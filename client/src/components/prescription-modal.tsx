@@ -254,9 +254,12 @@ export default function PrescriptionModal({
                 value={selectedMedicine}
                 onSelect={handleMedicationSelect}
                 onAutoFill={handleMedicationSelect}
-                placeholder="Search medications..."
+                placeholder="Start typing medication name (e.g., Paracetamol, Amoxicillin)..."
                 className="w-full"
               />
+              <p className="text-xs text-slate-500 mt-1">
+                ✨ Select a medication to automatically fill dosage, frequency, and instructions from pharmacy database.
+              </p>
             </FormItem>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -268,8 +271,14 @@ export default function PrescriptionModal({
                   <FormItem>
                     <FormLabel>Dosage</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 500mg, 1 tablet" {...field} />
+                      <Input 
+                        placeholder="Enter dosage amount (e.g., 500mg, 2 tablets, 5ml)" 
+                        {...field} 
+                      />
                     </FormControl>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Specify the exact amount per dose. Auto-filled from pharmacy database when available.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -283,8 +292,14 @@ export default function PrescriptionModal({
                   <FormItem>
                     <FormLabel>Frequency</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Twice daily, Every 8 hours" {...field} />
+                      <Input 
+                        placeholder="How often to take (e.g., Twice daily, Every 8 hours, Once at bedtime)" 
+                        {...field} 
+                      />
                     </FormControl>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Specify timing intervals. Common: Once daily, Twice daily, Every 6-8 hours.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -296,10 +311,16 @@ export default function PrescriptionModal({
                 name="duration"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Duration</FormLabel>
+                    <FormLabel>Treatment Duration</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 7 days, 2 weeks" {...field} />
+                      <Input 
+                        placeholder="Total treatment period (e.g., 7 days, 2 weeks, 1 month)" 
+                        {...field} 
+                      />
                     </FormControl>
+                    <p className="text-xs text-slate-500 mt-1">
+                      How long the patient should continue taking this medication.
+                    </p>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -336,14 +357,17 @@ export default function PrescriptionModal({
               name="instructions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Instructions</FormLabel>
+                  <FormLabel>Patient Instructions</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="e.g., Take with food, Before meals, Avoid alcohol"
-                      rows={3}
+                      placeholder="Detailed instructions for the patient (e.g., Take with food, Avoid alcohol, Do not drive while taking this medication, Complete the full course)"
+                      rows={4}
                       {...field} 
                     />
                   </FormControl>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Include important safety information, timing, food restrictions, and warnings. Auto-filled from pharmacy guidelines when available.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )}
