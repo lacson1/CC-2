@@ -1,22 +1,38 @@
 import { Link, useLocation } from "wouter";
-import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut } from "lucide-react";
+import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRole, RoleGuard } from "@/components/role-guard";
+import { Button } from "@/components/ui/button";
 
-const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
-  { name: "Patients", href: "/patients", icon: Users },
-  { name: "Visits", href: "/visits", icon: Stethoscope },
-  { name: "Lab Results", href: "/lab-results", icon: FlaskRound },
-  { name: "Pharmacy", href: "/pharmacy", icon: Pill },
-];
+const getNavigationForRole = (role: string) => {
+  const allNavigation = [
+    { name: "Dashboard", href: "/dashboard", icon: BarChart3, roles: ["admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
+    { name: "Patients", href: "/patients", icon: Users, roles: ["admin", "doctor", "nurse"] },
+    { name: "Visits", href: "/visits", icon: Stethoscope, roles: ["admin", "doctor", "nurse"] },
+    { name: "Lab Results", href: "/lab-results", icon: FlaskRound, roles: ["admin", "doctor", "nurse"] },
+    { name: "Pharmacy", href: "/pharmacy", icon: Pill, roles: ["admin", "pharmacist"] },
+    { name: "Referrals", href: "/referrals", icon: UserCheck, roles: ["admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
+  ];
+  
+  return allNavigation.filter(item => item.roles.includes(role));
+};
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const { logout } = useAuth();
+  const { user } = useRole();
+
+  const navigation = getNavigationForRole(user?.role || '');
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
       return location === "/" || location === "/dashboard";
     }
     return location.startsWith(href);
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -65,12 +81,17 @@ export default function Sidebar() {
             <User className="text-white w-4 h-4" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-medium text-slate-700">Dr. Adebayo</p>
-            <p className="text-xs text-slate-500">Administrator</p>
+            <p className="text-sm font-medium text-slate-700">{user?.username}</p>
+            <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
           </div>
-          <button className="text-slate-400 hover:text-slate-600">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleLogout}
+            className="text-slate-400 hover:text-slate-600 p-1"
+          >
             <LogOut className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       </div>
     </div>
