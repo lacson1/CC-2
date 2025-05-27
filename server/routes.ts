@@ -152,10 +152,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Low stock medicines
+  // Low stock medicines with automatic notifications
   app.get("/api/medicines/low-stock", async (req, res) => {
     try {
       const lowStockMedicines = await storage.getLowStockMedicines();
+      
+      // Send notifications for critically low stock items
+      for (const medicine of lowStockMedicines) {
+        if (medicine.quantity === 0) {
+          // Out of stock - urgent notification
+          await sendNotificationToRole('pharmacist', 
+            NotificationTypes.MEDICATION_OUT_OF_STOCK(medicine.name)
+          );
+          await sendNotificationToRole('admin', 
+            NotificationTypes.MEDICATION_OUT_OF_STOCK(medicine.name)
+          );
+        } else if (medicine.quantity <= 10) {
+          // Low stock warning
+          await sendNotificationToRole('pharmacist', 
+            NotificationTypes.MEDICATION_LOW_STOCK(medicine.name, medicine.quantity)
+          );
+        }
+      }
+      
       res.json(lowStockMedicines);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch low stock medicines" });
