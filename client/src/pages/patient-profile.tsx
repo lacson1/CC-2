@@ -82,7 +82,7 @@ export default function PatientProfile() {
   };
 
   const getPatientInitials = (firstName: string, lastName: string) => {
-    return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
   const getStatusBadge = (status: string) => {
@@ -114,7 +114,7 @@ export default function PatientProfile() {
                 {patient.firstName} {patient.lastName}
               </h2>
               <p className="text-sm text-slate-500">
-                ID: HC{patient.id.toString().padStart(6, "0")} | Age: {getPatientAge(patient.dateOfBirth)} | {patient.gender}
+                ID: HC{patient.id?.toString().padStart(6, "0")} | Age: {getPatientAge(patient.dateOfBirth)} | {patient.gender}
               </p>
             </div>
           </div>

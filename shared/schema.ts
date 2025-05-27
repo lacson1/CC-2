@@ -1,7 +1,15 @@
-import { pgTable, text, serial, integer, date, timestamp, decimal, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, date, timestamp, decimal, boolean, varchar } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  password: varchar('password', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull(), // e.g., admin, nurse
+  createdAt: timestamp('created_at').defaultNow()
+});
 
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
@@ -139,7 +147,14 @@ export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
   createdAt: true,
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type Visit = typeof visits.$inferSelect;

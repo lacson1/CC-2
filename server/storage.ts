@@ -4,6 +4,7 @@ import {
   labResults, 
   medicines,
   prescriptions,
+  users,
   type Patient, 
   type InsertPatient,
   type Visit,
@@ -13,7 +14,9 @@ import {
   type Medicine,
   type InsertMedicine,
   type Prescription,
-  type InsertPrescription
+  type InsertPrescription,
+  type User,
+  type InsertUser
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, gte, lte, and, ilike, or } from "drizzle-orm";
@@ -50,6 +53,11 @@ export interface IStorage {
   createPrescription(prescription: InsertPrescription): Promise<Prescription>;
   updatePrescriptionStatus(id: number, status: string): Promise<Prescription>;
   getActivePrescriptionsByPatient(patientId: number): Promise<Prescription[]>;
+  
+  // Users
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
   
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -227,6 +235,25 @@ export class DatabaseStorage implements IStorage {
         eq(prescriptions.status, "active")
       ))
       .orderBy(desc(prescriptions.createdAt));
+  }
+
+  // Users
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
   }
 
   // Dashboard stats
