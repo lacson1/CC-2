@@ -14,6 +14,7 @@ import LabResults from "@/pages/lab-results";
 import Pharmacy from "@/pages/pharmacy";
 import Referrals from "@/pages/referrals";
 import ProfilePage from "@/pages/profile";
+import UserManagement from "@/pages/user-management";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -35,6 +36,7 @@ function AuthenticatedApp() {
               <Route path="/pharmacy" component={Pharmacy} />
               <Route path="/referrals" component={Referrals} />
               <Route path="/profile" component={ProfilePage} />
+              <Route path="/user-management" component={UserManagement} />
               <Route component={NotFound} />
             </Switch>
           </div>

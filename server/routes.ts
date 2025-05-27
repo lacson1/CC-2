@@ -512,11 +512,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User management routes (Admin only)
+  app.get('/api/users', authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
+    try {
+      const allUsers = await db.select().from(users);
+      // Don't return passwords
+      const usersWithoutPasswords = allUsers.map(user => ({ ...user, password: undefined }));
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
   app.post("/api/users", authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
       userData.password = await hashPassword(userData.password);
       const user = await storage.createUser(userData);
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logUserAction(AuditActions.USER_CREATED, user.id, {
+        newUserRole: user.role,
+        newUserUsername: user.username
+      });
+      
       res.json({ ...user, password: undefined }); // Don't return password
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -524,6 +543,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ message: "Failed to create user" });
       }
+    }
+  });
+
+  app.patch('/api/users/:id', authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { username, password, role, email, phone, photoUrl } = req.body;
+      
+      const updateData: Record<string, any> = { username, role, email, phone, photoUrl };
+      
+      // Hash password if provided
+      if (password) {
+        updateData.password = await hashPassword(password);
+      }
+      
+      // Remove undefined values
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === undefined) {
+          delete updateData[key];
+        }
+      });
+      
+      const [updatedUser] = await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logUserAction(AuditActions.USER_UPDATED, userId, {
+        updatedFields: Object.keys(updateData),
+        newRole: role
+      });
+      
+      res.json({ ...updatedUser, password: undefined }); // Don't return password
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete('/api/users/:id', authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Prevent admin from deleting themselves
+      if (req.user?.id === userId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const [deletedUser] = await db.delete(users)
+        .where(eq(users.id, userId))
+        .returning();
+      
+      if (!deletedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logUserAction(AuditActions.USER_UPDATED, userId, {
+        action: "deleted",
+        deletedUserRole: deletedUser.role,
+        deletedUsername: deletedUser.username
+      });
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 
