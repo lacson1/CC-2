@@ -122,6 +122,26 @@ export const labTests = pgTable('lab_tests', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+export const labOrders = pgTable('lab_orders', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  orderedBy: integer('ordered_by').notNull().references(() => users.id),
+  status: varchar('status', { length: 20 }).default('pending'), // pending, in_progress, completed
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  completedAt: timestamp('completed_at')
+});
+
+export const labOrderItems = pgTable('lab_order_items', {
+  id: serial('id').primaryKey(),
+  labOrderId: integer('lab_order_id').notNull().references(() => labOrders.id),
+  labTestId: integer('lab_test_id').notNull().references(() => labTests.id),
+  result: text('result'),
+  remarks: text('remarks'),
+  status: varchar('status', { length: 20 }).default('pending'), // pending, completed
+  completedBy: integer('completed_by').references(() => users.id),
+  completedAt: timestamp('completed_at')
+});
+
 export const medications = pgTable('medications', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 150 }).notNull(),

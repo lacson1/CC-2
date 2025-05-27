@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, users, auditLogs, labTests, medications } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, users, auditLogs, labTests, medications, labOrders, labOrderItems } from "@shared/schema";
 import { z } from "zod";
 import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
@@ -140,6 +140,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/suggestions/lab-tests', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { q } = req.query;
+      const searchTerm = q ? String(q).toLowerCase() : '';
+      
+      const testResults = await db.select().from(labTests).where(
+        searchTerm
+          ? or(
+              ilike(labTests.name, `%${searchTerm}%`),
+              ilike(labTests.category, `%${searchTerm}%`)
+            )
+          : undefined
+      ).limit(20);
+      
+      res.json(testResults);
+    } catch (error) {
+      console.error('Error fetching lab test suggestions:', error);
+      res.status(500).json({ message: 'Failed to fetch lab test suggestions' });
+    }
+  });
+
+  // Original endpoint for compatibility
+  app.get('/api/lab-tests-old', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { q } = req.query;
       if (!q || typeof q !== 'string') {
