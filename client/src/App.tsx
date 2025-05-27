@@ -36,6 +36,7 @@ function AuthenticatedApp() {
               <Route path="/lab-results" component={LabResults} />
               <Route path="/pharmacy" component={Pharmacy} />
               <Route path="/referrals" component={Referrals} />
+              <Route path="/form-builder" component={FormBuilder} />
               <Route path="/profile" component={ProfilePage} />
               <Route path="/user-management" component={UserManagement} />
               <Route component={NotFound} />
