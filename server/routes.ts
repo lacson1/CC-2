@@ -303,26 +303,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Calculate age safely with proper null/undefined handling
+      const dob = patient.dateOfBirth ? new Date(patient.dateOfBirth) : null;
       let age = null;
-      if (patient.dateOfBirth) {
-        try {
-          const dob = new Date(patient.dateOfBirth);
-          const today = new Date();
-          
-          // Check if date is valid
-          if (!isNaN(dob.getTime())) {
-            age = today.getFullYear() - dob.getFullYear();
-            const monthDiff = today.getMonth() - dob.getMonth();
-            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-              age--;
-            }
-            // Ensure age is reasonable (0-150)
-            if (age < 0 || age > 150) {
-              age = null;
-            }
-          }
-        } catch (error) {
-          // If date parsing fails, age remains null
+      
+      if (dob && !isNaN(dob.getTime())) {
+        const today = new Date();
+        age = today.getFullYear() - dob.getFullYear();
+        const monthDiff = today.getMonth() - dob.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+          age--;
+        }
+        // Ensure age is reasonable (0-150)
+        if (age < 0 || age > 150) {
           age = null;
         }
       }
