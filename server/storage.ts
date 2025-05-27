@@ -265,6 +265,53 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Referrals
+  async getReferral(id: number): Promise<Referral | undefined> {
+    const [referral] = await db.select().from(referrals).where(eq(referrals.id, id));
+    return referral || undefined;
+  }
+
+  async getReferrals(filters?: { toRole?: string; fromUserId?: number; status?: string }): Promise<Referral[]> {
+    const conditions = [];
+    if (filters?.toRole) {
+      conditions.push(eq(referrals.toRole, filters.toRole));
+    }
+    if (filters?.fromUserId) {
+      conditions.push(eq(referrals.fromUserId, filters.fromUserId));
+    }
+    if (filters?.status) {
+      conditions.push(eq(referrals.status, filters.status));
+    }
+
+    if (conditions.length > 0) {
+      return await db.select()
+        .from(referrals)
+        .where(and(...conditions))
+        .orderBy(desc(referrals.date));
+    }
+
+    return await db.select()
+      .from(referrals)
+      .orderBy(desc(referrals.date));
+  }
+
+  async createReferral(insertReferral: InsertReferral): Promise<Referral> {
+    const [referral] = await db
+      .insert(referrals)
+      .values(insertReferral)
+      .returning();
+    return referral;
+  }
+
+  async updateReferralStatus(id: number, status: string): Promise<Referral> {
+    const [referral] = await db
+      .update(referrals)
+      .set({ status })
+      .where(eq(referrals.id, id))
+      .returning();
+    return referral;
+  }
+
   // Dashboard stats
   async getDashboardStats(): Promise<{
     totalPatients: number;

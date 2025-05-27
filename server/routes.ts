@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 
@@ -284,6 +284,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ ...user, password: undefined }); // Don't return password
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Referrals routes - Medical staff only
+  app.post("/api/referrals", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const referralData = insertReferralSchema.parse(req.body);
+      const referral = await storage.createReferral(referralData);
+      res.json(referral);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid referral data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create referral" });
+      }
+    }
+  });
+
+  app.get("/api/referrals", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const { toRole, fromUserId, status } = req.query;
+      const filters: any = {};
+      
+      if (toRole) filters.toRole = toRole as string;
+      if (fromUserId) filters.fromUserId = parseInt(fromUserId as string);
+      if (status) filters.status = status as string;
+
+      const referrals = await storage.getReferrals(filters);
+      res.json(referrals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referrals" });
+    }
+  });
+
+  app.patch("/api/referrals/:id", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+
+      if (!status || !['pending', 'accepted', 'rejected'].includes(status)) {
+        res.status(400).json({ message: "Invalid status. Must be 'pending', 'accepted', or 'rejected'" });
+        return;
+      }
+
+      const referral = await storage.updateReferralStatus(id, status);
+      res.json(referral);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update referral status" });
     }
   });
 
