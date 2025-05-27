@@ -1,0 +1,89 @@
+I want you to build me a complete web application for a small clinic in Southwest Nigeria. It will have a Node.js/Express backend with a PostgreSQL database and a React frontend with TypeScript.
+
+✅ The app should have:
+- Patient registration and search
+- Visit tracking (date, vitals, diagnosis, treatment)
+- Lab results management
+- Pharmacy inventory tracking
+- Admin dashboard with basic stats
+
+✅ Use Drizzle ORM for database schema and queries.  
+✅ Use Tailwind CSS for frontend styling.  
+✅ Use React Router for page routing.  
+✅ Use Vite for building the frontend.  
+✅ Use Axios for API calls.
+
+---
+
+### 🗂️ **File structure:**
+
+- `backend/`
+  - `server.ts` (main Express server)
+  - `schema.ts` (Drizzle ORM schema)
+  - `.env` (for `DATABASE_URL`)
+- `frontend/`
+  - `src/`
+    - `components/`
+      - `PatientList.tsx`
+      - `PatientProfile.tsx`
+      - `AddVisitForm.tsx`
+      - `PharmacyPage.tsx`
+    - `App.tsx`
+    - `main.tsx`
+  - `tailwind.config.js`
+  - `vite.config.ts`
+- `package.json` in both backend and frontend folders
+
+---
+
+### ⚙️ **Backend Requirements:**
+
+1️⃣ Use **Express** for the API.  
+2️⃣ **API routes**:
+- `POST /api/patients` — add new patient
+- `GET /api/patients` — get all patients
+- `GET /api/patients/:id` — get one patient
+- `POST /api/patients/:id/visits` — add visit
+- `GET /api/patients/:id/visits` — get visits for a patient
+- `POST /api/patients/:id/labs` — add lab result
+- `GET /api/patients/:id/labs` — get lab results
+- `POST /api/medicines` — add medicine
+- `GET /api/medicines` — get all medicines
+- `PATCH /api/medicines/:id` — update medicine quantity
+
+3️⃣ Use Drizzle ORM to define:
+- Patients table
+- Visits table
+- LabResults table
+- Medicines table
+
+4️⃣ Connect to Postgres using `DATABASE_URL` in `.env`.
+
+---
+
+### ⚙️ **Frontend Requirements:**
+
+1️⃣ Use **React + TypeScript**.  
+2️⃣ Use **Tailwind CSS** for styling.  
+3️⃣ Create the following pages:
+- **Patient List Page**: list patients and search
+- **Patient Profile Page**: show patient info and visits
+- **Add Visit Form**: add new visits
+- **Pharmacy Page**: list and update medicines
+- **Admin Dashboard**: show total patients, today’s visits, low stock alerts
+
+4️⃣ Use Axios to call the backend API endpoints.  
+5️⃣ Use React Router for routing between pages.
+
+---
+
+### 📝 **Deployment:**
+
+- Deploy the backend to **Railway**.
+- Deploy the frontend to **Vercel**.
+- Set environment variable in frontend: `VITE_API_URL=https://<backend-url>`
+
+---
+
+🎯 Build this step by step in Replit. Use Node.js 18+ for backend and the latest React template for frontend.  
+🎯 Make sure the project is clean, organized, and uses TypeScript throughout.
