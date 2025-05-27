@@ -122,15 +122,17 @@ export default function Sidebar() {
             </div>
           )}
           
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleLogout}
-            className={`text-slate-400 hover:text-slate-600 p-1 transition-all duration-300 ${isCollapsed ? 'hidden' : 'block'}`}
-            title="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+          {!isCollapsed && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="text-slate-400 hover:text-slate-600 p-1"
+              title="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          )}
         </div>
         
         {/* Logout button for collapsed state */}
