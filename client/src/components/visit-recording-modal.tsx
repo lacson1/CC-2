@@ -88,7 +88,7 @@ export default function VisitRecordingModal({
 
   const recordVisitMutation = useMutation({
     mutationFn: async (data: InsertVisit) => {
-      const response = await apiRequest("POST", `/api/patients/${data.patientId}/visits`, data);
+      const response = await apiRequest("POST", `/api/patients/${data.patientId}/visits`, { ...data, status: "final" });
       return response.json();
     },
     onSuccess: () => {
@@ -97,6 +97,8 @@ export default function VisitRecordingModal({
       if (selectedPatientId) {
         queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "visits"] });
       }
+      // Clear the draft after successful submission
+      localStorage.removeItem(getDraftKey());
       toast({
         title: "Success",
         description: "Visit recorded successfully!",
@@ -113,6 +115,14 @@ export default function VisitRecordingModal({
       });
     },
   });
+
+  // Check if there's a draft with content
+  const hasDraftContent = () => {
+    const draft = localStorage.getItem(getDraftKey());
+    if (!draft) return false;
+    const data = JSON.parse(draft);
+    return Object.values(data).some(value => value && value !== "");
+  };
 
   const onSubmit = (data: Omit<InsertVisit, "patientId">) => {
     if (!selectedPatientId) {
