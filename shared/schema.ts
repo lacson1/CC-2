@@ -112,6 +112,16 @@ export const auditLogs = pgTable('audit_logs', {
   timestamp: timestamp('timestamp').defaultNow().notNull()
 });
 
+export const labTests = pgTable('lab_tests', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  category: varchar('category', { length: 50 }), // e.g., "Blood Test"
+  description: varchar('description', { length: 255 }),
+  units: varchar('units', { length: 50 }),
+  referenceRange: varchar('reference_range', { length: 100 }),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 export const comments = pgTable('comments', {
   id: serial('id').primaryKey(),
   patientId: integer('patient_id').references(() => patients.id).notNull(),
@@ -185,6 +195,10 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
     fields: [auditLogs.userId],
     references: [users.id],
   }),
+}));
+
+export const labTestsRelations = relations(labTests, ({ many }) => ({
+  labResults: many(labResults),
 }));
 
 export const commentsRelations = relations(comments, ({ one, many }) => ({
@@ -280,3 +294,11 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
+
+export const insertLabTestSchema = createInsertSchema(labTests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type LabTest = typeof labTests.$inferSelect;
+export type InsertLabTest = z.infer<typeof insertLabTestSchema>;

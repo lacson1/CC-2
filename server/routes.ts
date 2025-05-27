@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, users, auditLogs } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, users, auditLogs, labTests } from "@shared/schema";
 import { z } from "zod";
 import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
@@ -625,6 +625,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(logs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Lab Tests endpoints
+  app.get('/api/lab-tests', authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const tests = await db.select().from(labTests).orderBy(labTests.name);
+      res.json(tests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch lab tests" });
+    }
+  });
+
+  app.post('/api/lab-tests', authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertLabTestSchema.parse(req.body);
+      
+      const [labTest] = await db.insert(labTests)
+        .values(validatedData)
+        .returning();
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logSystemAction("Lab Test Created", {
+        labTestId: labTest.id,
+        labTestName: labTest.name,
+        category: labTest.category
+      });
+      
+      res.status(201).json(labTest);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lab test data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create lab test" });
     }
   });
 
