@@ -3,6 +3,7 @@ import {
   visits, 
   labResults, 
   medicines,
+  prescriptions,
   type Patient, 
   type InsertPatient,
   type Visit,
@@ -10,7 +11,9 @@ import {
   type LabResult,
   type InsertLabResult,
   type Medicine,
-  type InsertMedicine
+  type InsertMedicine,
+  type Prescription,
+  type InsertPrescription
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, gte, lte, and, ilike, or } from "drizzle-orm";
@@ -39,6 +42,14 @@ export interface IStorage {
   createMedicine(medicine: InsertMedicine): Promise<Medicine>;
   updateMedicineQuantity(id: number, quantity: number): Promise<Medicine>;
   getLowStockMedicines(): Promise<Medicine[]>;
+  
+  // Prescriptions
+  getPrescription(id: number): Promise<Prescription | undefined>;
+  getPrescriptionsByPatient(patientId: number): Promise<Prescription[]>;
+  getPrescriptionsByVisit(visitId: number): Promise<Prescription[]>;
+  createPrescription(prescription: InsertPrescription): Promise<Prescription>;
+  updatePrescriptionStatus(id: number, status: string): Promise<Prescription>;
+  getActivePrescriptionsByPatient(patientId: number): Promise<Prescription[]>;
   
   // Dashboard stats
   getDashboardStats(): Promise<{
@@ -172,6 +183,50 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(medicines)
       .where(lte(medicines.quantity, medicines.lowStockThreshold))
       .orderBy(medicines.quantity);
+  }
+
+  // Prescriptions
+  async getPrescription(id: number): Promise<Prescription | undefined> {
+    const [prescription] = await db.select().from(prescriptions).where(eq(prescriptions.id, id));
+    return prescription || undefined;
+  }
+
+  async getPrescriptionsByPatient(patientId: number): Promise<Prescription[]> {
+    return await db.select().from(prescriptions)
+      .where(eq(prescriptions.patientId, patientId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async getPrescriptionsByVisit(visitId: number): Promise<Prescription[]> {
+    return await db.select().from(prescriptions)
+      .where(eq(prescriptions.visitId, visitId))
+      .orderBy(desc(prescriptions.createdAt));
+  }
+
+  async createPrescription(insertPrescription: InsertPrescription): Promise<Prescription> {
+    const [prescription] = await db
+      .insert(prescriptions)
+      .values(insertPrescription)
+      .returning();
+    return prescription;
+  }
+
+  async updatePrescriptionStatus(id: number, status: string): Promise<Prescription> {
+    const [prescription] = await db
+      .update(prescriptions)
+      .set({ status })
+      .where(eq(prescriptions.id, id))
+      .returning();
+    return prescription;
+  }
+
+  async getActivePrescriptionsByPatient(patientId: number): Promise<Prescription[]> {
+    return await db.select().from(prescriptions)
+      .where(and(
+        eq(prescriptions.patientId, patientId),
+        eq(prescriptions.status, "active")
+      ))
+      .orderBy(desc(prescriptions.createdAt));
   }
 
   // Dashboard stats

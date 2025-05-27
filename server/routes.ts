@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -165,6 +165,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recentPatients);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch recent patients" });
+    }
+  });
+
+  // Prescription routes
+  app.post("/api/patients/:id/prescriptions", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const prescriptionData = insertPrescriptionSchema.parse({ ...req.body, patientId });
+      const prescription = await storage.createPrescription(prescriptionData);
+      res.json(prescription);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid prescription data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create prescription" });
+      }
+    }
+  });
+
+  app.get("/api/patients/:id/prescriptions", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const prescriptions = await storage.getPrescriptionsByPatient(patientId);
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch prescriptions" });
+    }
+  });
+
+  app.get("/api/patients/:id/prescriptions/active", async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const activePrescriptions = await storage.getActivePrescriptionsByPatient(patientId);
+      res.json(activePrescriptions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch active prescriptions" });
+    }
+  });
+
+  app.get("/api/visits/:id/prescriptions", async (req, res) => {
+    try {
+      const visitId = parseInt(req.params.id);
+      const prescriptions = await storage.getPrescriptionsByVisit(visitId);
+      res.json(prescriptions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch visit prescriptions" });
+    }
+  });
+
+  app.patch("/api/prescriptions/:id/status", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status || typeof status !== "string") {
+        res.status(400).json({ message: "Invalid status" });
+        return;
+      }
+      
+      const prescription = await storage.updatePrescriptionStatus(id, status);
+      res.json(prescription);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update prescription status" });
     }
   });
 

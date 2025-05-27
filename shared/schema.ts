@@ -56,23 +56,60 @@ export const medicines = pgTable("medicines", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const prescriptions = pgTable("prescriptions", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").notNull().references(() => patients.id),
+  visitId: integer("visit_id").references(() => visits.id),
+  medicineId: integer("medicine_id").notNull().references(() => medicines.id),
+  dosage: text("dosage").notNull(),
+  frequency: text("frequency").notNull(),
+  duration: text("duration").notNull(),
+  instructions: text("instructions"),
+  prescribedBy: text("prescribed_by").notNull(),
+  status: text("status").notNull().default("active"),
+  startDate: timestamp("start_date").defaultNow().notNull(),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const patientsRelations = relations(patients, ({ many }) => ({
   visits: many(visits),
   labResults: many(labResults),
+  prescriptions: many(prescriptions),
 }));
 
-export const visitsRelations = relations(visits, ({ one }) => ({
+export const visitsRelations = relations(visits, ({ one, many }) => ({
   patient: one(patients, {
     fields: [visits.patientId],
     references: [patients.id],
   }),
+  prescriptions: many(prescriptions),
 }));
 
 export const labResultsRelations = relations(labResults, ({ one }) => ({
   patient: one(patients, {
     fields: [labResults.patientId],
     references: [patients.id],
+  }),
+}));
+
+export const medicinesRelations = relations(medicines, ({ many }) => ({
+  prescriptions: many(prescriptions),
+}));
+
+export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
+  patient: one(patients, {
+    fields: [prescriptions.patientId],
+    references: [patients.id],
+  }),
+  visit: one(visits, {
+    fields: [prescriptions.visitId],
+    references: [visits.id],
+  }),
+  medicine: one(medicines, {
+    fields: [prescriptions.medicineId],
+    references: [medicines.id],
   }),
 }));
 
@@ -97,6 +134,11 @@ export const insertMedicineSchema = createInsertSchema(medicines).omit({
   createdAt: true,
 });
 
+export const insertPrescriptionSchema = createInsertSchema(prescriptions).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
@@ -106,3 +148,5 @@ export type LabResult = typeof labResults.$inferSelect;
 export type InsertLabResult = z.infer<typeof insertLabResultSchema>;
 export type Medicine = typeof medicines.$inferSelect;
 export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
+export type Prescription = typeof prescriptions.$inferSelect;
+export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;

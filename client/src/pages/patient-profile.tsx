@@ -15,11 +15,13 @@ import {
   History, 
   Stethoscope, 
   FlaskRound,
-  Plus 
+  Plus,
+  Pill
 } from "lucide-react";
 import VisitRecordingModal from "@/components/visit-recording-modal";
 import LabResultModal from "@/components/lab-result-modal";
-import type { Patient, Visit, LabResult } from "@shared/schema";
+import PrescriptionModal from "@/components/prescription-modal";
+import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
