@@ -80,11 +80,22 @@ export const prescriptions = pgTable("prescriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const referrals = pgTable('referrals', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id),
+  fromUserId: integer('from_user_id').references(() => users.id),
+  toRole: varchar('to_role', { length: 20 }),
+  reason: varchar('reason', { length: 255 }),
+  date: date('date').defaultNow(),
+  status: varchar('status', { length: 20 }).default('pending')
+});
+
 // Relations
 export const patientsRelations = relations(patients, ({ many }) => ({
   visits: many(visits),
   labResults: many(labResults),
   prescriptions: many(prescriptions),
+  referrals: many(referrals),
 }));
 
 export const visitsRelations = relations(visits, ({ one, many }) => ({
@@ -121,6 +132,17 @@ export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
   }),
 }));
 
+export const referralsRelations = relations(referrals, ({ one }) => ({
+  patient: one(patients, {
+    fields: [referrals.patientId],
+    references: [patients.id],
+  }),
+  fromUser: one(users, {
+    fields: [referrals.fromUserId],
+    references: [users.id],
+  }),
+}));
+
 // Insert schemas
 export const insertPatientSchema = createInsertSchema(patients).omit({
   id: true,
@@ -152,6 +174,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true,
 });
 
+export const insertReferralSchema = createInsertSchema(referrals).omit({
+  id: true,
+  date: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -165,3 +192,5 @@ export type Medicine = typeof medicines.$inferSelect;
 export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
 export type Prescription = typeof prescriptions.$inferSelect;
 export type InsertPrescription = z.infer<typeof insertPrescriptionSchema>;
+export type Referral = typeof referrals.$inferSelect;
+export type InsertReferral = z.infer<typeof insertReferralSchema>;

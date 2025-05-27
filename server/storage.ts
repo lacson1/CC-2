@@ -5,6 +5,7 @@ import {
   medicines,
   prescriptions,
   users,
+  referrals,
   type Patient, 
   type InsertPatient,
   type Visit,
@@ -16,7 +17,9 @@ import {
   type Prescription,
   type InsertPrescription,
   type User,
-  type InsertUser
+  type InsertUser,
+  type Referral,
+  type InsertReferral
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, gte, lte, and, ilike, or } from "drizzle-orm";
@@ -58,6 +61,12 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Referrals
+  getReferral(id: number): Promise<Referral | undefined>;
+  getReferrals(filters?: { toRole?: string; fromUserId?: number; status?: string }): Promise<Referral[]>;
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  updateReferralStatus(id: number, status: string): Promise<Referral>;
   
   // Dashboard stats
   getDashboardStats(): Promise<{
