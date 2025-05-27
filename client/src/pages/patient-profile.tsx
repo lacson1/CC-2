@@ -29,6 +29,7 @@ import VisitRecordingModal from "@/components/visit-recording-modal";
 import LabResultModal from "@/components/lab-result-modal";
 import PrescriptionModal from "@/components/prescription-modal";
 import PatientQRCard from "@/components/patient-qr-card";
+import PatientChat from "@/components/patient-chat";
 import { useRole } from "@/components/role-guard";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
@@ -241,6 +242,14 @@ export default function PatientProfile() {
           {/* Emergency QR Code */}
           <div className="lg:col-span-1">
             <PatientQRCard patient={patient} />
+          </div>
+
+          {/* Team Chat */}
+          <div className="lg:col-span-1">
+            <PatientChat 
+              patientId={patient.id} 
+              patientName={`${patient.firstName} ${patient.lastName}`} 
+            />
           </div>
 
           {/* Visits and Lab Results */}
