@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, users, auditLogs, labTests, medications, labOrders, labOrderItems } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, users, auditLogs, labTests, medications, labOrders, labOrderItems, consultationForms, consultationRecords } from "@shared/schema";
 import { z } from "zod";
+import { db } from "./db";
+import { eq, desc, or, ilike } from "drizzle-orm";
 import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
 import { AuditLogger, AuditActions } from "./audit";
-import { db } from "./db";
-import { eq, or, ilike } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Firebase for push notifications
@@ -977,6 +977,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(records);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch consultation records" });
+    }
+  });
+
+  // Get patient consultations with form details
+  app.get("/api/patients/:id/consultations", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      
+      const consultations = await db
+        .select({
+          id: consultationRecords.id,
+          patientId: consultationRecords.patientId,
+          formId: consultationRecords.formId,
+          filledBy: consultationRecords.filledBy,
+          formData: consultationRecords.formData,
+          createdAt: consultationRecords.createdAt,
+          formName: consultationForms.name,
+          specialistRole: consultationForms.specialistRole,
+          formDescription: consultationForms.description
+        })
+        .from(consultationRecords)
+        .leftJoin(consultationForms, eq(consultationRecords.formId, consultationForms.id))
+        .where(eq(consultationRecords.patientId, patientId))
+        .orderBy(desc(consultationRecords.createdAt));
+      
+      res.json(consultations);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch patient consultations" });
     }
   });
 
