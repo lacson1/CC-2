@@ -33,6 +33,9 @@ import PatientChat from "@/components/patient-chat";
 import LabOrderForm from "@/components/lab-order-form";
 import LabOrdersList from "@/components/lab-orders-list";
 import ConsultationHistory from "@/components/consultation-history";
+import VaccinationManagement from "@/components/vaccination-management";
+import AllergyManagement from "@/components/allergy-management";
+import MedicalHistoryManagement from "@/components/medical-history-management";
 import { useRole } from "@/components/role-guard";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
@@ -320,102 +323,24 @@ export default function PatientProfile() {
                         </TabsContent>
 
                         <TabsContent value="vaccinations">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="flex items-center justify-between">
-                                <span className="flex items-center">
-                                  <Heart className="mr-2 h-5 w-5" />
-                                  Vaccination History
-                                </span>
-                                {(user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin') && (
-                                  <Button size="sm">
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Add Vaccination
-                                  </Button>
-                                )}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-4">
-                                <div className="text-center py-8 text-gray-500">
-                                  <Heart className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                                  <p>No vaccination records found</p>
-                                  <p className="text-sm">Add vaccination records to track immunization history</p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                          <VaccinationManagement 
+                            patientId={patient.id} 
+                            canEdit={user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin'} 
+                          />
                         </TabsContent>
 
                         <TabsContent value="allergies">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="flex items-center justify-between">
-                                <span className="flex items-center">
-                                  <AlertCircle className="mr-2 h-5 w-5" />
-                                  Allergy History
-                                </span>
-                                {(user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin') && (
-                                  <Button size="sm">
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit Allergies
-                                  </Button>
-                                )}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              {patient.allergies ? (
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                  <div className="flex items-start">
-                                    <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 mr-3" />
-                                    <div>
-                                      <h4 className="font-medium text-red-900 mb-2">Known Allergies</h4>
-                                      <p className="text-red-800">{patient.allergies}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                  <AlertCircle className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                                  <p>No known allergies recorded</p>
-                                  <p className="text-sm">Add allergy information to ensure safe treatment</p>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
+                          <AllergyManagement 
+                            patientId={patient.id} 
+                            canEdit={user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin'} 
+                          />
                         </TabsContent>
 
                         <TabsContent value="history">
-                          <Card>
-                            <CardHeader>
-                              <CardTitle className="flex items-center justify-between">
-                                <span className="flex items-center">
-                                  <History className="mr-2 h-5 w-5" />
-                                  Past Medical History
-                                </span>
-                                {(user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin') && (
-                                  <Button size="sm">
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit History
-                                  </Button>
-                                )}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              {patient.medicalHistory ? (
-                                <div className="bg-slate-50 border rounded-lg p-4">
-                                  <h4 className="font-medium text-slate-900 mb-2">Medical History</h4>
-                                  <p className="text-slate-700 whitespace-pre-wrap">{patient.medicalHistory}</p>
-                                </div>
-                              ) : (
-                                <div className="text-center py-8 text-gray-500">
-                                  <History className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-                                  <p>No medical history recorded</p>
-                                  <p className="text-sm">Add past medical history for comprehensive care</p>
-                                </div>
-                              )}
-                            </CardContent>
-                          </Card>
+                          <MedicalHistoryManagement 
+                            patientId={patient.id} 
+                            canEdit={user?.role === 'doctor' || user?.role === 'admin'} 
+                          />
                         </TabsContent>
                       </Tabs>
                     </CardContent>

@@ -194,6 +194,43 @@ export const consultationRecords = pgTable('consultation_records', {
   updatedAt: timestamp('updated_at').defaultNow()
 });
 
+export const vaccinations = pgTable('vaccinations', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  vaccineName: varchar('vaccine_name', { length: 100 }).notNull(),
+  dateAdministered: date('date_administered').notNull(),
+  administeredBy: varchar('administered_by', { length: 100 }).notNull(),
+  batchNumber: varchar('batch_number', { length: 50 }),
+  manufacturer: varchar('manufacturer', { length: 100 }),
+  notes: text('notes'),
+  nextDueDate: date('next_due_date'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const allergies = pgTable('allergies', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  allergen: varchar('allergen', { length: 100 }).notNull(),
+  type: varchar('type', { length: 20 }).notNull(), // 'drug', 'food', 'environmental'
+  severity: varchar('severity', { length: 20 }).notNull(), // 'mild', 'moderate', 'severe'
+  reaction: text('reaction').notNull(),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const medicalHistory = pgTable('medical_history', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  condition: varchar('condition', { length: 200 }).notNull(),
+  type: varchar('type', { length: 30 }).notNull(), // 'diagnosis', 'surgery', 'hospitalization', 'chronic_condition'
+  dateOccurred: date('date_occurred').notNull(),
+  status: varchar('status', { length: 20 }).notNull(), // 'active', 'resolved', 'ongoing'
+  description: text('description').notNull(),
+  treatment: text('treatment'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 export const comments = pgTable('comments', {
   id: serial('id').primaryKey(),
   patientId: integer('patient_id').references(() => patients.id).notNull(),
