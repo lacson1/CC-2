@@ -1,45 +1,47 @@
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { FlaskRound } from "lucide-react";
-import { Link } from "wouter";
+import { TestTube } from "lucide-react";
+import LabResultEntry from "@/components/lab-result-entry";
+import { useRole } from "@/components/role-guard";
 
 export default function LabResults() {
+  const { user } = useRole();
+
   return (
-    <>
-      {/* Top Bar */}
-      <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+            <TestTube className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold text-slate-800">Lab Results</h2>
-            <p className="text-sm text-slate-500">Manage laboratory test results</p>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Laboratory Results</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Manage pending lab orders and enter test results
+            </p>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <FlaskRound className="mr-2 h-5 w-5" />
-              All Lab Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-12">
-              <FlaskRound className="mx-auto h-12 w-12 text-slate-400" />
-              <h3 className="mt-4 text-lg font-medium text-slate-900">Lab Results Management</h3>
-              <p className="mt-2 text-sm text-slate-500">
-                Lab results can be viewed and added from individual patient profiles. Go to the Patients page to manage lab results.
+      <main className="p-6">
+        {user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse' ? (
+          <LabResultEntry />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="h-5 w-5" />
+                Access Restricted
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                You don't have permission to access the laboratory results management system. 
+                Please contact your administrator if you need access.
               </p>
-              <Link href="/patients" className="inline-flex items-center px-4 py-2 mt-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                Go to Patients
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </main>
-    </>
+    </div>
   );
 }

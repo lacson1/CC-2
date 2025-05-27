@@ -30,6 +30,8 @@ import LabResultModal from "@/components/lab-result-modal";
 import PrescriptionModal from "@/components/prescription-modal";
 import PatientQRCard from "@/components/patient-qr-card";
 import PatientChat from "@/components/patient-chat";
+import LabOrderForm from "@/components/lab-order-form";
+import LabOrdersList from "@/components/lab-orders-list";
 import { useRole } from "@/components/role-guard";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
@@ -255,10 +257,28 @@ export default function PatientProfile() {
             <Tabs defaultValue="visits" className="w-full">
               <TabsList>
                 <TabsTrigger value="visits">Visit History</TabsTrigger>
+                <TabsTrigger value="lab-orders">Lab Orders</TabsTrigger>
                 <TabsTrigger value="labs">Lab Results</TabsTrigger>
                 <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
               </TabsList>
               
+              <TabsContent value="lab-orders">
+                <div className="space-y-6">
+                  {/* Lab Order Form */}
+                  {(user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin') && (
+                    <LabOrderForm 
+                      patientId={patient.id} 
+                      onOrderCreated={() => {
+                        // Refresh lab orders list
+                      }}
+                    />
+                  )}
+                  
+                  {/* Lab Orders List */}
+                  <LabOrdersList patientId={patient.id} />
+                </div>
+              </TabsContent>
+
               <TabsContent value="visits">
                 <Card>
                   <CardHeader>
