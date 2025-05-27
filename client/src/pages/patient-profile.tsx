@@ -42,12 +42,12 @@ export default function PatientProfile() {
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
-    queryKey: ["/api/patients", patientId],
+    queryKey: [`/api/patients/${patientId}`],
     enabled: !!patientId,
   });
 
   const { data: visits, isLoading: visitsLoading } = useQuery<Visit[]>({
-    queryKey: ["/api/patients", patientId, "visits"],
+    queryKey: [`/api/patients/${patientId}/visits`],
     enabled: !!patientId,
   });
 
