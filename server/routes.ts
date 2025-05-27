@@ -22,11 +22,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const searchTerm = q.toLowerCase();
       const medicines = await storage.getMedicines();
       
-      // Filter medicines by name, category, or common conditions
+      // Filter medicines by name, description, or common conditions
       const filteredMedicines = medicines
         .filter(medicine => 
           medicine.name.toLowerCase().includes(searchTerm) ||
-          (medicine.category && medicine.category.toLowerCase().includes(searchTerm)) ||
+          (medicine.description && medicine.description.toLowerCase().includes(searchTerm)) ||
           (medicine.commonConditions && medicine.commonConditions.toLowerCase().includes(searchTerm))
         )
         .slice(0, 10); // Limit to 10 results for performance

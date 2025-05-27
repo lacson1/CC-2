@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertPrescriptionSchema, type InsertPrescription, type Patient, type Medicine } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
+import { MedicationAutocomplete } from "@/components/smart-autocomplete";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -23,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -30,9 +32,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Check, ChevronsUpDown, Pill, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PrescriptionModalProps {
@@ -51,17 +64,12 @@ export default function PrescriptionModal({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [patientSearchOpen, setPatientSearchOpen] = useState(false);
-  const [medicineSearchOpen, setMedicineSearchOpen] = useState(false);
   const [selectedPatientId, setSelectedPatientId] = useState<number | undefined>(patientId);
-  const [selectedMedicineId, setSelectedMedicineId] = useState<number | undefined>();
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
 
   const { data: patients } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
-    enabled: !patientId, // Only fetch if patientId is not provided
-  });
-
-  const { data: medicines } = useQuery<Medicine[]>({
-    queryKey: ["/api/medicines"],
+    enabled: !patientId,
   });
 
   const form = useForm<Omit<InsertPrescription, "patientId" | "medicineId">>({
@@ -99,7 +107,7 @@ export default function PrescriptionModal({
       });
       form.reset();
       setSelectedPatientId(undefined);
-      setSelectedMedicineId(undefined);
+      setSelectedMedicine(null);
       onOpenChange(false);
     },
     onError: () => {
@@ -111,6 +119,30 @@ export default function PrescriptionModal({
     },
   });
 
+  // Smart Auto-Fill Function - This automatically fills dosage and instructions!
+  const handleMedicationSelect = (medication: Medicine) => {
+    setSelectedMedicine(medication);
+    
+    // Auto-fill form fields from pharmacy database defaults
+    if (medication.defaultDosage) {
+      form.setValue("dosage", medication.defaultDosage);
+    }
+    if (medication.defaultFrequency) {
+      form.setValue("frequency", medication.defaultFrequency);
+    }
+    if (medication.defaultDuration) {
+      form.setValue("duration", medication.defaultDuration);
+    }
+    if (medication.defaultInstructions) {
+      form.setValue("instructions", medication.defaultInstructions);
+    }
+
+    toast({
+      title: "Smart Auto-Fill Applied!",
+      description: `Prescription details auto-filled from ${medication.name} database defaults.`,
+    });
+  };
+
   const onSubmit = (data: Omit<InsertPrescription, "patientId" | "medicineId">) => {
     if (!selectedPatientId) {
       toast({
@@ -121,7 +153,7 @@ export default function PrescriptionModal({
       return;
     }
 
-    if (!selectedMedicineId) {
+    if (!selectedMedicine) {
       toast({
         title: "Error",
         description: "Please select a medicine.",
@@ -130,23 +162,27 @@ export default function PrescriptionModal({
       return;
     }
 
-    createPrescriptionMutation.mutate({
+    const prescriptionData: InsertPrescription = {
       ...data,
       patientId: selectedPatientId,
-      medicineId: selectedMedicineId,
-    });
+      medicineId: selectedMedicine.id,
+    };
+
+    createPrescriptionMutation.mutate(prescriptionData);
   };
 
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
-  const selectedMedicine = medicines?.find(m => m.id === selectedMedicineId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Prescription</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Pill className="h-5 w-5 text-green-600" />
+            Create New Prescription
+          </DialogTitle>
           <DialogDescription>
-            Add a new prescription with dosage and administration instructions.
+            Add a new prescription for the patient. Smart auto-fill will help speed up the process!
           </DialogDescription>
         </DialogHeader>
 
@@ -154,98 +190,77 @@ export default function PrescriptionModal({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Patient Selection */}
             {!patientId && (
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Select Patient</label>
-                <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={patientSearchOpen}
-                      className="w-full justify-between"
-                    >
-                      {selectedPatient
-                        ? `${selectedPatient.firstName} ${selectedPatient.lastName}`
-                        : "Select patient..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search patient..." />
-                      <CommandEmpty>No patient found.</CommandEmpty>
-                      <CommandGroup>
-                        {patients?.map((patient) => (
-                          <CommandItem
-                            key={patient.id}
-                            onSelect={() => {
-                              setSelectedPatientId(patient.id);
-                              setPatientSearchOpen(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                selectedPatientId === patient.id ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {patient.firstName} {patient.lastName} - {patient.phone}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+              <FormField
+                control={form.control}
+                name="patientId"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Patient</FormLabel>
+                    <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={patientSearchOpen}
+                          className="w-full justify-between"
+                        >
+                          {selectedPatient 
+                            ? `${selectedPatient.firstName} ${selectedPatient.lastName}` 
+                            : "Select patient..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Search patients..." />
+                          <CommandEmpty>No patient found.</CommandEmpty>
+                          <CommandList>
+                            <CommandGroup>
+                              {patients?.map((patient) => (
+                                <CommandItem
+                                  key={patient.id}
+                                  onSelect={() => {
+                                    setSelectedPatientId(patient.id);
+                                    setPatientSearchOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      selectedPatientId === patient.id ? "opacity-100" : "opacity-0"
+                                    )}
+                                  />
+                                  {patient.firstName} {patient.lastName}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
 
-            {/* Medicine Selection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Select Medicine</label>
-              <Popover open={medicineSearchOpen} onOpenChange={setMedicineSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={medicineSearchOpen}
-                    className="w-full justify-between"
-                  >
-                    {selectedMedicine
-                      ? selectedMedicine.name
-                      : "Select medicine..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
-                  <Command>
-                    <CommandInput placeholder="Search medicine..." />
-                    <CommandEmpty>No medicine found.</CommandEmpty>
-                    <CommandGroup>
-                      {medicines?.map((medicine) => (
-                        <CommandItem
-                          key={medicine.id}
-                          onSelect={() => {
-                            setSelectedMedicineId(medicine.id);
-                            setMedicineSearchOpen(false);
-                          }}
-                        >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              selectedMedicineId === medicine.id ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {medicine.name} - {medicine.unit}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+            {/* Smart Medication Selection with Auto-Fill */}
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-blue-500" />
+                Medication (Smart Auto-Fill Enabled)
+              </FormLabel>
+              <MedicationAutocomplete
+                value={selectedMedicine}
+                onSelect={handleMedicationSelect}
+                onAutoFill={handleMedicationSelect}
+                placeholder="Search medications..."
+                className="w-full"
+              />
+            </FormItem>
 
-            {/* Prescription Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Dosage */}
               <FormField
                 control={form.control}
                 name="dosage"
@@ -253,41 +268,29 @@ export default function PrescriptionModal({
                   <FormItem>
                     <FormLabel>Dosage</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., 500mg, 2 tablets" />
+                      <Input placeholder="e.g., 500mg, 1 tablet" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Frequency */}
               <FormField
                 control={form.control}
                 name="frequency"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Frequency</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select frequency" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Once daily">Once daily</SelectItem>
-                        <SelectItem value="Twice daily">Twice daily</SelectItem>
-                        <SelectItem value="Three times daily">Three times daily</SelectItem>
-                        <SelectItem value="Four times daily">Four times daily</SelectItem>
-                        <SelectItem value="Every 4 hours">Every 4 hours</SelectItem>
-                        <SelectItem value="Every 6 hours">Every 6 hours</SelectItem>
-                        <SelectItem value="Every 8 hours">Every 8 hours</SelectItem>
-                        <SelectItem value="As needed">As needed</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input placeholder="e.g., Twice daily, Every 8 hours" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Duration */}
               <FormField
                 control={form.control}
                 name="duration"
@@ -295,40 +298,50 @@ export default function PrescriptionModal({
                   <FormItem>
                     <FormLabel>Duration</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g., 7 days, 2 weeks" />
+                      <Input placeholder="e.g., 7 days, 2 weeks" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Status */}
               <FormField
                 control={form.control}
-                name="prescribedBy"
+                name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Prescribed By</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="discontinued">Discontinued</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
+            {/* Instructions */}
             <FormField
               control={form.control}
               name="instructions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Special Instructions</FormLabel>
+                  <FormLabel>Instructions</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value || ""}
+                    <Textarea 
+                      placeholder="e.g., Take with food, Before meals, Avoid alcohol"
                       rows={3}
-                      placeholder="Take with food, avoid alcohol, etc..."
+                      {...field} 
                     />
                   </FormControl>
                   <FormMessage />
@@ -336,47 +349,33 @@ export default function PrescriptionModal({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="startDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
-                        onChange={(e) => field.onChange(new Date(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Auto-Fill Preview */}
+            {selectedMedicine && (selectedMedicine.defaultDosage || selectedMedicine.defaultInstructions) && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-800">Smart Auto-Fill Applied</span>
+                </div>
+                <div className="text-sm text-blue-700">
+                  Form fields have been automatically populated with pharmacy database defaults for {selectedMedicine.name}. 
+                  You can modify any values as needed.
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedMedicine.defaultDosage && (
+                    <Badge variant="outline" className="text-blue-700 border-blue-300">
+                      Dosage: {selectedMedicine.defaultDosage}
+                    </Badge>
+                  )}
+                  {selectedMedicine.defaultFrequency && (
+                    <Badge variant="outline" className="text-blue-700 border-blue-300">
+                      Frequency: {selectedMedicine.defaultFrequency}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
 
-              <FormField
-                control={form.control}
-                name="endDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        value={field.value ? new Date(field.value).toISOString().split('T')[0] : ""}
-                        onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-2">
               <Button
                 type="button"
                 variant="outline"
@@ -384,9 +383,10 @@ export default function PrescriptionModal({
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
+              <Button 
+                type="submit" 
                 disabled={createPrescriptionMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
               >
                 {createPrescriptionMutation.isPending ? "Creating..." : "Create Prescription"}
               </Button>
