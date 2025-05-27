@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   MessageCircle, 
   Send, 
@@ -19,7 +20,9 @@ import {
   Stethoscope,
   Heart,
   FileText,
-  Bell
+  Bell,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -45,6 +48,7 @@ export default function PatientChat({ patientId, patientName }: PatientChatProps
   const [priority, setPriority] = useState<string>("normal");
   const [isPrivate, setIsPrivate] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -157,23 +161,28 @@ export default function PatientChat({ patientId, patientName }: PatientChatProps
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-lg">
-          <div className="flex items-center space-x-2">
-            <MessageCircle className="h-5 w-5 text-primary" />
-            <span>Team Discussion</span>
-            <Badge variant="outline" className="text-xs">
-              {patientName}
-            </Badge>
-          </div>
-          <div className="flex items-center space-x-2 text-sm text-slate-500">
-            <Users className="h-4 w-4" />
-            <span>{comments.length} messages</span>
-          </div>
-        </CardTitle>
-      </CardHeader>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CardHeader className="pb-3">
+          <CollapsibleTrigger asChild>
+            <CardTitle className="flex items-center justify-between text-lg cursor-pointer hover:bg-slate-50 p-2 rounded-md transition-colors">
+              <div className="flex items-center space-x-2">
+                <MessageCircle className="h-5 w-5 text-primary" />
+                <span>Team Discussion</span>
+                <Badge variant="outline" className="text-xs">
+                  {patientName}
+                </Badge>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-slate-500">
+                <Users className="h-4 w-4" />
+                <span>{comments.length} messages</span>
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </div>
+            </CardTitle>
+          </CollapsibleTrigger>
+        </CardHeader>
 
-      <CardContent className="flex-1 flex flex-col space-y-4 min-h-0">
+        <CollapsibleContent>
+          <CardContent className="flex-1 flex flex-col space-y-4 min-h-0">
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto space-y-3 max-h-96 pr-2">
           {isLoading ? (
@@ -371,7 +380,9 @@ export default function PatientChat({ patientId, patientName }: PatientChatProps
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
