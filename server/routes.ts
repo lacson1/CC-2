@@ -59,6 +59,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive Medications Database API
+  app.get('/api/suggestions/medications', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { q } = req.query;
+      if (!q || typeof q !== 'string') {
+        return res.json([]);
+      }
+
+      const searchTerm = `%${q.toLowerCase()}%`;
+      const result = await db.select().from(medications)
+        .where(
+          or(
+            ilike(medications.name, searchTerm),
+            ilike(medications.genericName, searchTerm),
+            ilike(medications.brandName, searchTerm),
+            ilike(medications.category, searchTerm)
+          )
+        )
+        .limit(10)
+        .orderBy(medications.name);
+      
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch medication suggestions" });
+    }
+  });
+
   app.get("/api/suggestions/diagnoses", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { q } = req.query;
