@@ -6,7 +6,17 @@ import { insertVisitSchema, type InsertVisit, type Patient } from "@shared/schem
 import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 
-const visitFormSchema = insertVisitSchema.omit({ patientId: true });
+const visitFormSchema = z.object({
+  complaint: z.string().min(1, "Chief complaint is required"),
+  diagnosis: z.string().min(1, "Diagnosis is required"),
+  treatment: z.string().min(1, "Treatment plan is required"),
+  visitType: z.string().default("consultation"),
+  bloodPressure: z.string().optional(),
+  temperature: z.string().optional(),
+  weight: z.string().optional(),
+  height: z.string().optional(),
+  followUpDate: z.string().optional(),
+});
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
