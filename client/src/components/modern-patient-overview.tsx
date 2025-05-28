@@ -121,10 +121,14 @@ export function ModernPatientOverview({
 
       {/* Enhanced Tabbed Interface */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <User className="w-4 h-4" />
             Overview
+          </TabsTrigger>
+          <TabsTrigger value="vitals" className="flex items-center gap-2">
+            <Monitor className="w-4 h-4" />
+            Vital Signs
           </TabsTrigger>
           <TabsTrigger value="record-visit" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
@@ -134,9 +138,13 @@ export function ModernPatientOverview({
             <FileText className="w-4 h-4" />
             Consultation
           </TabsTrigger>
-          <TabsTrigger value="vitals" className="flex items-center gap-2">
-            <Monitor className="w-4 h-4" />
-            Vital Signs
+          <TabsTrigger value="appointments" className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" />
+            Appointments
+          </TabsTrigger>
+          <TabsTrigger value="communication" className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Communication
           </TabsTrigger>
         </TabsList>
 
@@ -244,6 +252,11 @@ export function ModernPatientOverview({
             </div>
           </TabsContent>
 
+          {/* Vital Signs Tab */}
+          <TabsContent value="vitals" className="space-y-6">
+            <PatientVitalSignsTracker patientId={patient.id} />
+          </TabsContent>
+
           {/* Record Visit Tab */}
           <TabsContent value="record-visit" className="space-y-6">
             <Card>
@@ -273,9 +286,19 @@ export function ModernPatientOverview({
             <ConsultationFormSelector patientId={patient.id} />
           </TabsContent>
 
-          {/* Vital Signs Tab */}
-          <TabsContent value="vitals" className="space-y-6">
-            <PatientVitalSignsTracker patientId={patient.id} />
+          {/* Appointments Tab */}
+          <TabsContent value="appointments" className="space-y-6">
+            <SmartAppointmentScheduler patientId={patient.id} />
+          </TabsContent>
+
+          {/* Communication Tab */}
+          <TabsContent value="communication" className="space-y-6">
+            <PatientCommunicationHub
+              patientId={patient.id}
+              patientName={`${patient.firstName} ${patient.lastName}`}
+              patientPhone={patient.phone}
+              patientEmail={patient.email}
+            />
           </TabsContent>
         </Tabs>
     </div>
