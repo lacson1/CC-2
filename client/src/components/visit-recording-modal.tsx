@@ -95,9 +95,9 @@ export default function VisitRecordingModal({
       console.warn('Failed to load draft:', error);
       return {
         bloodPressure: "",
-        heartRate: undefined,
-        temperature: undefined,
-        weight: undefined,
+        heartRate: "",
+        temperature: "",
+        weight: "",
         complaint: "",
         diagnosis: "",
         treatment: "",
@@ -201,11 +201,11 @@ export default function VisitRecordingModal({
       treatment: data.treatment,
       visitType: data.visitType || "consultation",
       visitDate: new Date().toISOString().split('T')[0],
-      bloodPressure: typeof data.bloodPressure === 'string' ? data.bloodPressure.trim() || null : data.bloodPressure || null,
-      heartRate: data.heartRate || null,
-      temperature: data.temperature || null,
-      weight: data.weight || null,
-      followUpDate: typeof data.followUpDate === 'string' ? data.followUpDate.trim() || null : data.followUpDate || null,
+      bloodPressure: data.bloodPressure || null,
+      heartRate: data.heartRate ? parseFloat(data.heartRate) : null,
+      temperature: data.temperature ? parseFloat(data.temperature) : null,
+      weight: data.weight ? parseFloat(data.weight) : null,
+      followUpDate: data.followUpDate || null,
       status: "completed"
     };
 
@@ -321,7 +321,7 @@ export default function VisitRecordingModal({
                           type="number"
                           {...field}
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value || "")}
                           placeholder="72"
                         />
                       </FormControl>
@@ -342,7 +342,7 @@ export default function VisitRecordingModal({
                           step="0.1"
                           {...field}
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value || "")}
                           placeholder="36.5"
                         />
                       </FormControl>
@@ -363,7 +363,7 @@ export default function VisitRecordingModal({
                           step="0.1"
                           {...field}
                           value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value || "")}
                           placeholder="70.5"
                         />
                       </FormControl>
