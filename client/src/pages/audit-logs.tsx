@@ -36,8 +36,8 @@ export default function AuditLogs() {
       log.entityType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       JSON.stringify(log.details).toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesAction = !actionFilter || log.action === actionFilter;
-    const matchesEntity = !entityFilter || log.entityType === entityFilter;
+    const matchesAction = !actionFilter || actionFilter === "all" || log.action === actionFilter;
+    const matchesEntity = !entityFilter || entityFilter === "all" || log.entityType === entityFilter;
     
     return matchesSearch && matchesAction && matchesEntity;
   });
@@ -143,7 +143,7 @@ export default function AuditLogs() {
                 <SelectValue placeholder="All Actions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Actions</SelectItem>
+                <SelectItem value="all">All Actions</SelectItem>
                 {uniqueActions.map(action => (
                   <SelectItem key={action} value={action}>{action}</SelectItem>
                 ))}
@@ -155,7 +155,7 @@ export default function AuditLogs() {
                 <SelectValue placeholder="All Entities" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Entities</SelectItem>
+                <SelectItem value="all">All Entities</SelectItem>
                 {uniqueEntities.map(entity => (
                   <SelectItem key={entity} value={entity}>{entity}</SelectItem>
                 ))}
