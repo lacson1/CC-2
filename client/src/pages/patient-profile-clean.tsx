@@ -89,16 +89,20 @@ export default function PatientProfile() {
 
   return (
     <>
+      {/* Navigation Bar */}
+      <div className="bg-slate-50 border-b border-slate-200 px-6 py-2">
+        <Link href="/patients">
+          <Button variant="ghost" size="sm" className="hover:bg-slate-200">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Patients
+          </Button>
+        </Link>
+      </div>
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Link href="/patients">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Patients
-              </Button>
-            </Link>
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-lg font-semibold text-primary">
                 {patient.firstName?.charAt(0)}{patient.lastName?.charAt(0)}
