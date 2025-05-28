@@ -152,12 +152,6 @@ export default function VisitRecordingModal({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
-      if (selectedPatientId) {
-        queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "visits"] });
-      }
-      
       // Clear the draft after successful submission
       try {
         localStorage.removeItem(draftKey);
@@ -170,9 +164,19 @@ export default function VisitRecordingModal({
         description: "Visit recorded successfully!",
       });
       
+      // Reset form and close dialog immediately
       form.reset();
       setSelectedPatientId(undefined);
       onOpenChange(false);
+      
+      // Refresh data after dialog is closed
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+        if (selectedPatientId) {
+          queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "visits"] });
+        }
+      }, 100);
     },
     onError: (error) => {
       console.error('Visit recording error:', error);
