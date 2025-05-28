@@ -42,12 +42,12 @@ export default function Patients() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Patient Management</h1>
-          <p className="text-slate-600 mt-1">Manage patient records, appointments, and medical history</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Patient Management</h1>
+          <p className="text-slate-600 mt-1 text-sm md:text-base">Manage patient records, appointments, and medical history</p>
         </div>
         {/* Only admin, doctor, and nurse can add new patients */}
         {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (

@@ -150,80 +150,80 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-4 md:p-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">Total Patients</p>
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-slate-600 uppercase tracking-wide truncate">Total Patients</p>
+                  <p className="text-xl md:text-3xl font-bold text-slate-800 mt-1 md:mt-2">
                     {statsLoading ? "..." : stats?.totalPatients || 0}
                   </p>
-                  <p className="text-sm text-secondary mt-1">
+                  <p className="text-xs md:text-sm text-secondary mt-1 hidden md:block">
                     <ArrowUp className="inline w-3 h-3" /> +12% from last month
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <Users className="text-primary h-6 w-6" />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Users className="text-primary h-4 w-4 md:h-6 md:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">Today's Visits</p>
-                  <p className="text-3xl font-bold text-slate-800 mt-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-slate-600 uppercase tracking-wide truncate">Today's Visits</p>
+                  <p className="text-xl md:text-3xl font-bold text-slate-800 mt-1 md:mt-2">
                     {statsLoading ? "..." : stats?.todayVisits || 0}
                   </p>
-                  <p className="text-sm text-secondary mt-1">
+                  <p className="text-xs md:text-sm text-secondary mt-1 hidden md:block">
                     <ArrowUp className="inline w-3 h-3" /> +5 from yesterday
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <Stethoscope className="text-secondary h-6 w-6" />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-secondary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Stethoscope className="text-secondary h-4 w-4 md:h-6 md:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">Low Stock Items</p>
-                  <p className="text-3xl font-bold text-red-600 mt-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-slate-600 uppercase tracking-wide truncate">Low Stock Items</p>
+                  <p className="text-xl md:text-3xl font-bold text-red-600 mt-1 md:mt-2">
                     {statsLoading ? "..." : stats?.lowStockItems || 0}
                   </p>
-                  <p className="text-sm text-red-600 mt-1">
+                  <p className="text-xs md:text-sm text-red-600 mt-1 hidden md:block">
                     <TriangleAlert className="inline w-3 h-3" /> Requires attention
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Pill className="text-red-600 h-6 w-6" />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Pill className="text-red-600 h-4 w-4 md:h-6 md:w-6" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600 uppercase tracking-wide">Pending Labs</p>
-                  <p className="text-3xl font-bold text-amber-600 mt-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs md:text-sm font-medium text-slate-600 uppercase tracking-wide truncate">Pending Labs</p>
+                  <p className="text-xl md:text-3xl font-bold text-amber-600 mt-1 md:mt-2">
                     {statsLoading ? "..." : stats?.pendingLabs || 0}
                   </p>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-xs md:text-sm text-slate-500 mt-1 hidden md:block">
                     <Clock className="inline w-3 h-3" /> Awaiting results
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <FlaskRound className="text-amber-600 h-6 w-6" />
+                <div className="w-8 h-8 md:w-12 md:h-12 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <FlaskRound className="text-amber-600 h-4 w-4 md:h-6 md:w-6" />
                 </div>
               </div>
             </CardContent>
@@ -232,9 +232,9 @@ export default function Dashboard() {
 
         {/* Nurse-Specific Dashboard */}
         {user?.role === 'nurse' && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold text-slate-800 mb-4">Nurse Dashboard</h3>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="mb-6 md:mb-8">
+            <h3 className="text-lg md:text-xl font-semibold text-slate-800 mb-3 md:mb-4">Nurse Dashboard</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               {/* Today's Visits */}
               <Card>
                 <CardHeader>
