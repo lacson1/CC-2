@@ -2188,18 +2188,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const patientLabResults = await db.select({
         id: labOrders.id,
-        orderDate: labOrders.orderDate,
-        status: labOrders.status,
-        notes: labOrders.notes
+        status: labOrders.status
       })
       .from(labOrders)
       .where(eq(labOrders.patientId, decoded.patientId))
-      .orderBy(desc(labOrders.orderDate));
+      .orderBy(desc(labOrders.createdAt));
       
       res.json(patientLabResults);
     } catch (error) {
       console.error('Error fetching patient lab results:', error);
       res.status(500).json({ message: 'Failed to fetch lab results' });
+    }
+  });
+
+  // Antenatal Consultation Template
+  app.get('/api/templates/antenatal', async (req, res) => {
+    try {
+      const antenatalTemplate = {
+        "templateName": "Antenatal Consultation",
+        "sections": [
+          {
+            "title": "Patient Information",
+            "fields": [
+              { "name": "Patient Name", "type": "text" },
+              { "name": "Age", "type": "number" },
+              { "name": "Gravida", "type": "number" },
+              { "name": "Parity", "type": "number" },
+              { "name": "LMP", "type": "date" },
+              { "name": "EDD", "type": "date" },
+              { "name": "Occupation", "type": "text" },
+              { "name": "Address", "type": "text" },
+              { "name": "Phone", "type": "text" }
+            ]
+          },
+          {
+            "title": "Antenatal History",
+            "fields": [
+              { "name": "Past Obstetric History", "type": "textarea" },
+              { "name": "Past Medical History", "type": "textarea" },
+              { "name": "Past Surgical History", "type": "textarea" },
+              { "name": "Family History", "type": "textarea" },
+              { "name": "Social History", "type": "textarea" }
+            ]
+          },
+          {
+            "title": "Examination Findings",
+            "fields": [
+              { "name": "General Examination", "type": "textarea" },
+              { "name": "Blood Pressure", "type": "text" },
+              { "name": "Pulse", "type": "text" },
+              { "name": "Temperature", "type": "text" },
+              { "name": "Respiratory Rate", "type": "text" },
+              { "name": "Height", "type": "text" },
+              { "name": "Weight", "type": "text" },
+              { "name": "Abdominal Examination", "type": "textarea" },
+              { "name": "Fetal Heart Sound", "type": "text" }
+            ]
+          },
+          {
+            "title": "Investigations",
+            "fields": [
+              { "name": "Urinalysis", "type": "textarea" },
+              { "name": "PCV", "type": "text" },
+              { "name": "Blood Group", "type": "text" },
+              { "name": "Genotype", "type": "text" },
+              { "name": "VDRL", "type": "text" },
+              { "name": "Hepatitis B", "type": "text" },
+              { "name": "HIV", "type": "text" },
+              { "name": "Other Tests", "type": "textarea" }
+            ]
+          },
+          {
+            "title": "Management Plan",
+            "fields": [
+              { "name": "Diagnosis", "type": "textarea" },
+              { "name": "Treatment Plan", "type": "textarea" },
+              { "name": "Follow-up Plan", "type": "textarea" },
+              { "name": "Next Visit Date", "type": "date" }
+            ]
+          }
+        ]
+      };
+      
+      res.json({
+        success: true,
+        template: antenatalTemplate
+      });
+    } catch (error) {
+      console.error('Error fetching antenatal template:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to fetch template' 
+      });
     }
   });
 
