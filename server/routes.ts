@@ -1327,25 +1327,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { name, type, logoUrl, themeColor, address, phone, email, website } = req.body;
 
+      // Validate required fields
+      if (!name || name.trim() === '') {
+        return res.status(400).json({ message: 'Organization name is required' });
+      }
+
+      if (!email || email.trim() === '') {
+        return res.status(400).json({ message: 'Organization email is required' });
+      }
+
+      // Check if organization with same name already exists
+      const existingOrg = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.name, name.trim()))
+        .limit(1);
+
+      if (existingOrg.length > 0) {
+        return res.status(400).json({ message: 'An organization with this name already exists' });
+      }
+
+      // Check if organization with same email already exists
+      const existingOrgByEmail = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.email, email.trim()))
+        .limit(1);
+
+      if (existingOrgByEmail.length > 0) {
+        return res.status(400).json({ message: 'An organization with this email already exists' });
+      }
+
       const [organization] = await db
         .insert(organizations)
         .values({
-          name,
+          name: name.trim(),
           type: type || 'clinic',
-          logoUrl,
+          logoUrl: logoUrl?.trim() || null,
           themeColor: themeColor || '#3B82F6',
-          address,
-          phone,
-          email,
-          website,
+          address: address?.trim() || null,
+          phone: phone?.trim() || null,
+          email: email.trim(),
+          website: website?.trim() || null,
           isActive: true,
         })
         .returning();
 
+      // Log the creation
+      const audit = new AuditLogger(req);
+      await audit.logSystemAction('create_organization', { organizationId: organization.id, name: organization.name });
+
       res.status(201).json(organization);
     } catch (error) {
       console.error('Error creating organization:', error);
-      res.status(500).json({ message: 'Failed to create organization' });
+      
+      // Provide more specific error messages
+      if (error.code === '23505') { // PostgreSQL unique constraint violation
+        return res.status(400).json({ message: 'Organization name or email already exists' });
+      }
+      
+      res.status(500).json({ message: 'Failed to create organization. Please check your input and try again.' });
     }
   });
 
