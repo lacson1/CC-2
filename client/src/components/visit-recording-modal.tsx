@@ -235,7 +235,7 @@ export default function VisitRecordingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onEscapeKeyDown={() => onOpenChange(false)}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Record Patient Visit</DialogTitle>
           <DialogDescription>
