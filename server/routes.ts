@@ -2205,7 +2205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/templates/antenatal', async (req, res) => {
     try {
       const antenatalTemplate = {
-        "templateName": "Antenatal Consultation",
+        "templateName": "Gynaecological Assessment Form",
         "sections": [
           {
             "title": "Patient Information",
