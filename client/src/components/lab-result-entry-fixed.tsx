@@ -57,7 +57,7 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
 
   // Get items for selected order
   const { data: orderItems = [], isLoading: itemsLoading } = useQuery<LabOrderItem[]>({
-    queryKey: ['/api/lab-orders', selectedOrder, 'items'],
+    queryKey: [`/api/lab-orders/${selectedOrder}/items`],
     enabled: !!selectedOrder
   });
 
