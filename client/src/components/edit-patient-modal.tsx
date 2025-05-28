@@ -71,7 +71,9 @@ export function EditPatientModal({ open, onOpenChange, patient, onPatientUpdated
         title: "Success",
         description: "Patient information updated successfully!",
       });
+      // Invalidate both the patients list and the specific patient data
       queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/patients", patient.id] });
       onPatientUpdated();
       onOpenChange(false);
     },

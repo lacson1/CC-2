@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRoute } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Stethoscope, FlaskRound, Pill, Edit } from "lucide-react";
@@ -19,6 +19,7 @@ export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
   const patientId = params?.id ? parseInt(params.id) : undefined;
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [showLabModal, setShowLabModal] = useState(false);
@@ -222,7 +223,7 @@ export default function PatientProfile() {
         patient={patient}
         onPatientUpdated={() => {
           // Refresh patient data after update
-          window.location.reload();
+          queryClient.invalidateQueries({ queryKey: ["/api/patients", patientId] });
         }}
       />
 
