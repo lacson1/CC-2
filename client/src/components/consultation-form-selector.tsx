@@ -106,7 +106,7 @@ export default function ConsultationFormSelector({
     
     if (!selectedForm) return false;
 
-    selectedForm.formStructure.fields.forEach(field => {
+    (selectedForm.formStructure?.fields || []).forEach(field => {
       const value = formData[field.id];
       
       if (field.required && (!value || value.toString().trim() === '')) {
