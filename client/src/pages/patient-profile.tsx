@@ -129,10 +129,10 @@ export default function PatientProfile() {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-slate-50">
       {/* Top Bar */}
-      <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4">
-        <div className="flex items-center justify-between">
+      <header className="bg-white shadow-sm border-b border-slate-200 px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-full flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
               <span className="text-white font-semibold text-lg">
@@ -211,13 +211,15 @@ export default function PatientProfile() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-6">
-        <ModernPatientOverview
-          patient={patient}
-          visits={visits || []}
-          recentLabs={labResults || []}
-          activePrescriptions={prescriptions || []}
-        />
+      <main className="flex-1 overflow-y-auto px-4 py-6 max-w-full">
+        <div className="w-full max-w-none">
+          <ModernPatientOverview
+            patient={patient}
+            visits={visits || []}
+            recentLabs={labResults || []}
+            activePrescriptions={prescriptions || []}
+          />
+        </div>
         
         {/* Floating Action Menu */}
         <FloatingActionMenu
@@ -254,14 +256,9 @@ export default function PatientProfile() {
           organization={currentOrganization}
         />
       </div>
-    </>
+    </div>
   );
 }
-                <TabsTrigger value="medical-records">Medical Records</TabsTrigger>
-                <TabsTrigger value="visits">Visits</TabsTrigger>
-                <TabsTrigger value="lab-orders">Lab Orders</TabsTrigger>
-                <TabsTrigger value="medications">Medications</TabsTrigger>
-                <TabsTrigger value="labs">Lab Results</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview">
