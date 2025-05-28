@@ -38,8 +38,10 @@ import AllergyManagement from "@/components/allergy-management";
 import MedicalHistoryManagement from "@/components/medical-history-management";
 import { PrintExportToolbar } from "@/components/print-export-toolbar";
 import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
+import { ModernPatientOverview } from "@/components/modern-patient-overview";
+import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
-import type { Patient, Visit, LabResult, Prescription, Organization } from "@shared/schema";
+import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
@@ -209,75 +211,24 @@ export default function PatientProfile() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Patient Information */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <User className="mr-2 h-5 w-5" />
-                  Patient Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm">
-                    {patient.dateOfBirth ? `Born: ${new Date(patient.dateOfBirth).toLocaleDateString()}` : 'Date of Birth: Not provided'}
-                  </span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm">{patient.phone || 'Phone: Not provided'}</span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Mail className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm">{patient.email || 'Email: Not provided'}</span>
-                </div>
-                
-                <div className="flex items-start space-x-2">
-                  <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
-                  <span className="text-sm">{patient.address || 'Address: Not provided'}</span>
-                </div>
+        <ModernPatientOverview
+          patient={patient}
+          visits={visits || []}
+          recentLabs={labResults || []}
+          activePrescriptions={prescriptions || []}
+        />
+        
+        {/* Floating Action Menu */}
+        <FloatingActionMenu
+          onRecordVisit={() => setShowVisitModal(true)}
+          onAddLabResult={() => setShowLabModal(true)}
+          onAddPrescription={() => setShowPrescriptionModal(true)}
+          onCreateConsultation={() => setShowConsultationModal(true)}
+          userRole={user?.role || 'guest'}
+      </main>
 
-                {patient.allergies && (
-                  <div>
-                    <h4 className="font-medium text-slate-700 mb-2">Allergies</h4>
-                    <p className="text-sm text-slate-600 bg-red-50 p-2 rounded">
-                      {patient.allergies}
-                    </p>
-                  </div>
-                )}
-
-                {patient.medicalHistory && (
-                  <div>
-                    <h4 className="font-medium text-slate-700 mb-2">Medical History</h4>
-                    <p className="text-sm text-slate-600 bg-slate-50 p-2 rounded">
-                      {patient.medicalHistory}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Emergency QR Code */}
-          <div className="lg:col-span-1">
-            <PatientQRCard patient={patient} />
-          </div>
-
-          {/* Team Chat */}
-          <div className="lg:col-span-1">
-            <PatientChat 
-              patientId={patient.id} 
-              patientName={`${patient.firstName} ${patient.lastName}`} 
-            />
-          </div>
-
-          {/* Main Patient Information Tabs */}
-          <div className="lg:col-span-3">
+      {/* Modals and overlays */}
+      <div>
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-6">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
