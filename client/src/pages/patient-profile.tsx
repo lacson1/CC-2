@@ -36,8 +36,10 @@ import ConsultationHistory from "@/components/consultation-history";
 import VaccinationManagement from "@/components/vaccination-management";
 import AllergyManagement from "@/components/allergy-management";
 import MedicalHistoryManagement from "@/components/medical-history-management";
+import { PrintExportToolbar } from "@/components/print-export-toolbar";
+import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
 import { useRole } from "@/components/role-guard";
-import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
+import type { Patient, Visit, LabResult, Prescription, Organization } from "@shared/schema";
 
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
@@ -66,6 +68,14 @@ export default function PatientProfile() {
     queryKey: ["/api/patients", patientId, "prescriptions"],
     enabled: !!patientId,
   });
+
+  // Fetch organization data for branding
+  const { data: organizations = [] } = useQuery<Organization[]>({
+    queryKey: ["/api/organizations"],
+  });
+
+  // Get current user's organization
+  const currentOrganization = organizations.find(org => org.id === user?.organizationId);
 
   if (patientLoading) {
     return (
@@ -136,6 +146,16 @@ export default function PatientProfile() {
             </div>
           </div>
           <div className="flex space-x-2">
+            {/* Print & Export Patient Summary */}
+            <PrintExportToolbar
+              elementId="patient-summary-print"
+              filename={`patient_${patient.firstName}_${patient.lastName}_summary`}
+              organization={currentOrganization}
+              data={visits || []}
+              showCSV={false}
+              className="mr-2"
+            />
+            
             {/* Doctor-only actions */}
             {user?.role === 'doctor' && (
               <>
@@ -677,6 +697,15 @@ export default function PatientProfile() {
         onOpenChange={setShowPrescriptionModal}
         patientId={patientId}
       />
+
+      {/* Hidden Printable Patient Summary */}
+      <div className="hidden">
+        <PatientSummaryPrintable
+          patient={patient}
+          visits={visits || []}
+          organization={currentOrganization}
+        />
+      </div>
     </>
   );
 }
