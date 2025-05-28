@@ -66,14 +66,15 @@ export function EditPatientModal({ open, onOpenChange, patient, onPatientUpdated
     mutationFn: async (data: any) => {
       return apiRequest("PATCH", `/api/patients/${patient.id}`, data);
     },
-    onSuccess: () => {
+    onSuccess: (updatedData) => {
       toast({
         title: "Success",
         description: "Patient information updated successfully!",
       });
-      // Invalidate both the patients list and the specific patient data
+      // Force a complete cache refresh
+      queryClient.removeQueries({ queryKey: ["/api/patients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/patients", patient.id] });
+      // Call the parent callback to handle additional refresh logic
       onPatientUpdated();
       onOpenChange(false);
     },

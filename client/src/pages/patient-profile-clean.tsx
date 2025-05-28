@@ -222,8 +222,8 @@ export default function PatientProfile() {
         onOpenChange={setShowEditPatientModal}
         patient={patient}
         onPatientUpdated={() => {
-          // Refresh patient data after update
-          queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+          // Force complete cache refresh
+          queryClient.removeQueries({ queryKey: ["/api/patients"] });
           queryClient.refetchQueries({ queryKey: ["/api/patients"] });
         }}
       />
