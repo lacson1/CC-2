@@ -153,11 +153,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createVisit(insertVisit: InsertVisit): Promise<Visit> {
-    const [visit] = await db
-      .insert(visits)
-      .values(insertVisit)
-      .returning();
-    return visit;
+    try {
+      console.log('Storage createVisit called with:', insertVisit);
+      const [visit] = await db
+        .insert(visits)
+        .values(insertVisit)
+        .returning();
+      console.log('Visit created successfully:', visit);
+      return visit;
+    } catch (error) {
+      console.error('Database error in createVisit:', error);
+      throw error;
+    }
   }
 
   async getTodaysVisits(): Promise<Visit[]> {
