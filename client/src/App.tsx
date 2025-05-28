@@ -19,6 +19,7 @@ import AuditLogs from "@/pages/audit-logs";
 import FormBuilder from "@/pages/form-builder";
 import ClinicalPerformance from "@/pages/clinical-performance";
 import OrganizationManagement from "@/pages/organization-management";
+import { MedicalToolsPage } from "@/pages/medical-tools";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -40,6 +41,7 @@ function AuthenticatedApp() {
               <Route path="/pharmacy" component={Pharmacy} />
               <Route path="/referrals" component={Referrals} />
               <Route path="/form-builder" component={FormBuilder} />
+              <Route path="/medical-tools" component={MedicalToolsPage} />
               <Route path="/clinical-performance" component={ClinicalPerformance} />
               <Route path="/profile" component={ProfilePage} />
               <Route path="/user-management" component={UserManagement} />

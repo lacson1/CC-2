@@ -6,7 +6,7 @@ import { PatientTimeline } from './patient-timeline';
 import { PatientAlertsPanel } from './patient-alerts-panel';
 import PatientVitalSignsTracker from './patient-vital-signs-tracker';
 import SmartAppointmentScheduler from './smart-appointment-scheduler';
-import PatientCommunicationHub from './patient-communication-hub';
+import { PatientCommunicationHub } from './patient-communication-hub';
 import ConsultationFormSelector from './consultation-form-selector';
 import VisitRecordingModal from './visit-recording-modal';
 import { 
