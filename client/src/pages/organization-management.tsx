@@ -184,9 +184,19 @@ export default function OrganizationManagement() {
           <h1 className="text-3xl font-bold text-slate-800">Organization Management</h1>
           <p className="text-slate-600 mt-2">Manage multiple clinics and healthcare facilities</p>
         </div>
-        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+        <Dialog open={isCreateModalOpen || !!editingOrg} onOpenChange={(open) => {
+          if (!open) {
+            setIsCreateModalOpen(false);
+            setEditingOrg(null);
+            form.reset();
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditingOrg(null); form.reset(); }}>
+            <Button onClick={() => { 
+              setEditingOrg(null); 
+              form.reset(); 
+              setIsCreateModalOpen(true);
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Organization
             </Button>
@@ -298,7 +308,11 @@ export default function OrganizationManagement() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => setIsCreateModalOpen(false)}
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setEditingOrg(null);
+                    form.reset();
+                  }}
                 >
                   Cancel
                 </Button>
