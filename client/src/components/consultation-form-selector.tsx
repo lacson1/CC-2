@@ -62,6 +62,11 @@ export default function ConsultationFormSelector({
     queryKey: ['/api/consultation-forms'],
   });
 
+  // Fetch consultation history for this patient
+  const { data: consultationHistory = [], isLoading: historyLoading } = useQuery({
+    queryKey: ['/api/patients', patientId, 'consultation-records'],
+  });
+
   // Get selected form details
   const selectedForm = forms.find(form => form.id === selectedFormId);
 
@@ -298,13 +303,58 @@ export default function ConsultationFormSelector({
 
   return (
     <div className="space-y-6">
+      {/* Consultation History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="h-5 w-5" />
+            Consultation History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {historyLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              Loading consultation history...
+            </div>
+          ) : consultationHistory.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">
+              No consultations recorded yet for this patient.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {consultationHistory.map((consultation: any) => (
+                <Card key={consultation.id} className="border-l-4 border-l-blue-500">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium">
+                        {forms.find(f => f.id === consultation.formId)?.name || 'Unknown Form'}
+                      </h4>
+                      <Badge variant="outline">
+                        {new Date(consultation.consultationDate).toLocaleDateString()}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Consultation ID: #{consultation.id}
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      {new Date(consultation.consultationDate).toLocaleString()}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Form Selection */}
       {!selectedFormId && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Select Consultation Form
+              Create New Consultation
             </CardTitle>
           </CardHeader>
           <CardContent>
