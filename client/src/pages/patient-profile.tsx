@@ -111,7 +111,8 @@ export default function PatientProfile() {
   };
 
   const getPatientInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+    const initials = `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`;
+    return initials ? initials.toUpperCase() : 'N/A';
   };
 
   const getStatusBadge = (status: string) => {
