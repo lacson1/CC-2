@@ -48,9 +48,47 @@ export default function Dashboard() {
     queryKey: ["/api/medicines/low-stock"],
   });
 
+  const reorderMutation = useMutation({
+    mutationFn: async ({ medicineId, quantity }: { medicineId: number, quantity: number }) => {
+      const response = await apiRequest("PATCH", `/api/medicines/${medicineId}`, {
+        quantity: quantity
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/medicines/low-stock"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({
+        title: "Medicine Restocked",
+        description: `${selectedMedicine?.name} has been restocked successfully.`,
+      });
+      setShowReorderModal(false);
+      setReorderQuantity("");
+      setSelectedMedicine(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to restock medicine. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleReorderMedicine = (medicine: any) => {
     setSelectedMedicine(medicine);
+    setReorderQuantity("100"); // Default reorder quantity
     setShowReorderModal(true);
+  };
+
+  const handleConfirmReorder = () => {
+    if (!selectedMedicine || !reorderQuantity) return;
+    
+    const newQuantity = parseInt(selectedMedicine.quantity) + parseInt(reorderQuantity);
+    reorderMutation.mutate({
+      medicineId: selectedMedicine.id,
+      quantity: newQuantity
+    });
   };
 
   // Doctor-specific data
@@ -736,6 +774,63 @@ export default function Dashboard() {
         open={showLabModal}
         onOpenChange={setShowLabModal}
       />
+
+      {/* Medicine Reorder Modal */}
+      <Dialog open={showReorderModal} onOpenChange={setShowReorderModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Restock Medicine</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Medicine</Label>
+              <p className="text-lg font-semibold text-slate-800">{selectedMedicine?.name}</p>
+              <p className="text-sm text-slate-600">Current stock: {selectedMedicine?.quantity} {selectedMedicine?.unit}</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="reorder-quantity" className="text-sm font-medium">
+                Quantity to Add
+              </Label>
+              <Input
+                id="reorder-quantity"
+                type="number"
+                value={reorderQuantity}
+                onChange={(e) => setReorderQuantity(e.target.value)}
+                placeholder="Enter quantity to add"
+                className="mt-1"
+              />
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-lg">
+              <p className="text-sm text-slate-600">New Total Stock:</p>
+              <p className="text-lg font-semibold text-green-600">
+                {selectedMedicine && reorderQuantity 
+                  ? parseInt(selectedMedicine.quantity) + parseInt(reorderQuantity || "0")
+                  : selectedMedicine?.quantity} {selectedMedicine?.unit}
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setShowReorderModal(false)}
+                disabled={reorderMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1"
+                onClick={handleConfirmReorder}
+                disabled={!reorderQuantity || reorderMutation.isPending}
+              >
+                {reorderMutation.isPending ? "Restocking..." : "Confirm Restock"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
