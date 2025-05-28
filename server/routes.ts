@@ -1081,6 +1081,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/consultation-forms", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertConsultationFormSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const form = await storage.createConsultationForm(validatedData);
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logSystemAction("Consultation Form Created", {
+        formId: form.id,
+        formName: form.name,
+        specialistRole: form.specialistRole
+      });
+      
+      res.status(201).json(form);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid form data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create consultation form" });
+    }
+  });
+
   app.patch("/api/consultation-forms/:id", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
