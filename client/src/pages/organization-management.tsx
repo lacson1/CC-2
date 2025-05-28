@@ -122,10 +122,15 @@ export default function OrganizationManagement() {
   });
 
   const onSubmit = (data: OrganizationFormData) => {
-    if (editingOrg) {
-      updateMutation.mutate({ id: editingOrg.id, data });
-    } else {
-      createMutation.mutate(data);
+    try {
+      if (editingOrg) {
+        updateMutation.mutate({ id: editingOrg.id, data });
+      } else {
+        createMutation.mutate(data);
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast({ title: "Error", description: "Failed to submit form", variant: "destructive" });
     }
   };
 
