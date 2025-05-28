@@ -90,8 +90,10 @@ export default function OrganizationManagement() {
       form.reset();
       queryClient.invalidateQueries({ queryKey: ["/api/organizations"] });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to create organization", variant: "destructive" });
+    onError: (error: any) => {
+      console.error("Organization creation error:", error);
+      const errorMessage = error?.message || "Failed to create organization";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     }
   });
 
