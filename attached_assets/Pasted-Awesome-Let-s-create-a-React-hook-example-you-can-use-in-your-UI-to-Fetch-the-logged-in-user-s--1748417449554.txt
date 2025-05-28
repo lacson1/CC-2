@@ -1,0 +1,120 @@
+Awesome! Let’s create a React hook example you can use in your UI to:
+
+✅ Fetch the logged-in user’s permissions
+✅ Store them in context or local state
+✅ Check if the user has a specific permission before showing UI elements
+
+Here’s how it works:
+
+⸻
+
+🌟 1️⃣ Hook: usePermissions.ts
+
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+
+export const usePermissions = () => {
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch user permissions from your backend API
+    const fetchPermissions = async () => {
+      try {
+        const res = await axios.get('/api/auth/permissions');
+        setPermissions(res.data || []);
+      } catch (error) {
+        console.error('Error fetching permissions:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPermissions();
+  }, []);
+
+  // Helper: check if user has a specific permission
+  const hasPermission = (permission: string) => {
+    return permissions.includes(permission);
+  };
+
+  return { permissions, hasPermission, loading };
+};
+
+
+⸻
+
+🌟 2️⃣ Example Backend API Endpoint (/api/auth/permissions)
+
+This should be in your Express backend:
+
+app.get('/api/auth/permissions', async (req, res) => {
+  const { roleId } = req.user; // JWT middleware puts this here
+
+  // Get permissions for this role
+  const rolePerms = await db
+    .select({ name: permissions.name })
+    .from(rolePermissions)
+    .leftJoin(permissions, rolePermissions.permissionId.eq(permissions.id))
+    .where(rolePermissions.roleId.eq(roleId));
+
+  const permNames = rolePerms.map(p => p.name);
+
+  res.json(permNames);
+});
+
+✅ This ensures the frontend only sees permissions for the logged-in user’s role!
+
+⸻
+
+🌟 3️⃣ Example Usage in a React Component
+
+Here’s how you can conditionally show UI based on permissions:
+
+import { usePermissions } from './hooks/usePermissions';
+
+const Dashboard = () => {
+  const { hasPermission, loading } = usePermissions();
+
+  if (loading) return <p>Loading...</p>;
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+
+      {hasPermission('viewPatients') && (
+        <button className="bg-green-500 text-white px-4 py-2 rounded">
+          View Patients
+        </button>
+      )}
+
+      {hasPermission('createLabOrder') && (
+        <button className="bg-blue-500 text-white px-4 py-2 rounded ml-2">
+          Create Lab Order
+        </button>
+      )}
+
+      {!hasPermission('viewPatients') && (
+        <p className="text-red-500">You do not have access to view patients.</p>
+      )}
+    </div>
+  );
+};
+
+
+⸻
+
+🌟 Benefits of This Approach
+
+✅ Reusable across the entire app (usePermissions() anywhere!)
+✅ Centralized logic for permission checking
+✅ Dynamic UI adapts to the user’s role instantly!
+
+⸻
+
+Would you like me to:
+
+🔹 Bundle this hook & example into a zip file for easy import?
+🔹 Or show how to integrate it into an existing Replit project?
+
+Let me know—I’m here to make sure this is smooth and easy to use! 🚀✨
