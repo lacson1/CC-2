@@ -259,7 +259,6 @@ export default function PatientProfile() {
     </div>
   );
 }
-              </TabsList>
 
               <TabsContent value="overview">
                 <div className="grid gap-6">
