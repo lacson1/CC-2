@@ -201,11 +201,11 @@ export default function VisitRecordingModal({
       treatment: data.treatment,
       visitType: data.visitType || "consultation",
       visitDate: new Date().toISOString().split('T')[0],
-      bloodPressure: data.bloodPressure?.trim() || null,
-      heartRate: data.heartRate?.trim() || null,
-      temperature: data.temperature?.trim() || null,
-      weight: data.weight?.trim() || null,
-      followUpDate: data.followUpDate?.trim() || null,
+      bloodPressure: typeof data.bloodPressure === 'string' ? data.bloodPressure.trim() || null : data.bloodPressure || null,
+      heartRate: data.heartRate || null,
+      temperature: data.temperature || null,
+      weight: data.weight || null,
+      followUpDate: typeof data.followUpDate === 'string' ? data.followUpDate.trim() || null : data.followUpDate || null,
       status: "completed"
     };
 
