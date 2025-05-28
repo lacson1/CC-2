@@ -237,39 +237,38 @@ export function ModernPatientOverview({
         </Card>
       </div>
 
-      {/* Middle Panel - Timeline & Main Content */}
-      <div className="lg:col-span-2">
-        <PatientTimeline events={timelineEvents} />
-      </div>
+              {/* Middle Panel - Timeline & Main Content */}
+              <div className="lg:col-span-2">
+                <PatientTimeline events={timelineEvents} />
+              </div>
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* Vital Signs Tab */}
-        <TabsContent value="vitals" className="space-y-6">
-          <PatientVitalSignsTracker patientId={patient.id} />
-        </TabsContent>
+          {/* Vital Signs Tab */}
+          <TabsContent value="vitals" className="space-y-6">
+            <PatientVitalSignsTracker patientId={patient.id} />
+          </TabsContent>
 
-        {/* Appointments Tab */}
-        <TabsContent value="appointments" className="space-y-6">
-          <SmartAppointmentScheduler patientId={patient.id} />
-        </TabsContent>
+          {/* Appointments Tab */}
+          <TabsContent value="appointments" className="space-y-6">
+            <SmartAppointmentScheduler patientId={patient.id} />
+          </TabsContent>
 
-        {/* Communication Tab */}
-        <TabsContent value="communication" className="space-y-6">
-          <PatientCommunicationHub
-            patientId={patient.id}
-            patientName={`${patient.firstName} ${patient.lastName}`}
-            patientPhone={patient.phone}
-            patientEmail={patient.email}
-          />
-        </TabsContent>
+          {/* Communication Tab */}
+          <TabsContent value="communication" className="space-y-6">
+            <PatientCommunicationHub
+              patientId={patient.id}
+              patientName={`${patient.firstName} ${patient.lastName}`}
+              patientPhone={patient.phone}
+              patientEmail={patient.email}
+            />
+          </TabsContent>
 
-        {/* Timeline Tab */}
-        <TabsContent value="timeline" className="space-y-6">
-          <PatientTimeline events={timelineEvents} />
-        </TabsContent>
-      </Tabs>
+          {/* Timeline Tab */}
+          <TabsContent value="timeline" className="space-y-6">
+            <PatientTimeline events={timelineEvents} />
+          </TabsContent>
+        </Tabs>
     </div>
   );
 }
