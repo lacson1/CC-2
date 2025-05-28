@@ -27,7 +27,7 @@ interface ConsultationForm {
   name: string;
   description: string;
   specialistRole: string;
-  formSchema: {
+  formStructure: {
     fields: FormField[];
   };
   isActive: boolean;
@@ -148,7 +148,7 @@ export default function FormBuilder() {
       name: formName,
       description: formDescription,
       specialistRole,
-      formSchema: { fields },
+      formStructure: { fields },
       isActive: true
     };
 
@@ -160,7 +160,7 @@ export default function FormBuilder() {
     setFormName(form.name);
     setFormDescription(form.description);
     setSpecialistRole(form.specialistRole);
-    setFields(form.formSchema.fields);
+    setFields(form.formStructure.fields);
   };
 
   const resetForm = () => {
@@ -511,7 +511,7 @@ export default function FormBuilder() {
                         <p className="text-sm text-gray-600">{form.description}</p>
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>{form.specialistRole}</span>
-                          <span>{form.formSchema.fields.length} fields</span>
+                          <span>{form.formStructure.fields.length} fields</span>
                         </div>
                         <Button
                           variant="outline"
