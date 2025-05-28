@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +18,7 @@ const visitFormSchema = z.object({
   height: z.string().optional(),
   followUpDate: z.string().optional(),
 });
+
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -45,7 +47,7 @@ import {
 } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VisitRecordingModalProps {
@@ -66,25 +68,40 @@ export default function VisitRecordingModal({
 
   const { data: patients } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
-    enabled: !patientId, // Only fetch if patientId is not provided
+    enabled: !patientId && open, // Only fetch if patientId is not provided and modal is open
   });
 
-  // Auto-save functionality - load from localStorage
-  const getDraftKey = () => `visitDraft_${selectedPatientId || patientId || 'new'}`;
+  // Memoize the draft key to prevent unnecessary recalculations
+  const draftKey = useMemo(() => `visitDraft_${selectedPatientId || patientId || 'new'}`, [selectedPatientId, patientId]);
   
   const loadDraft = () => {
-    const saved = localStorage.getItem(getDraftKey());
-    return saved ? JSON.parse(saved) : {
-      bloodPressure: "",
-      heartRate: undefined,
-      temperature: undefined,
-      weight: undefined,
-      complaint: "",
-      diagnosis: "",
-      treatment: "",
-      followUpDate: "",
-      visitType: "consultation",
-    };
+    try {
+      const saved = localStorage.getItem(draftKey);
+      return saved ? JSON.parse(saved) : {
+        bloodPressure: "",
+        heartRate: undefined,
+        temperature: undefined,
+        weight: undefined,
+        complaint: "",
+        diagnosis: "",
+        treatment: "",
+        followUpDate: "",
+        visitType: "consultation",
+      };
+    } catch (error) {
+      console.warn('Failed to load draft:', error);
+      return {
+        bloodPressure: "",
+        heartRate: undefined,
+        temperature: undefined,
+        weight: undefined,
+        complaint: "",
+        diagnosis: "",
+        treatment: "",
+        followUpDate: "",
+        visitType: "consultation",
+      };
+    }
   };
 
   const form = useForm<Omit<InsertVisit, "patientId">>({
@@ -92,16 +109,42 @@ export default function VisitRecordingModal({
     defaultValues: loadDraft(),
   });
 
-  // Auto-save form data on every change
+  // Debounced auto-save functionality
   const watchedValues = form.watch();
   
   useEffect(() => {
-    localStorage.setItem(getDraftKey(), JSON.stringify(watchedValues));
-  }, [watchedValues, selectedPatientId, patientId]);
+    if (!open) return; // Don't save when modal is closed
+    
+    const timeoutId = setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(watchedValues));
+      } catch (error) {
+        console.warn('Failed to save draft:', error);
+      }
+    }, 1000); // Debounce by 1 second
+
+    return () => clearTimeout(timeoutId);
+  }, [watchedValues, draftKey, open]);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      setSelectedPatientId(patientId);
+      const draft = loadDraft();
+      form.reset(draft);
+    } else {
+      // Clear form state when modal closes
+      setSelectedPatientId(undefined);
+      setPatientSearchOpen(false);
+    }
+  }, [open, patientId, form, draftKey]);
 
   const recordVisitMutation = useMutation({
     mutationFn: async (data: InsertVisit) => {
-      const response = await apiRequest("POST", `/api/patients/${data.patientId}/visits`, { ...data, status: "final" });
+      const response = await apiRequest("POST", `/api/patients/${data.patientId}/visits`, { 
+        ...data, 
+        status: "final" 
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -110,17 +153,25 @@ export default function VisitRecordingModal({
       if (selectedPatientId) {
         queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "visits"] });
       }
+      
       // Clear the draft after successful submission
-      localStorage.removeItem(getDraftKey());
+      try {
+        localStorage.removeItem(draftKey);
+      } catch (error) {
+        console.warn('Failed to remove draft:', error);
+      }
+      
       toast({
         title: "Success",
         description: "Visit recorded successfully!",
       });
+      
       form.reset();
       setSelectedPatientId(undefined);
       onOpenChange(false);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Visit recording error:', error);
       toast({
         title: "Error",
         description: "Failed to record visit. Please try again.",
@@ -128,14 +179,6 @@ export default function VisitRecordingModal({
       });
     },
   });
-
-  // Check if there's a draft with content
-  const hasDraftContent = () => {
-    const draft = localStorage.getItem(getDraftKey());
-    if (!draft) return false;
-    const data = JSON.parse(draft);
-    return Object.values(data).some(value => value && value !== "");
-  };
 
   const onSubmit = (data: Omit<InsertVisit, "patientId">) => {
     if (!selectedPatientId) {
@@ -147,13 +190,40 @@ export default function VisitRecordingModal({
       return;
     }
 
-    recordVisitMutation.mutate({
+    // Clean up empty strings to avoid validation issues
+    const cleanedData = {
       ...data,
+      bloodPressure: data.bloodPressure?.trim() || undefined,
+      temperature: data.temperature?.toString()?.trim() || undefined,
+      weight: data.weight?.toString()?.trim() || undefined,
+      followUpDate: data.followUpDate?.trim() || undefined,
+    };
+
+    recordVisitMutation.mutate({
+      ...cleanedData,
       patientId: selectedPatientId,
     });
   };
 
   const selectedPatient = patients?.find(p => p.id === selectedPatientId);
+
+  // Manual save draft function
+  const saveDraft = () => {
+    try {
+      localStorage.setItem(draftKey, JSON.stringify(watchedValues));
+      toast({
+        title: "Draft Saved",
+        description: "Your visit data has been saved as a draft.",
+      });
+    } catch (error) {
+      console.warn('Failed to save draft:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save draft.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -178,6 +248,7 @@ export default function VisitRecordingModal({
                       role="combobox"
                       aria-expanded={patientSearchOpen}
                       className="w-full justify-between"
+                      type="button"
                     >
                       {selectedPatient
                         ? `${selectedPatient.firstName} ${selectedPatient.lastName}`
@@ -373,7 +444,7 @@ export default function VisitRecordingModal({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Visit Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue />
@@ -393,20 +464,32 @@ export default function VisitRecordingModal({
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-between">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={saveDraft}
+                className="flex items-center gap-2"
               >
-                Cancel
+                <Save className="h-4 w-4" />
+                Save Draft
               </Button>
-              <Button
-                type="submit"
-                disabled={recordVisitMutation.isPending}
-              >
-                {recordVisitMutation.isPending ? "Recording..." : "Record Visit"}
-              </Button>
+              
+              <div className="flex space-x-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={recordVisitMutation.isPending}
+                >
+                  {recordVisitMutation.isPending ? "Recording..." : "Record Visit"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>
