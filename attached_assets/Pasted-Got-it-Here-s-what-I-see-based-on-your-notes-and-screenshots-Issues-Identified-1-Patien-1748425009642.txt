@@ -1,0 +1,105 @@
+Got it! Here’s what I see based on your notes and screenshots:
+
+⸻
+
+🚨 Issues Identified:
+
+1️⃣ Patient Info Edit:
+	•	You can edit patient data (like phone, email, address), but changes are not showing on the main Patient page after saving.
+	•	Likely because:
+	•	The frontend state is not refreshing after the update.
+	•	Or the API response isn’t updating the UI correctly.
+
+⸻
+
+2️⃣ Vital Signs:
+	•	When you record vital signs via the “Record Vitals” button, they are not showing in the “Vital Signs Monitor”.
+	•	Possible causes:
+	•	The API is not returning the new data.
+	•	The vitals monitor component is not re-fetching data after the update.
+	•	Or data is being saved in the DB, but not linked correctly to the patient’s profile.
+
+⸻
+
+🌟 How to Fix Both Issues
+
+✅ 1️⃣ Refresh the Patient Data After Edit
+
+In your Edit Info form submit handler:
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // API call to save changes
+  await axios.patch(`/api/patients/${patientId}`, updatedPatientData);
+
+  // After successful update: re-fetch patient data
+  const res = await axios.get(`/api/patients/${patientId}`);
+  setPatient(res.data);
+};
+
+✅ Alternative: Use React Query’s invalidateQueries to automatically refresh the patient data.
+
+⸻
+
+✅ 2️⃣ Ensure Vital Signs Are Saved and Fetched Correctly
+
+🔹 Backend:
+	•	Make sure the Record Vitals API endpoint is saving data with the correct patient ID.
+
+app.post('/api/patients/:id/vitals', async (req, res) => {
+  const { id } = req.params;
+  const { bloodPressure, heartRate, temperature, oxygenSaturation } = req.body;
+
+  await db.insert(vitalSigns).values({
+    patientId: parseInt(id),
+    bloodPressure,
+    heartRate,
+    temperature,
+    oxygenSaturation,
+    recordedAt: new Date()
+  });
+
+  res.status(201).json({ message: 'Vitals recorded' });
+});
+
+🔹 Frontend:
+	•	In the Vital Signs Monitor component, make sure to re-fetch the data after saving.
+	•	Example:
+
+const handleRecordVitals = async (newVitals) => {
+  await axios.post(`/api/patients/${patientId}/vitals`, newVitals);
+
+  // Refresh vital signs
+  const res = await axios.get(`/api/patients/${patientId}/vitals`);
+  setVitals(res.data);
+};
+
+✅ Use useEffect to load fresh data when patient ID changes:
+
+useEffect(() => {
+  const fetchVitals = async () => {
+    const res = await axios.get(`/api/patients/${patientId}/vitals`);
+    setVitals(res.data);
+  };
+
+  fetchVitals();
+}, [patientId]);
+
+
+⸻
+
+🌟 Bonus: Add Visual Feedback
+
+✅ Show a spinner or loading indicator while data is re-fetching.
+✅ Show a toast notification (“Changes saved!”) after editing info or recording vitals.
+
+⸻
+
+Would you like me to:
+
+🔹 Create a React snippet for re-fetching patient data after editing?
+🔹 Or create an example backend endpoint to return the updated vitals?
+🔹 Or show how to integrate this with React Query for even smoother UX?
+
+Let me know—I’ll tailor the fix to your stack! 🚀✨
