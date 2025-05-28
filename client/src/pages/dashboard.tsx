@@ -219,7 +219,7 @@ export default function Dashboard() {
                     {statsLoading ? "..." : stats?.pendingLabs || 0}
                   </p>
                   <p className="text-xs md:text-sm text-slate-500 mt-1 hidden md:block">
-                    <Clock className="inline w-3 h-3" /> Awaiting results
+                    <Clock className="inline w-3 h-3 mr-1" /> Awaiting results
                   </p>
                 </div>
                 <div className="w-8 h-8 md:w-12 md:h-12 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
