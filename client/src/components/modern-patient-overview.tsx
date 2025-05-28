@@ -1,8 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PatientTimeline } from './patient-timeline';
 import { PatientAlertsPanel } from './patient-alerts-panel';
+import PatientVitalSignsTracker from './patient-vital-signs-tracker';
+import SmartAppointmentScheduler from './smart-appointment-scheduler';
+import PatientCommunicationHub from './patient-communication-hub';
 import { 
   User, 
   Calendar, 
@@ -12,7 +16,10 @@ import {
   Heart,
   Activity,
   Pill,
-  FlaskRound
+  FlaskRound,
+  MessageSquare,
+  CalendarDays,
+  Monitor
 } from 'lucide-react';
 
 interface Patient {
@@ -86,9 +93,58 @@ export function ModernPatientOverview({
   }));
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Panel - Patient Info & Alerts */}
-      <div className="space-y-6">
+    <div className="space-y-6">
+      {/* Patient Quick Info Header */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center space-x-4">
+            <Avatar className="w-12 h-12">
+              <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+                {getPatientInitials(patient.firstName, patient.lastName)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">
+                {patient.firstName} {patient.lastName}
+              </h2>
+              <p className="text-sm text-gray-500">
+                ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Tabbed Interface */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <User className="w-4 h-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="vitals" className="flex items-center gap-2">
+            <Monitor className="w-4 h-4" />
+            Vital Signs
+          </TabsTrigger>
+          <TabsTrigger value="appointments" className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" />
+            Appointments
+          </TabsTrigger>
+          <TabsTrigger value="communication" className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Communication
+          </TabsTrigger>
+          <TabsTrigger value="timeline" className="flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            Timeline
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab - Original Layout */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Panel - Patient Info & Alerts */}
+            <div className="space-y-6">
         {/* Patient Card */}
         <Card>
           <CardContent className="p-6">
@@ -185,6 +241,35 @@ export function ModernPatientOverview({
       <div className="lg:col-span-2">
         <PatientTimeline events={timelineEvents} />
       </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Vital Signs Tab */}
+        <TabsContent value="vitals" className="space-y-6">
+          <PatientVitalSignsTracker patientId={patient.id} />
+        </TabsContent>
+
+        {/* Appointments Tab */}
+        <TabsContent value="appointments" className="space-y-6">
+          <SmartAppointmentScheduler patientId={patient.id} />
+        </TabsContent>
+
+        {/* Communication Tab */}
+        <TabsContent value="communication" className="space-y-6">
+          <PatientCommunicationHub
+            patientId={patient.id}
+            patientName={`${patient.firstName} ${patient.lastName}`}
+            patientPhone={patient.phone}
+            patientEmail={patient.email}
+          />
+        </TabsContent>
+
+        {/* Timeline Tab */}
+        <TabsContent value="timeline" className="space-y-6">
+          <PatientTimeline events={timelineEvents} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
