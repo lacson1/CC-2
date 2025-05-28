@@ -67,10 +67,17 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
     },
     onSuccess: () => {
       toast({
-        title: "Result Updated",
+        title: "Result Saved! ✅",
         description: "Lab test result has been saved successfully."
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/lab-orders'] });
+      // Clear the form values for this item
+      setResultValues(prev => {
+        const newValues = { ...prev };
+        delete newValues[selectedOrder!];
+        return newValues;
+      });
+      // Refresh the data to show updated results
+      queryClient.invalidateQueries({ queryKey: [`/api/lab-orders/${selectedOrder}/items`] });
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders/pending'] });
     },
     onError: () => {

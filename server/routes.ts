@@ -1020,6 +1020,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch('/api/lab-order-items/:id', authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      const { result, remarks } = req.body;
+
+      if (!result || !result.trim()) {
+        return res.status(400).json({ message: "Result is required" });
+      }
+
+      const [updatedItem] = await db.update(labOrderItems)
+        .set({
+          result: result.trim(),
+          remarks: remarks?.trim() || null,
+          status: 'completed',
+          completedBy: req.user!.id,
+          completedAt: new Date()
+        })
+        .where(eq(labOrderItems.id, itemId))
+        .returning();
+
+      if (!updatedItem) {
+        return res.status(404).json({ message: "Lab order item not found" });
+      }
+
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logLabResultAction("Lab Result Added", itemId, {
+        result: result.trim(),
+        remarks: remarks?.trim(),
+        status: 'completed'
+      });
+
+      res.json(updatedItem);
+    } catch (error) {
+      console.error('Error updating lab order item:', error);
+      res.status(500).json({ message: "Failed to update lab order item" });
+    }
+  });
+
   app.get("/api/users/:username", authenticateToken, requireAnyRole(['admin', 'doctor']), async (req, res) => {
     try {
       const username = req.params.username;
