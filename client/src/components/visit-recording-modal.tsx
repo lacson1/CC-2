@@ -246,7 +246,14 @@ export default function VisitRecordingModal({
                     <FormItem>
                       <FormLabel>Temperature (°C)</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="36.5" />
+                        <Input
+                          type="number"
+                          step="0.1"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          placeholder="36.5"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -260,7 +267,14 @@ export default function VisitRecordingModal({
                     <FormItem>
                       <FormLabel>Weight (kg)</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="70.5" />
+                        <Input
+                          type="number"
+                          step="0.1"
+                          {...field}
+                          value={field.value || ""}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          placeholder="70.5"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
