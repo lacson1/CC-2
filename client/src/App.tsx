@@ -37,7 +37,7 @@ function AuthenticatedApp() {
 
   return (
     <div className="flex h-screen bg-slate-50">
-      <Sidebar />
+      <Sidebar onStartTour={startTour} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
         <main className="flex-1 overflow-hidden">
