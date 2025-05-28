@@ -15,6 +15,12 @@ interface SafetyAlert {
 
 interface PatientSafetyAlertsProps {
   patientId: number;
+  patient?: {
+    allergies?: string;
+    medicalHistory?: string;
+    firstName?: string;
+    lastName?: string;
+  };
   alerts?: SafetyAlert[];
   compact?: boolean;
 }
@@ -102,8 +108,62 @@ const getPriorityBadge = (priority: SafetyAlert['priority']) => {
   }
 };
 
-export function PatientSafetyAlerts({ patientId, alerts = sampleAlerts, compact = false }: PatientSafetyAlertsProps) {
-  if (!alerts || alerts.length === 0) {
+export function PatientSafetyAlerts({ patientId, patient, alerts, compact = false }: PatientSafetyAlertsProps) {
+  // Generate real alerts from patient data
+  const generateAlertsFromPatient = (): SafetyAlert[] => {
+    const generatedAlerts: SafetyAlert[] = [];
+    
+    // Process allergies
+    if (patient?.allergies && patient.allergies.trim() !== '') {
+      generatedAlerts.push({
+        id: `allergy-${patientId}`,
+        type: 'critical',
+        title: 'Allergy Alert',
+        description: `Patient is allergic to: ${patient.allergies}. Avoid prescribing these medications.`,
+        category: 'allergy',
+        priority: 'high',
+        dateAdded: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    // Process medical history for chronic conditions
+    if (patient?.medicalHistory) {
+      const conditions = ['diabetes', 'hypertension', 'cardiac', 'heart', 'epilepsy', 'asthma', 'kidney', 'liver'];
+      const patientHistory = patient.medicalHistory.toLowerCase();
+      
+      conditions.forEach(condition => {
+        if (patientHistory.includes(condition)) {
+          generatedAlerts.push({
+            id: `condition-${condition}-${patientId}`,
+            type: 'warning',
+            title: `${condition.charAt(0).toUpperCase() + condition.slice(1)} History`,
+            description: `Patient has a history of ${condition}. Monitor relevant parameters and adjust treatment accordingly.`,
+            category: 'condition',
+            priority: 'medium',
+            dateAdded: new Date().toISOString().split('T')[0]
+          });
+        }
+      });
+    }
+
+    // Add sample communication preference if no other alerts
+    if (generatedAlerts.length === 0) {
+      generatedAlerts.push({
+        id: `info-${patientId}`,
+        type: 'info',
+        title: 'No Critical Alerts',
+        description: 'No critical safety alerts on file. Always verify current medications and allergies before treatment.',
+        category: 'note',
+        priority: 'low',
+        dateAdded: new Date().toISOString().split('T')[0]
+      });
+    }
+
+    return generatedAlerts;
+  };
+
+  const displayAlerts = alerts || generateAlertsFromPatient();
+  if (!displayAlerts || displayAlerts.length === 0) {
     return compact ? null : (
       <div className="text-center py-4">
         <Shield className="mx-auto h-8 w-8 text-green-500 mb-2" />
@@ -115,15 +175,15 @@ export function PatientSafetyAlerts({ patientId, alerts = sampleAlerts, compact 
   if (compact) {
     return (
       <div className="flex flex-wrap gap-1">
-        {alerts.slice(0, 3).map((alert) => (
+        {displayAlerts.slice(0, 3).map((alert) => (
           <Badge key={alert.id} variant={getAlertVariant(alert.type)} className="text-xs">
             {getAlertIcon(alert.type)}
             <span className="ml-1">{alert.title}</span>
           </Badge>
         ))}
-        {alerts.length > 3 && (
+        {displayAlerts.length > 3 && (
           <Badge variant="outline" className="text-xs">
-            +{alerts.length - 3} more
+            +{displayAlerts.length - 3} more
           </Badge>
         )}
       </div>
@@ -135,12 +195,12 @@ export function PatientSafetyAlerts({ patientId, alerts = sampleAlerts, compact 
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900">Safety Alerts</h3>
         <Badge variant="outline" className="text-xs">
-          {alerts.length} Alert{alerts.length !== 1 ? 's' : ''}
+          {displayAlerts.length} Alert{displayAlerts.length !== 1 ? 's' : ''}
         </Badge>
       </div>
       
       <div className="space-y-2">
-        {alerts.map((alert) => (
+        {displayAlerts.map((alert) => (
           <Alert key={alert.id} className={`${getAlertColors(alert.type)} border-l-4`}>
             <div className="flex items-start justify-between">
               <div className="flex items-start space-x-2">
@@ -173,9 +233,55 @@ export function PatientSafetyAlerts({ patientId, alerts = sampleAlerts, compact 
   );
 }
 
-export function QuickSafetyIndicator({ alerts = sampleAlerts }: { alerts?: SafetyAlert[] }) {
-  const criticalAlerts = alerts.filter(alert => alert.type === 'critical');
-  const warningAlerts = alerts.filter(alert => alert.type === 'warning');
+export function QuickSafetyIndicator({ 
+  alerts, 
+  patient 
+}: { 
+  alerts?: SafetyAlert[];
+  patient?: {
+    allergies?: string;
+    medicalHistory?: string;
+  };
+}) {
+  // Generate alerts if not provided
+  const generateQuickAlerts = (): SafetyAlert[] => {
+    const quickAlerts: SafetyAlert[] = [];
+    
+    if (patient?.allergies && patient.allergies.trim() !== '') {
+      quickAlerts.push({
+        id: 'quick-allergy',
+        type: 'critical',
+        title: 'Allergy',
+        description: patient.allergies,
+        category: 'allergy',
+        priority: 'high'
+      });
+    }
+
+    if (patient?.medicalHistory) {
+      const criticalConditions = ['diabetes', 'hypertension', 'cardiac', 'heart', 'epilepsy'];
+      const hasCondition = criticalConditions.some(condition => 
+        patient.medicalHistory?.toLowerCase().includes(condition)
+      );
+      
+      if (hasCondition) {
+        quickAlerts.push({
+          id: 'quick-condition',
+          type: 'warning',
+          title: 'Chronic Condition',
+          description: 'Has chronic medical condition',
+          category: 'condition',
+          priority: 'medium'
+        });
+      }
+    }
+
+    return quickAlerts;
+  };
+
+  const displayAlerts = alerts || generateQuickAlerts();
+  const criticalAlerts = displayAlerts.filter(alert => alert.type === 'critical');
+  const warningAlerts = displayAlerts.filter(alert => alert.type === 'warning');
   
   if (criticalAlerts.length === 0 && warningAlerts.length === 0) {
     return (

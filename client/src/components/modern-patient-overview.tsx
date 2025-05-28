@@ -118,7 +118,7 @@ export function ModernPatientOverview({
                     ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
                   </p>
                 </div>
-                <QuickSafetyIndicator />
+                <QuickSafetyIndicator patient={patient} />
               </div>
             </div>
           </div>
@@ -168,7 +168,11 @@ export function ModernPatientOverview({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PatientSafetyAlerts patientId={patient.id} />
+              <PatientSafetyAlerts 
+                patientId={patient.id} 
+                patient={patient}
+                compact={false}
+              />
             </CardContent>
           </Card>
         </TabsContent>
