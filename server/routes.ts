@@ -954,7 +954,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Create audit log
       const auditLogger = new AuditLogger(req);
-      await auditLogger.logPatientAction(AuditActions.PATIENT_RECORD_UPDATED, recordData.patientId, {
+      await auditLogger.logPatientAction(AuditActions.PATIENT_UPDATED, recordData.patientId, {
         action: 'consultation_record_created',
         recordId: record.id,
         formId: recordData.formId
