@@ -2100,5 +2100,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Patient Portal Authentication
+  app.post('/api/patient-auth/login', async (req, res) => {
+    try {
+      const { patientId, phone, dateOfBirth } = req.body;
+      
+      // Find patient by ID and verify credentials
+      const [patient] = await db.select()
+        .from(patients)
+        .where(eq(patients.id, parseInt(patientId)));
+      
+      if (!patient) {
+        return res.status(401).json({ message: 'Invalid patient credentials' });
+      }
+      
+      // Verify phone and date of birth match
+      const phoneMatch = patient.phone === phone;
+      const dobMatch = patient.dateOfBirth === dateOfBirth;
+      
+      if (!phoneMatch || !dobMatch) {
+        return res.status(401).json({ message: 'Invalid patient credentials' });
+      }
+      
+      // Create patient session token (simplified for demo)
+      const patientToken = jwt.sign(
+        { patientId: patient.id, type: 'patient' },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: '24h' }
+      );
+      
+      res.json({
+        token: patientToken,
+        patient: {
+          id: patient.id,
+          firstName: patient.firstName,
+          lastName: patient.lastName,
+          phone: patient.phone,
+          email: patient.email,
+          dateOfBirth: patient.dateOfBirth,
+          gender: patient.gender,
+          address: patient.address
+        }
+      });
+    } catch (error) {
+      console.error('Patient authentication error:', error);
+      res.status(500).json({ message: 'Authentication failed' });
+    }
+  });
+
+  // Patient Portal - Get Patient Visits
+  app.get('/api/patient-portal/visits', async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+      if (decoded.type !== 'patient') {
+        return res.status(401).json({ message: 'Invalid token type' });
+      }
+      
+      const patientVisits = await db.select()
+        .from(visits)
+        .where(eq(visits.patientId, decoded.patientId))
+        .orderBy(desc(visits.visitDate));
+      
+      res.json(patientVisits);
+    } catch (error) {
+      console.error('Error fetching patient visits:', error);
+      res.status(500).json({ message: 'Failed to fetch visits' });
+    }
+  });
+
+  // Patient Portal - Get Patient Lab Results
+  app.get('/api/patient-portal/lab-results', async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+      if (decoded.type !== 'patient') {
+        return res.status(401).json({ message: 'Invalid token type' });
+      }
+      
+      const patientLabResults = await db.select({
+        id: labOrders.id,
+        orderDate: labOrders.orderDate,
+        status: labOrders.status,
+        notes: labOrders.notes
+      })
+      .from(labOrders)
+      .where(eq(labOrders.patientId, decoded.patientId))
+      .orderBy(desc(labOrders.orderDate));
+      
+      res.json(patientLabResults);
+    } catch (error) {
+      console.error('Error fetching patient lab results:', error);
+      res.status(500).json({ message: 'Failed to fetch lab results' });
+    }
+  });
+
   return httpServer;
 }

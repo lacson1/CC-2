@@ -22,6 +22,7 @@ import FormBuilder from "@/pages/form-builder";
 import ClinicalPerformance from "@/pages/clinical-performance";
 import OrganizationManagement from "@/pages/organization-management";
 import { MedicalToolsPage } from "@/pages/medical-tools";
+import PatientPortal from "@/pages/patient-portal";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -81,19 +82,29 @@ function AuthenticatedApp() {
 function Router() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
-      </div>
-    );
-  }
+  // Patient Portal Route - Independent of staff authentication
+  return (
+    <Switch>
+      <Route path="/patient-portal" component={PatientPortal} />
+      <Route>
+        {() => {
+          if (isLoading) {
+            return (
+              <div className="min-h-screen flex items-center justify-center">
+                <div className="text-lg">Loading...</div>
+              </div>
+            );
+          }
 
-  if (!user) {
-    return <Login />;
-  }
+          if (!user) {
+            return <Login />;
+          }
 
-  return <AuthenticatedApp />;
+          return <AuthenticatedApp />;
+        }}
+      </Route>
+    </Switch>
+  );
 }
 
 function App() {
