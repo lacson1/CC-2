@@ -223,15 +223,39 @@ export default function PatientProfile() {
           onRecordVisit={() => setShowVisitModal(true)}
           onAddLabResult={() => setShowLabModal(true)}
           onAddPrescription={() => setShowPrescriptionModal(true)}
-          onCreateConsultation={() => setShowConsultationModal(true)}
+          onCreateConsultation={() => setShowVisitModal(true)}
           userRole={user?.role || 'guest'}
+        />
       </main>
 
-      {/* Modals and overlays */}
-      <div>
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+      {/* Modals */}
+      <VisitRecordingModal
+        open={showVisitModal}
+        onOpenChange={setShowVisitModal}
+        patientId={patientId}
+      />
+      <LabResultModal
+        open={showLabModal}
+        onOpenChange={setShowLabModal}
+        patientId={patientId}
+      />
+      <PrescriptionModal
+        open={showPrescriptionModal}
+        onOpenChange={setShowPrescriptionModal}
+        patientId={patientId}
+      />
+
+      {/* Hidden Printable Patient Summary */}
+      <div className="hidden">
+        <PatientSummaryPrintable
+          patient={patient}
+          visits={visits || []}
+          organization={currentOrganization}
+        />
+      </div>
+    </>
+  );
+}
                 <TabsTrigger value="medical-records">Medical Records</TabsTrigger>
                 <TabsTrigger value="visits">Visits</TabsTrigger>
                 <TabsTrigger value="lab-orders">Lab Orders</TabsTrigger>

@@ -8,7 +8,7 @@ import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/top-bar";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
-import PatientProfile from "@/pages/patient-profile";
+import PatientProfile from "@/pages/patient-profile-clean";
 import Visits from "@/pages/visits";
 import LabResults from "@/pages/lab-results";
 import Pharmacy from "@/pages/pharmacy";
