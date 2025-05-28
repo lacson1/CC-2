@@ -354,10 +354,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/patients/:id/visits", authenticateToken, requireRole('doctor'), async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
+      console.log('Creating visit for patient:', patientId);
+      console.log('Visit data received:', req.body);
+      
       const visitData = insertVisitSchema.parse({ ...req.body, patientId });
+      console.log('Parsed visit data:', visitData);
+      
       const visit = await storage.createVisit(visitData);
       res.json(visit);
     } catch (error) {
+      console.error('Visit creation error:', error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid visit data", errors: error.errors });
       } else {
