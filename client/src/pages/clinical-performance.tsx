@@ -77,58 +77,32 @@ export default function ClinicalPerformance() {
   const [timeRange, setTimeRange] = useState("30");
   const [selectedMetric, setSelectedMetric] = useState("visits");
   
-  // Fetch clinical performance data
+  // Fetch live clinical data from API endpoints
   const { data: clinicalMetrics, isLoading: metricsLoading } = useQuery<ClinicalMetrics>({
-    queryKey: ["/api/clinical/metrics", timeRange],
+    queryKey: ["/api/clinical/metrics", { timeRange }],
   });
 
   const { data: performanceData, isLoading: performanceLoading } = useQuery<PerformanceData[]>({
-    queryKey: ["/api/clinical/performance", timeRange],
+    queryKey: ["/api/clinical/performance", { timeRange }],
   });
 
-  const { data: diagnosisData, isLoading: diagnosisLoading } = useQuery<DiagnosisMetrics[]>({
-    queryKey: ["/api/clinical/diagnosis-metrics", timeRange],
+  const { data: diagnosisMetrics, isLoading: diagnosisLoading } = useQuery<DiagnosisMetrics[]>({
+    queryKey: ["/api/clinical/diagnosis-metrics", { timeRange }],
   });
 
   const { data: staffPerformance, isLoading: staffLoading } = useQuery<StaffPerformance[]>({
-    queryKey: ["/api/clinical/staff-performance", timeRange],
+    queryKey: ["/api/clinical/staff-performance", { timeRange }],
   });
 
-  // Default data for development
-  const defaultMetrics: ClinicalMetrics = {
-    totalVisits: 156,
-    avgVisitDuration: 18,
-    patientSatisfaction: 4.6,
-    treatmentSuccess: 89,
-    followUpCompliance: 76,
-    diagnosisAccuracy: 94
+  // Use live data with proper loading states and error handling
+  const metrics = clinicalMetrics || {
+    totalVisits: 0,
+    avgVisitDuration: 0,
+    patientSatisfaction: 0,
+    treatmentSuccess: 0,
+    followUpCompliance: 0,
+    diagnosisAccuracy: 0
   };
-
-  const defaultPerformanceData: PerformanceData[] = [
-    { period: "Week 1", visits: 38, successRate: 92, avgDuration: 16, satisfaction: 4.7 },
-    { period: "Week 2", visits: 42, successRate: 89, avgDuration: 19, satisfaction: 4.5 },
-    { period: "Week 3", visits: 35, successRate: 91, avgDuration: 17, satisfaction: 4.6 },
-    { period: "Week 4", visits: 41, successRate: 87, avgDuration: 20, satisfaction: 4.4 },
-  ];
-
-  const defaultDiagnosisData: DiagnosisMetrics[] = [
-    { condition: "Hypertension", count: 28, successRate: 94, avgTreatmentDays: 30, color: "#8884d8" },
-    { condition: "Diabetes T2", count: 22, successRate: 89, avgTreatmentDays: 45, color: "#82ca9d" },
-    { condition: "Upper Respiratory", count: 35, successRate: 96, avgTreatmentDays: 7, color: "#ffc658" },
-    { condition: "Malaria", count: 19, successRate: 98, avgTreatmentDays: 5, color: "#ff7300" },
-    { condition: "Gastroenteritis", count: 15, successRate: 92, avgTreatmentDays: 3, color: "#00ff00" },
-  ];
-
-  const defaultStaffData: StaffPerformance[] = [
-    { staffId: 1, name: "Dr. Ade", role: "Doctor", visits: 48, satisfaction: 4.8, efficiency: 92, specialization: "General Medicine" },
-    { staffId: 2, name: "Dr. Rob", role: "Doctor", visits: 45, satisfaction: 4.6, efficiency: 88, specialization: "Internal Medicine" },
-    { staffId: 3, name: "Nurse Syb", role: "Nurse", visits: 63, satisfaction: 4.7, efficiency: 95, specialization: "Patient Care" },
-  ];
-
-  const metrics = clinicalMetrics || defaultMetrics;
-  const performance = performanceData || defaultPerformanceData;
-  const diagnosis = diagnosisData || defaultDiagnosisData;
-  const staff = staffPerformance || defaultStaffData;
 
   const getPerformanceColor = (value: number, threshold: number) => {
     if (value >= threshold) return "text-green-600";
@@ -355,25 +329,35 @@ export default function ClinicalPerformance() {
                 <CardDescription>Distribution of diagnoses in your clinic</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={diagnosis}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ condition, count }) => `${condition}: ${count}`}
-                      outerRadius={100}
-                      fill="#8884d8"
-                      dataKey="count"
-                    >
-                      {diagnosis.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                {diagnosisLoading ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : diagnosisMetrics && diagnosisMetrics.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={diagnosisMetrics}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ condition, count }) => `${condition}: ${count}`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="count"
+                      >
+                        {diagnosisMetrics.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-slate-500">
+                    No diagnosis data available
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -386,15 +370,25 @@ export default function ClinicalPerformance() {
                 <CardDescription>Success rates and treatment duration</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={diagnosis}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="condition" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="successRate" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
+                {diagnosisLoading ? (
+                  <div className="flex items-center justify-center h-[300px]">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  </div>
+                ) : diagnosisMetrics && diagnosisMetrics.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={diagnosisMetrics}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="condition" angle={-45} textAnchor="end" height={100} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="successRate" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex items-center justify-center h-[300px] text-slate-500">
+                    No treatment success data available
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -417,7 +411,7 @@ export default function ClinicalPerformance() {
                     </tr>
                   </thead>
                   <tbody>
-                    {diagnosis.map((item, index) => (
+                    {diagnosisMetrics && diagnosisMetrics.length > 0 ? diagnosisMetrics.map((item, index) => (
                       <tr key={index} className="border-b hover:bg-slate-50">
                         <td className="p-2 font-medium">{item.condition}</td>
                         <td className="p-2">{item.count}</td>
@@ -427,7 +421,13 @@ export default function ClinicalPerformance() {
                         <td className="p-2">{item.avgTreatmentDays} days</td>
                         <td className="p-2">{getPerformanceBadge(item.successRate, 85)}</td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan={5} className="p-4 text-center text-slate-500">
+                          No diagnosis data available
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -446,7 +446,13 @@ export default function ClinicalPerformance() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {staff.map((member) => (
+                {staffLoading ? (
+                  [...Array(3)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-32 bg-slate-200 rounded-lg"></div>
+                    </div>
+                  ))
+                ) : staffPerformance && staffPerformance.length > 0 ? staffPerformance.map((member) => (
                   <Card key={member.staffId} className="border-slate-200">
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-3">
