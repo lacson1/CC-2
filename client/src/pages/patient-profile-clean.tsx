@@ -210,23 +210,7 @@ export default function PatientProfile() {
           activePrescriptions={prescriptions || []}
         />
         
-        {/* Vital Signs Tracker Widget */}
-        {patient && (
-          <PatientVitalSignsTracker patientId={patient.id} />
-        )}
-        
-        {/* Smart Appointment Scheduler Widget */}
-        {patient && (
-          <SmartAppointmentScheduler patientId={patient.id} />
-        )}
-        
-        {/* Patient Communication Hub Widget - Temporarily disabled due to error */}
-        {/* {patient && (
-          <PatientCommunicationHub 
-            patientId={patient.id} 
-            patientName={`${patient.firstName} ${patient.lastName}`}
-          />
-        )} */}
+
         
         {/* Floating Action Menu */}
         <FloatingActionMenu
