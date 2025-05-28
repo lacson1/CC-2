@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { 
   Search, UserPlus, Users, Phone, Calendar, MapPin, 
   Stethoscope, FlaskRound, Pill, UserCheck, Activity,
-  Heart, Clock, FileText
+  Heart, Clock, FileText, Grid3X3, List, LayoutGrid
 } from "lucide-react";
 import PatientRegistrationModal from "@/components/patient-registration-modal";
 import { useRole } from "@/components/role-guard";
@@ -18,6 +18,7 @@ import type { Patient } from "@shared/schema";
 export default function Patients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showPatientModal, setShowPatientModal] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const { user } = useRole();
 
   const { data: patients = [], isLoading } = useQuery({
@@ -26,7 +27,7 @@ export default function Patients() {
 
   const filteredPatients = patients.filter((patient: Patient) => {
     const matchesSearch = `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      patient.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase());
+      patient.phone?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -72,6 +73,26 @@ export default function Patients() {
               <Button variant="outline" size="sm">All Patients</Button>
               <Button variant="outline" size="sm">Active</Button>
               <Button variant="outline" size="sm">Recent Visits</Button>
+              
+              {/* View Toggle */}
+              <div className="flex border rounded-md">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("grid")}
+                  className="rounded-r-none"
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setViewMode("list")}
+                  className="rounded-l-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -136,22 +157,24 @@ export default function Patients() {
         </Card>
       </div>
 
-      {/* Patient List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {isLoading ? (
-          <div className="col-span-full text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="text-slate-500 mt-2">Loading patients...</p>
-          </div>
-        ) : filteredPatients.length === 0 ? (
-          <div className="col-span-full text-center py-12">
-            <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">
-              {searchQuery ? "No patients found matching your search." : "No patients registered yet."}
-            </p>
-          </div>
-        ) : (
-          filteredPatients.map((patient: Patient) => (
+      {/* Patient Display */}
+      {isLoading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-slate-500 mt-2">Loading patients...</p>
+        </div>
+      ) : filteredPatients.length === 0 ? (
+        <div className="text-center py-12">
+          <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500">
+            {searchQuery ? "No patients found matching your search." : "No patients registered yet."}
+          </p>
+        </div>
+      ) : (
+        <>
+          {viewMode === "grid" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPatients.map((patient: Patient) => (
             <Card key={patient.id} className="hover:shadow-lg transition-all duration-300 hover:scale-[1.02] cursor-pointer border-slate-200">
               <Link href={`/patients/${patient.id}`}>
                 <CardHeader className="pb-4">
@@ -177,10 +200,10 @@ export default function Patients() {
                 <CardContent className="pt-0 space-y-4">
                   {/* Contact Info */}
                   <div className="space-y-2">
-                    {patient.phoneNumber && (
+                    {patient.phone && (
                       <div className="flex items-center text-sm text-slate-600">
                         <Phone className="h-4 w-4 mr-2 text-slate-400" />
-                        {patient.phoneNumber}
+                        {patient.phone}
                       </div>
                     )}
                     {patient.address && (
@@ -296,9 +319,89 @@ export default function Patients() {
                 </CardContent>
               </Link>
             </Card>
-          ))
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            /* List View */
+            <div className="space-y-4">
+              {filteredPatients.map((patient: Patient) => (
+                <Card key={patient.id} className="hover:shadow-md transition-all duration-200 cursor-pointer border-slate-200">
+                  <Link href={`/patients/${patient.id}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                              {getPatientInitials(patient)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3">
+                              <h3 className="text-lg font-semibold text-slate-800">
+                                {patient.firstName} {patient.lastName}
+                              </h3>
+                              <Badge variant="secondary" className="bg-green-100 text-green-800">Active</Badge>
+                            </div>
+                            <div className="flex items-center space-x-6 mt-1 text-sm text-slate-500">
+                              <div className="flex items-center">
+                                <Calendar className="h-4 w-4 mr-1" />
+                                {calculateAge(patient.dateOfBirth)} years old
+                              </div>
+                              {patient.phone && (
+                                <div className="flex items-center">
+                                  <Phone className="h-4 w-4 mr-1" />
+                                  {patient.phone}
+                                </div>
+                              )}
+                              {patient.address && (
+                                <div className="flex items-center">
+                                  <MapPin className="h-4 w-4 mr-1" />
+                                  {patient.address.length > 40 ? `${patient.address.substring(0, 40)}...` : patient.address}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {/* Role-based quick actions for list view */}
+                          {user?.role === 'doctor' && (
+                            <>
+                              <Button variant="outline" size="sm">
+                                <Stethoscope className="h-4 w-4 mr-1" />
+                                Visit
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <Pill className="h-4 w-4 mr-1" />
+                                Prescribe
+                              </Button>
+                            </>
+                          )}
+                          {user?.role === 'nurse' && (
+                            <>
+                              <Button variant="outline" size="sm">
+                                <Activity className="h-4 w-4 mr-1" />
+                                Vitals
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <FlaskRound className="h-4 w-4 mr-1" />
+                                Lab Result
+                              </Button>
+                            </>
+                          )}
+                          <Button variant="default" size="sm">
+                            <FileText className="h-4 w-4 mr-1" />
+                            View Profile
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      )}
 
       <PatientRegistrationModal
         open={showPatientModal}
