@@ -483,18 +483,18 @@ export const insertVisitSchema = createInsertSchema(visits).omit({
   followUpDate: data.followUpDate === "" ? null : data.followUpDate,
 }));
 
-// Frontend form schema (without patientId for form validation)
+// Frontend form schema (without patientId for form validation) - No restrictions
 export const visitFormSchema = z.object({
   bloodPressure: z.string().optional().nullable(),
-  heartRate: z.coerce.number().optional().nullable(),
-  temperature: z.coerce.number().optional().nullable(),
-  weight: z.coerce.number().optional().nullable(),
+  heartRate: z.union([z.string(), z.number()]).optional().nullable(),
+  temperature: z.union([z.string(), z.number()]).optional().nullable(),
+  weight: z.union([z.string(), z.number()]).optional().nullable(),
   complaint: z.string().optional().nullable(),
   diagnosis: z.string().optional().nullable(),
   treatment: z.string().optional().nullable(),
   followUpDate: z.string().optional().nullable(),
-  visitType: z.string().default("consultation"),
-  status: z.string().default("final"),
+  visitType: z.string().optional(),
+  status: z.string().optional(),
 });
 
 export const insertLabResultSchema = createInsertSchema(labResults).omit({
