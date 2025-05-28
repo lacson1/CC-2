@@ -23,15 +23,22 @@ export default function PatientProfile() {
   const [showLabModal, setShowLabModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
-  const { data: patient, isLoading: patientLoading } = useQuery({
+  const { data: patientData, isLoading: patientLoading } = useQuery({
     queryKey: ["/api/patients", patientId],
     enabled: !!patientId,
   });
 
-  const { data: visits } = useQuery({
+  const patient = Array.isArray(patientData) ? patientData.find(p => p.id === parseInt(patientId || '0')) : patientData;
+
+  const { data: visitsData } = useQuery({
     queryKey: ["/api/patients", patientId, "visits"],
     enabled: !!patientId,
   });
+
+  const visits = Array.isArray(visitsData) ? visitsData.map((visit: any) => ({
+    ...visit,
+    visitDate: typeof visit.visitDate === 'string' ? visit.visitDate : visit.visitDate?.toISOString?.()?.split('T')[0] || new Date().toISOString().split('T')[0]
+  })) : [];
 
   const { data: labResults } = useQuery({
     queryKey: ["/api/lab-results", patientId],
