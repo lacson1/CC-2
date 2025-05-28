@@ -58,7 +58,7 @@ export default function PatientVitalSignsTracker({ patientId }: PatientVitalSign
   const queryClient = useQueryClient();
 
   const { data: vitals = [], isLoading } = useQuery<VitalSigns[]>({
-    queryKey: ["/api/patients", patientId, "vitals"],
+    queryKey: [`/api/patients/${patientId}/vitals`],
     enabled: !!patientId,
   });
 

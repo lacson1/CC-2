@@ -149,6 +149,22 @@ export const referrals = pgTable('referrals', {
   status: varchar('status', { length: 20 }).default('pending')
 });
 
+export const vitalSigns = pgTable('vital_signs', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  bloodPressureSystolic: integer('blood_pressure_systolic'),
+  bloodPressureDiastolic: integer('blood_pressure_diastolic'),
+  heartRate: integer('heart_rate'),
+  temperature: decimal('temperature', { precision: 4, scale: 1 }),
+  respiratoryRate: integer('respiratory_rate'),
+  oxygenSaturation: integer('oxygen_saturation'),
+  weight: decimal('weight', { precision: 5, scale: 2 }),
+  height: decimal('height', { precision: 5, scale: 2 }),
+  recordedAt: timestamp('recorded_at').defaultNow().notNull(),
+  recordedBy: varchar('recorded_by', { length: 100 }).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id)
+});
+
 export const auditLogs = pgTable('audit_logs', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),

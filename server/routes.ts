@@ -1633,5 +1633,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Vital Signs Routes
+  app.get("/api/patients/:id/vitals", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      
+      const vitals = await db
+        .select()
+        .from(vitalSigns)
+        .where(eq(vitalSigns.patientId, patientId))
+        .orderBy(desc(vitalSigns.recordedAt));
+      
+      res.json(vitals);
+    } catch (error) {
+      console.error('Error fetching vitals:', error);
+      res.status(500).json({ message: "Failed to fetch vital signs" });
+    }
+  });
+
+  app.post("/api/patients/:id/vitals", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const { 
+        bloodPressureSystolic,
+        bloodPressureDiastolic,
+        heartRate,
+        temperature,
+        respiratoryRate,
+        oxygenSaturation,
+        weight,
+        height
+      } = req.body;
+
+      const [vital] = await db
+        .insert(vitalSigns)
+        .values({
+          patientId,
+          bloodPressureSystolic: parseInt(bloodPressureSystolic),
+          bloodPressureDiastolic: parseInt(bloodPressureDiastolic),
+          heartRate: parseInt(heartRate),
+          temperature: parseFloat(temperature),
+          respiratoryRate: parseInt(respiratoryRate),
+          oxygenSaturation: parseInt(oxygenSaturation),
+          weight: weight ? parseFloat(weight) : null,
+          height: height ? parseFloat(height) : null,
+          recordedAt: new Date(),
+          recordedBy: req.user?.username || 'Unknown'
+        })
+        .returning();
+
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logPatientAction('VITALS_RECORDED', patientId, {
+        vitalId: vital.id,
+        bloodPressure: `${bloodPressureSystolic}/${bloodPressureDiastolic}`,
+        heartRate,
+        temperature
+      });
+
+      res.json(vital);
+    } catch (error) {
+      console.error('Error recording vitals:', error);
+      res.status(500).json({ message: "Failed to record vital signs" });
+    }
+  });
+
   return httpServer;
 }
