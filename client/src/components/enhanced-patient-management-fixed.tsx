@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
   const [isPatientsOpen, setIsPatientsOpen] = useState(true);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -98,50 +99,34 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
   };
 
   const handlePatientAction = (action: string, patient: PatientWithStats) => {
-    const fullName = `${patient.title ? patient.title + ' ' : ''}${patient.firstName} ${patient.lastName}`;
-    
     switch (action) {
       case 'consultation':
-        toast({
-          title: "New Consultation",
-          description: `Starting consultation for ${fullName}`,
-        });
+        // Navigate to consultation forms page with patient pre-selected
+        setLocation(`/consultation-forms?patientId=${patient.id}`);
         break;
       case 'vitals':
-        toast({
-          title: "Record Vitals", 
-          description: `Recording vitals for ${fullName}`,
-        });
+        // Navigate to patient detail page to record vitals
+        setLocation(`/patients/${patient.id}`);
         break;
       case 'lab-tests':
-        toast({
-          title: "Lab Tests",
-          description: `Ordering lab tests for ${fullName}`,
-        });
+        // Navigate to lab tests page
+        setLocation(`/lab-tests?patientId=${patient.id}`);
         break;
       case 'prescription':
-        toast({
-          title: "Prescription",
-          description: `Prescribing medication for ${fullName}`,
-        });
+        // Navigate to pharmacy page for prescriptions
+        setLocation(`/pharmacy?patientId=${patient.id}`);
         break;
       case 'history':
-        toast({
-          title: "Medical History",
-          description: `Viewing history for ${fullName}`,
-        });
+        // Navigate to patient detail page to view history
+        setLocation(`/patients/${patient.id}`);
         break;
       case 'appointment':
-        toast({
-          title: "Schedule Appointment",
-          description: `Scheduling appointment for ${fullName}`,
-        });
+        // Navigate to appointments tab in patients page
+        setLocation(`/patients?tab=appointments&patientId=${patient.id}`);
         break;
       case 'report':
-        toast({
-          title: "Generate Report",
-          description: `Generating report for ${fullName}`,
-        });
+        // Navigate to patient detail page for reports
+        setLocation(`/patients/${patient.id}?section=reports`);
         break;
     }
   };
