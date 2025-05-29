@@ -127,30 +127,16 @@ export class DatabaseStorage implements IStorage {
   async getPatients(search?: string, organizationId?: number): Promise<Patient[]> {
     let query = db.select().from(patients);
 
-    if (organizationId) {
-      query = query.where(eq(patients.organizationId, organizationId));
-    }
-
     if (search) {
       const conditions = [
         ilike(patients.firstName, `%${search}%`),
         ilike(patients.lastName, `%${search}%`),
         ilike(patients.phone, `%${search}%`)
       ];
-
-      if (organizationId) {
-        query = query.where(
-          and(
-            eq(patients.organizationId, organizationId),
-            or(...conditions)
-          )
-        );
-      } else {
-        query = query.where(or(...conditions));
-      }
+      query = query.where(or(...conditions));
     }
 
-    const result = await query.orderBy(desc(patients.createdAt)).all();
+    const result = await query.orderBy(desc(patients.createdAt));
     return result;
   }
 
