@@ -11,6 +11,7 @@ import PatientVitalSignsTracker from './patient-vital-signs-tracker';
 import SmartAppointmentScheduler from './smart-appointment-scheduler';
 import { PatientCommunicationHub } from './patient-communication-hub';
 import ConsultationFormSelector from './consultation-form-selector';
+import { PatientDropdownMenu } from './patient-dropdown-menu';
 import { useLocation } from "wouter";
 import { Button } from '@/components/ui/button';
 import { 
@@ -144,163 +145,44 @@ export function ModernPatientOverview({
       <Card className="w-full">
         <CardContent className="p-3">
           <div className="flex items-center space-x-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-auto p-0 rounded-full hover:scale-105 transition-transform">
-                  <Avatar className="w-10 h-10 cursor-pointer">
-                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                      {getPatientInitials(patient.firstName, patient.lastName)}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <div className="px-3 py-2 border-b">
-                  <p className="text-sm font-medium">{patient.firstName} {patient.lastName}</p>
-                  <p className="text-xs text-gray-500">ID: HC{patient.id?.toString().padStart(6, "0")}</p>
-                </div>
-                <DropdownMenuItem onClick={onEditPatient}>
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Patient Info
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onRecordVisit}>
-                  <Stethoscope className="mr-2 h-4 w-4" />
-                  Record New Visit
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onAddPrescription}>
-                  <Pill className="mr-2 h-4 w-4" />
-                  Add Prescription
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/lab-orders')}>
-                  <FlaskRound className="mr-2 h-4 w-4" />
-                  Order Lab Tests
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/consultation-forms')}>
-                  <FileText className="mr-2 h-4 w-4" />
-                  Create Consultation Form
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/appointments')}>
-                  <CalendarDays className="mr-2 h-4 w-4" />
-                  Schedule Appointment
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/referrals')}>
-                  <Users className="mr-2 h-4 w-4" />
-                  Create Referral
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  // Switch to vitals tab in current patient view
-                  const vitalsTab = document.querySelector('[data-state="inactive"][value="vitals"]') as HTMLElement;
-                  if (vitalsTab) vitalsTab.click();
-                }}>
-                  <Monitor className="mr-2 h-4 w-4" />
-                  Record Vital Signs
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/documents')}>
-                  <Upload className="mr-2 h-4 w-4" />
-                  Upload Documents
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onPrintRecord}>
-                  <Share className="mr-2 h-4 w-4" />
-                  Print/Export Records
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => {
-                  // Switch to communication tab in current patient view
-                  const commTab = document.querySelector('[data-state="inactive"][value="communication"]') as HTMLElement;
-                  if (commTab) commTab.click();
-                }}>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  Send Message
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600" onClick={() => console.log('Archive patient functionality')}>
-                  <Archive className="mr-2 h-4 w-4" />
-                  Archive Patient
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <PatientDropdownMenu
+              patient={patient}
+              onEditPatient={onEditPatient}
+              onRecordVisit={onRecordVisit}
+              onAddPrescription={onAddPrescription}
+              onPrintRecord={onPrintRecord}
+            >
+              <Button variant="ghost" className="h-auto p-0 rounded-full hover:scale-105 transition-transform">
+                <Avatar className="w-10 h-10 cursor-pointer">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
+                    {getPatientInitials(patient.firstName, patient.lastName)}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </PatientDropdownMenu>
             <div className="flex-1">
               <div className="flex items-center space-x-3">
                 <div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="h-auto p-0 hover:bg-gray-100 rounded-md px-2 py-1">
-                        <div className="text-left">
-                          <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap flex items-center gap-1">
-                            {patient.firstName} {patient.lastName}
-                            <ChevronDown className="h-4 w-4 text-gray-400" />
-                          </h2>
-                          <p className="text-xs text-gray-500">
-                            ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
-                          </p>
-                        </div>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-64">
-                      <DropdownMenuItem onClick={onEditPatient}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        Edit Patient Info
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={onRecordVisit}>
-                        <Stethoscope className="mr-2 h-4 w-4" />
-                        Record New Visit
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={onAddPrescription}>
-                        <Pill className="mr-2 h-4 w-4" />
-                        Add Prescription
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/lab-orders')}>
-                        <FlaskRound className="mr-2 h-4 w-4" />
-                        Order Lab Tests
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/consultation-forms')}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        Create Consultation Form
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/appointments')}>
-                        <CalendarDays className="mr-2 h-4 w-4" />
-                        Schedule Appointment
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate('/referrals')}>
-                        <Users className="mr-2 h-4 w-4" />
-                        Create Referral
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
-                        // Switch to vitals tab in current patient view
-                        const vitalsTab = document.querySelector('[data-state="inactive"][value="vitals"]') as HTMLElement;
-                        if (vitalsTab) vitalsTab.click();
-                      }}>
-                        <Monitor className="mr-2 h-4 w-4" />
-                        Record Vital Signs
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/documents')}>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Documents
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={onPrintRecord}>
-                        <Share className="mr-2 h-4 w-4" />
-                        Print/Export Records
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => {
-                        // Switch to communication tab in current patient view
-                        const commTab = document.querySelector('[data-state="inactive"][value="communication"]') as HTMLElement;
-                        if (commTab) commTab.click();
-                      }}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Send Message
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600" onClick={() => console.log('Archive patient functionality')}>
-                        <Archive className="mr-2 h-4 w-4" />
-                        Archive Patient
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <PatientDropdownMenu
+                    patient={patient}
+                    onEditPatient={onEditPatient}
+                    onRecordVisit={onRecordVisit}
+                    onAddPrescription={onAddPrescription}
+                    onPrintRecord={onPrintRecord}
+                    showHeader={false}
+                  >
+                    <Button variant="ghost" className="h-auto p-0 hover:bg-gray-100 rounded-md px-2 py-1">
+                      <div className="text-left">
+                        <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap flex items-center gap-1">
+                          {patient.firstName} {patient.lastName}
+                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                        </h2>
+                        <p className="text-xs text-gray-500">
+                          ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
+                        </p>
+                      </div>
+                    </Button>
+                  </PatientDropdownMenu>
                 </div>
                 <QuickSafetyIndicator patient={patient} />
               </div>
@@ -467,15 +349,32 @@ export function ModernPatientOverview({
             <Card className="lg:col-span-2">
               <CardContent className="p-4">
                 <div className="flex items-center space-x-4 mb-4">
-                  <Avatar className="w-16 h-16">
-                    <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
-                      {getPatientInitials(patient.firstName, patient.lastName)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <PatientDropdownMenu
+                    patient={patient}
+                    onEditPatient={onEditPatient}
+                    onRecordVisit={onRecordVisit}
+                    onAddPrescription={onAddPrescription}
+                    onPrintRecord={onPrintRecord}
+                  >
+                    <Avatar className="w-16 h-16 cursor-pointer hover:scale-105 transition-transform">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-lg font-semibold">
+                        {getPatientInitials(patient.firstName, patient.lastName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </PatientDropdownMenu>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-gray-900">
-                      {patient.firstName} {patient.lastName}
-                    </h2>
+                    <PatientDropdownMenu
+                      patient={patient}
+                      onEditPatient={onEditPatient}
+                      onRecordVisit={onRecordVisit}
+                      onAddPrescription={onAddPrescription}
+                      onPrintRecord={onPrintRecord}
+                      showHeader={false}
+                    >
+                      <h2 className="text-xl font-bold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors">
+                        {patient.firstName} {patient.lastName}
+                      </h2>
+                    </PatientDropdownMenu>
                     <p className="text-sm text-gray-500">
                       ID: HC{patient.id?.toString().padStart(6, "0")}
                     </p>
