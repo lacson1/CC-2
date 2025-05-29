@@ -306,12 +306,27 @@ export default function PrescriptionModal({
                 value={selectedMedicine}
                 onSelect={handleMedicationSelect}
                 onAutoFill={handleMedicationSelect}
+                onManualEntry={handleManualMedicationEntry}
                 placeholder="Start typing medication name (e.g., Paracetamol, Amoxicillin)..."
                 className="w-full"
               />
               <p className="text-xs text-slate-500 mt-1">
                 ✨ Select a medication to automatically fill dosage, frequency, and instructions from comprehensive database.
+                {!selectedMedicine && manualMedicationName && " Or add any medication manually if not found in database."}
               </p>
+              
+              {/* Manual Medication Display */}
+              {manualMedicationName && !selectedMedicine && (
+                <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
+                  <div className="flex items-center mb-2">
+                    <Pill className="h-4 w-4 text-orange-600 mr-2" />
+                    <span className="font-medium text-orange-800">Manual medication: {manualMedicationName}</span>
+                  </div>
+                  <p className="text-orange-700 text-xs">
+                    Please fill in dosage, frequency, and instructions manually below.
+                  </p>
+                </div>
+              )}
               
               {/* Auto-fill Preview */}
               {selectedMedicine && (
