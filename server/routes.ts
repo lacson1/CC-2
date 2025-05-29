@@ -640,13 +640,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const patientId = parseInt(req.params.id);
       const user = req.user!;
       
-      // Add required fields from the authenticated user
-      const prescriptionData = insertPrescriptionSchema.parse({ 
+      // Add required fields from the authenticated user and handle date conversion
+      const requestData = {
         ...req.body, 
         patientId,
         prescribedBy: user.username,
         organizationId: user.organizationId || null
-      });
+      };
+      
+      // Convert date strings to Date objects if present
+      if (requestData.startDate && typeof requestData.startDate === 'string') {
+        requestData.startDate = new Date(requestData.startDate);
+      }
+      if (requestData.endDate && typeof requestData.endDate === 'string') {
+        requestData.endDate = new Date(requestData.endDate);
+      }
+      
+      const prescriptionData = insertPrescriptionSchema.parse(requestData);
       
       const prescription = await storage.createPrescription(prescriptionData);
       
