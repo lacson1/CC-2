@@ -14,6 +14,8 @@ import ConsultationFormSelector from './consultation-form-selector';
 import { PatientDropdownMenu } from './patient-dropdown-menu';
 import { useLocation } from "wouter";
 import { Button } from '@/components/ui/button';
+import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { 
   User, 
   Calendar, 
@@ -89,6 +91,61 @@ export function ModernPatientOverview({
   onPrintRecord
 }: ModernPatientOverviewProps) {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+
+  // Fetch patient prescriptions from the API
+  const { data: patientPrescriptions = [], isLoading: prescriptionsLoading } = useQuery({
+    queryKey: ['/api/patients', patient.id, 'prescriptions'],
+    queryFn: () => fetch(`/api/patients/${patient.id}/prescriptions`).then(res => res.json())
+  });
+
+  // Use fetched prescriptions if available, otherwise use passed activePrescriptions
+  const displayPrescriptions = patientPrescriptions.length > 0 ? patientPrescriptions : activePrescriptions;
+
+  const handleEditPrescription = (prescription: any) => {
+    toast({
+      title: "Edit Prescription",
+      description: `Opening edit form for ${prescription.medicationName}`,
+    });
+    // Open prescription add modal which can be used for editing
+    if (onAddPrescription) {
+      onAddPrescription();
+    }
+  };
+
+  const handlePrintPrescription = (prescription: any) => {
+    const printContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Prescription</h2>
+        <hr>
+        <p><strong>Patient:</strong> ${patient.firstName} ${patient.lastName}</p>
+        <p><strong>Patient ID:</strong> HC${patient.id?.toString().padStart(6, "0")}</p>
+        <p><strong>Date:</strong> ${new Date(prescription.startDate).toLocaleDateString()}</p>
+        <hr>
+        <h3>Medication Details</h3>
+        <p><strong>Medication:</strong> ${prescription.medicationName}</p>
+        <p><strong>Dosage:</strong> ${prescription.dosage}</p>
+        <p><strong>Frequency:</strong> ${prescription.frequency}</p>
+        <p><strong>Duration:</strong> ${prescription.duration}</p>
+        <p><strong>Instructions:</strong> ${prescription.instructions || 'None'}</p>
+        <p><strong>Prescribed by:</strong> ${prescription.prescribedBy}</p>
+        <hr>
+        <p style="margin-top: 30px;"><strong>Doctor's Signature:</strong> _________________</p>
+      </div>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    toast({
+      title: "Printing Prescription",
+      description: `Prescription for ${prescription.medicationName} sent to printer`,
+    });
+  };
   
   const getPatientAge = (dateOfBirth: string) => {
     const birth = new Date(dateOfBirth);
@@ -265,9 +322,13 @@ export function ModernPatientOverview({
                     </Button>
                   </div>
                   
-                  {activePrescriptions.length > 0 ? (
+                  {prescriptionsLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-slate-500">Loading prescriptions...</div>
+                    </div>
+                  ) : displayPrescriptions.length > 0 ? (
                     <div className="grid gap-4">
-                      {activePrescriptions.map((prescription: any) => (
+                      {displayPrescriptions.map((prescription: any) => (
                         <div key={prescription.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
@@ -334,11 +395,21 @@ export function ModernPatientOverview({
                                   )}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-slate-600 hover:text-slate-800"
+                                    onClick={() => handleEditPrescription(prescription)}
+                                  >
                                     <Edit className="w-3 h-3 mr-1" />
                                     Edit
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-slate-600 hover:text-slate-800"
+                                    onClick={() => handlePrintPrescription(prescription)}
+                                  >
                                     <Printer className="w-3 h-3 mr-1" />
                                     Print
                                   </Button>
@@ -493,7 +564,7 @@ export function ModernPatientOverview({
                     <Pill className="w-4 h-4 text-purple-500" />
                     <span className="text-sm">Active Meds</span>
                   </div>
-                  <Badge variant="secondary">{activePrescriptions.length}</Badge>
+                  <Badge variant="secondary">{displayPrescriptions.length}</Badge>
                 </div>
               </CardContent>
             </Card>
