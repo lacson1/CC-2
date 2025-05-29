@@ -94,7 +94,7 @@ export default function Dashboard() {
             </CardHeader>
           </Card>
 
-          <Card className="stat-card stat-card-pending text-white">
+          <Card className="stat-card stat-card-pending text-white card-selection-feedback">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <p className="text-sm font-medium text-white/80 uppercase tracking-wide">PENDING LABS</p>
