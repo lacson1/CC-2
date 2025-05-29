@@ -43,7 +43,7 @@ function AuthenticatedApp() {
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar />
         <main className="flex-1 overflow-hidden">
-          <div className="h-full overflow-y-auto p-4 lg:p-8 pt-16 lg:pt-4">
+          <div className="h-full overflow-y-auto p-4 lg:p-8">
             <Switch>
               <Route path="/" component={Dashboard} />
               <Route path="/dashboard" component={Dashboard} />
