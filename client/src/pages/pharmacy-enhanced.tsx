@@ -623,28 +623,30 @@ export default function EnhancedPharmacyPage() {
                 )}
               </div>
 
-              {/* Medicine List */}
+              {/* Medicine Display */}
               <div className="flex-1 overflow-auto p-6">
                 {isLoading ? (
                   <div className="text-center py-8">Loading medicines...</div>
                 ) : filteredMedicines.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredMedicines.map((medicine: Medicine) => (
-                      <Card key={medicine.id} className="hover:shadow-md transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-lg text-slate-800 mb-1">{medicine.name}</h3>
-                              <p className="text-sm text-slate-500 mb-2">{medicine.unit}</p>
-                              {medicine.supplier && (
-                                <p className="text-xs text-slate-400">by {medicine.supplier}</p>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <Badge variant={
-                                medicine.quantity === 0 ? "destructive" :
-                                medicine.quantity <= medicine.lowStockThreshold ? "secondary" :
-                                "default"
+                  viewMode === 'grid' ? (
+                    // Grid View
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredMedicines.map((medicine: Medicine) => (
+                        <Card key={medicine.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg text-slate-800 mb-1">{medicine.name}</h3>
+                                <p className="text-sm text-slate-500 mb-2">{medicine.unit}</p>
+                                {medicine.supplier && (
+                                  <p className="text-xs text-slate-400">by {medicine.supplier}</p>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <Badge variant={
+                                  medicine.quantity === 0 ? "destructive" :
+                                  medicine.quantity <= medicine.lowStockThreshold ? "secondary" :
+                                  "default"
                               }>
                                 {medicine.quantity === 0 ? "Out of Stock" :
                                  medicine.quantity <= medicine.lowStockThreshold ? "Low Stock" :
@@ -660,7 +662,7 @@ export default function EnhancedPharmacyPage() {
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-slate-600">Price:</span>
-                              <span className="font-medium">₦{medicine.sellingPrice}</span>
+                              <span className="font-medium">{formatCurrency(parseFloat(medicine.cost || '0'))}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                               <span className="text-slate-600">Low Stock Alert:</span>
@@ -718,6 +720,91 @@ export default function EnhancedPharmacyPage() {
                       </Card>
                     ))}
                   </div>
+                ) : (
+                    // List View
+                    <div className="space-y-4">
+                      {filteredMedicines.map((medicine: Medicine) => (
+                        <Card key={medicine.id} className="hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-lg text-slate-800">{medicine.name}</h3>
+                                    <p className="text-sm text-slate-500">{medicine.unit} • {medicine.supplier || 'No supplier'}</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-sm text-slate-600">Quantity</p>
+                                    <p className="text-lg font-semibold">{medicine.quantity}</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <p className="text-sm text-slate-600">Price</p>
+                                    <p className="text-lg font-semibold">{formatCurrency(parseFloat(medicine.cost || '0'))}</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <Badge variant={
+                                      medicine.quantity === 0 ? "destructive" :
+                                      medicine.quantity <= medicine.lowStockThreshold ? "secondary" :
+                                      "default"
+                                    }>
+                                      {medicine.quantity === 0 ? "Out of Stock" :
+                                       medicine.quantity <= medicine.lowStockThreshold ? "Low Stock" :
+                                       "In Stock"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                {editingQuantity[medicine.id] !== undefined ? (
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      type="number"
+                                      value={editingQuantity[medicine.id]}
+                                      onChange={(e) => setEditingQuantity(prev => ({
+                                        ...prev,
+                                        [medicine.id]: e.target.value
+                                      }))}
+                                      className="w-24"
+                                      placeholder="Qty"
+                                    />
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleQuantityUpdate(medicine.id, editingQuantity[medicine.id])}
+                                      disabled={updateQuantityMutation.isPending}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => setEditingQuantity(prev => {
+                                        const newState = { ...prev };
+                                        delete newState[medicine.id];
+                                        return newState;
+                                      })}
+                                    >
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setEditingQuantity(prev => ({
+                                      ...prev,
+                                      [medicine.id]: medicine.quantity.toString()
+                                    }))}
+                                  >
+                                    Update Stock
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )
                 ) : (
                   <div className="text-center py-12">
                     <Pill className="mx-auto h-12 w-12 text-slate-400" />
