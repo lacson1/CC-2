@@ -21,7 +21,8 @@ import {
   User,
   Activity,
   Search,
-  Zap
+  Zap,
+  X
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
@@ -108,6 +109,7 @@ const quickActions: QuickAction[] = [
 
 export default function TouchQuickActions() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showDesktopActions, setShowDesktopActions] = useState(true);
   const { user } = useAuth();
   const [, setLocation] = useLocation();
 
@@ -122,6 +124,10 @@ export default function TouchQuickActions() {
   const handleAction = (action: QuickAction) => {
     setIsOpen(false);
     setLocation(action.route);
+  };
+
+  const handleDesktopClose = () => {
+    setShowDesktopActions(false);
   };
 
   return (
@@ -211,33 +217,50 @@ export default function TouchQuickActions() {
       </div>
 
       {/* Desktop Quick Actions Bar */}
-      <div className="hidden md:flex fixed top-20 right-4 z-40 flex-col gap-2 bg-white/90 backdrop-blur-sm rounded-lg p-2 shadow-lg border">
-        {urgentActions.slice(0, 3).map((action) => (
+      {showDesktopActions && (
+        <div className="hidden md:flex fixed top-1/2 -translate-y-1/2 right-4 z-40 flex-col gap-2 bg-white/95 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-gray-200 transition-all duration-300 transform">
+          {/* Close button */}
           <Button
-            key={action.id}
             size="sm"
-            variant="outline"
-            className="w-12 h-12 p-0 hover:bg-red-50 border-red-200"
-            onClick={() => handleAction(action)}
-            title={action.description}
+            variant="ghost"
+            className="w-8 h-8 p-0 hover:bg-gray-100 self-end -mt-1 -mr-1"
+            onClick={handleDesktopClose}
+            title="Close quick actions"
           >
-            <div className="text-red-600">{action.icon}</div>
+            <X className="h-3 w-3 text-gray-500" />
           </Button>
-        ))}
-        <div className="w-full h-px bg-gray-200 my-1" />
-        {regularActions.slice(0, 3).map((action) => (
-          <Button
-            key={action.id}
-            size="sm"
-            variant="outline"
-            className="w-12 h-12 p-0 hover:bg-blue-50"
-            onClick={() => handleAction(action)}
-            title={action.description}
-          >
-            <div className="text-blue-600">{action.icon}</div>
-          </Button>
-        ))}
-      </div>
+          
+          {urgentActions.slice(0, 3).map((action) => (
+            <Button
+              key={action.id}
+              size="sm"
+              variant="outline"
+              className="w-12 h-12 p-0 hover:bg-red-50 border-red-200 transition-colors"
+              onClick={() => handleAction(action)}
+              title={action.description}
+            >
+              <div className="text-red-600">{action.icon}</div>
+            </Button>
+          ))}
+          
+          {urgentActions.length > 0 && regularActions.length > 0 && (
+            <div className="w-full h-px bg-gray-200 my-1" />
+          )}
+          
+          {regularActions.slice(0, 3).map((action) => (
+            <Button
+              key={action.id}
+              size="sm"
+              variant="outline"
+              className="w-12 h-12 p-0 hover:bg-blue-50 transition-colors"
+              onClick={() => handleAction(action)}
+              title={action.description}
+            >
+              <div className="text-blue-600">{action.icon}</div>
+            </Button>
+          ))}
+        </div>
+      )}
     </>
   );
 }
