@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Search, UserPlus, Users, Phone, Calendar, MapPin, 
@@ -15,7 +16,8 @@ import {
   Heart, Clock, FileText, Grid3X3, List, LayoutGrid,
   Filter, SortAsc, Download, Upload, Eye, AlertTriangle,
   Bookmark, BookmarkCheck, TrendingUp, Star, ChevronDown,
-  ChevronUp
+  ChevronUp, TestTube, Clipboard, Calendar as CalendarIcon,
+  ScrollText, Thermometer
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Patient } from "@shared/schema";
@@ -405,11 +407,62 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback className="bg-blue-100 text-blue-600">
-                                {getPatientInitials(patient)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all">
+                                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                                    {getPatientInitials(patient)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="w-56">
+                                <div className="px-2 py-1.5 text-sm font-medium text-slate-900">
+                                  {patient.firstName} {patient.lastName}
+                                </div>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/patients/${patient.id}`} className="flex items-center">
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Profile
+                                  </Link>
+                                </DropdownMenuItem>
+                                {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
+                                  <>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <Stethoscope className="mr-2 h-4 w-4" />
+                                      New Consultation
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <Thermometer className="mr-2 h-4 w-4" />
+                                      Record Vitals
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <TestTube className="mr-2 h-4 w-4" />
+                                      Order Lab Tests
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {(user?.role === 'admin' || user?.role === 'doctor') && (
+                                  <DropdownMenuItem className="flex items-center">
+                                    <Pill className="mr-2 h-4 w-4" />
+                                    Prescribe Medication
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="flex items-center">
+                                  <ScrollText className="mr-2 h-4 w-4" />
+                                  View History
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  Schedule Appointment
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Generate Report
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                             <div className="ml-3">
                               <h3 className="font-medium text-slate-900">
                                 {patient.firstName} {patient.lastName}
@@ -474,11 +527,62 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-blue-100 text-blue-600">
-                                {getPatientInitials(patient)}
-                              </AvatarFallback>
-                            </Avatar>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all">
+                                  <AvatarFallback className="bg-blue-100 text-blue-600">
+                                    {getPatientInitials(patient)}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start" className="w-56">
+                                <div className="px-2 py-1.5 text-sm font-medium text-slate-900">
+                                  {patient.firstName} {patient.lastName}
+                                </div>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/patients/${patient.id}`} className="flex items-center">
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Profile
+                                  </Link>
+                                </DropdownMenuItem>
+                                {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
+                                  <>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <Stethoscope className="mr-2 h-4 w-4" />
+                                      New Consultation
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <Thermometer className="mr-2 h-4 w-4" />
+                                      Record Vitals
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="flex items-center">
+                                      <TestTube className="mr-2 h-4 w-4" />
+                                      Order Lab Tests
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {(user?.role === 'admin' || user?.role === 'doctor') && (
+                                  <DropdownMenuItem className="flex items-center">
+                                    <Pill className="mr-2 h-4 w-4" />
+                                    Prescribe Medication
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="flex items-center">
+                                  <ScrollText className="mr-2 h-4 w-4" />
+                                  View History
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  Schedule Appointment
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Generate Report
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                             <div className="ml-3">
                               <h3 className="font-medium text-slate-900">
                                 {patient.firstName} {patient.lastName}
