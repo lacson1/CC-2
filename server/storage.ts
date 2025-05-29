@@ -187,6 +187,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async getVisitById(id: number): Promise<Visit | undefined> {
+    const [visit] = await db.select().from(visits).where(eq(visits.id, id));
+    return visit || undefined;
+  }
+
+  async updateVisit(id: number, data: Partial<InsertVisit>): Promise<Visit | undefined> {
+    const [visit] = await db
+      .update(visits)
+      .set(data)
+      .where(eq(visits.id, id))
+      .returning();
+    return visit || undefined;
+  }
+
   async getTodaysVisits(): Promise<Visit[]> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
