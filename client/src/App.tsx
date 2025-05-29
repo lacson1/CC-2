@@ -58,7 +58,7 @@ function AuthenticatedApp() {
               <Route path="/medical-tools" component={MedicalToolsPage} />
               <Route path="/clinical-performance" component={ClinicalPerformance} />
               <Route path="/profile" component={ProfilePage} />
-              <Route path="/user-management" component={UserManagement} />
+              <Route path="/user-management" component={UserManagementEnhanced} />
               <Route path="/audit-logs" component={AuditLogs} />
               <Route path="/organization-management" component={OrganizationManagement} />
               <Route component={NotFound} />
