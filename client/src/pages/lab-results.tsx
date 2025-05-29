@@ -10,22 +10,39 @@ export default function LabResults() {
   const { user } = useRole();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Fixed Header Section */}
+      <div className="bg-gray-50 border-b border-gray-200 p-6 space-y-6">
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-            <TestTube className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <TestTube className="h-5 w-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Laboratory Results</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <h1 className="text-2xl font-bold text-gray-800">Laboratory Results</h1>
+            <p className="text-sm text-gray-600">
               Manage pending lab orders and enter test results
             </p>
           </div>
         </div>
-      </header>
 
-      <main className="p-6">
+        {user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse' ? (
+          <Tabs defaultValue="order" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="order" className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Order Lab Tests
+              </TabsTrigger>
+              <TabsTrigger value="results" className="flex items-center gap-2">
+                <TestTube className="w-4 h-4" />
+                Add Results
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        ) : null}
+      </div>
+
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto p-6">
         {user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse' ? (
           <Tabs defaultValue="order" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
