@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Patient } from "@shared/schema";
+import PatientRegistrationModal from "./patient-registration-modal";
 
 interface PatientWithStats extends Patient {
   lastVisit?: string;
@@ -42,6 +43,7 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
   const [isStatsOpen, setIsStatsOpen] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(true);
   const [isPatientsOpen, setIsPatientsOpen] = useState(true);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -169,7 +171,10 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
           <p className="text-slate-600 mt-1">Advanced patient records with analytics and bulk operations</p>
         </div>
         {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => setShowRegistrationModal(true)}
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Add New Patient
           </Button>
@@ -518,6 +523,12 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
           )}
         </CollapsibleContent>
       </Collapsible>
+
+      {/* Patient Registration Modal */}
+      <PatientRegistrationModal
+        open={showRegistrationModal}
+        onOpenChange={setShowRegistrationModal}
+      />
     </div>
   );
 }
