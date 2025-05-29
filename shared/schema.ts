@@ -46,11 +46,12 @@ export const users = pgTable('users', {
   password: varchar('password', { length: 255 }).notNull(),
   role: varchar('role', { length: 20 }).notNull(), // Keep for backward compatibility
   roleId: integer('role_id').references(() => roles.id), // New RBAC role reference
+  title: varchar('title', { length: 10 }), // Dr., Mr., Mrs., Ms., Prof., etc.
+  firstName: varchar('first_name', { length: 50 }),
+  lastName: varchar('last_name', { length: 50 }),
   email: varchar('email', { length: 100 }),
   phone: varchar('phone', { length: 20 }),
   photoUrl: varchar('photo_url', { length: 255 }),
-  firstName: varchar('first_name', { length: 50 }),
-  lastName: varchar('last_name', { length: 50 }),
   organizationId: integer('organization_id').references(() => organizations.id),
   createdAt: timestamp('created_at').defaultNow()
 });

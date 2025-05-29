@@ -35,6 +35,9 @@ export default function UserManagement() {
     username: "",
     password: "",
     role: "",
+    title: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     photoUrl: "",
@@ -124,6 +127,9 @@ export default function UserManagement() {
       username: "",
       password: "",
       role: "",
+      title: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phone: "",
       photoUrl: "",
@@ -179,6 +185,9 @@ export default function UserManagement() {
       username: user.username,
       password: "", // Don't pre-fill password for security
       role: user.role,
+      title: user.title || "",
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
       email: user.email || "",
       phone: user.phone || "",
       photoUrl: user.photoUrl || "",
@@ -267,6 +276,45 @@ export default function UserManagement() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Select value={formData.title} onValueChange={(value) => setFormData({ ...formData, title: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Title" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Dr.">Dr.</SelectItem>
+                      <SelectItem value="Mr.">Mr.</SelectItem>
+                      <SelectItem value="Mrs.">Mrs.</SelectItem>
+                      <SelectItem value="Ms.">Ms.</SelectItem>
+                      <SelectItem value="Prof.">Prof.</SelectItem>
+                      <SelectItem value="Rev.">Rev.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="First name"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="Last name"
+                  />
+                </div>
               </div>
               
               <div>
@@ -450,7 +498,11 @@ export default function UserManagement() {
                       
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">{user.username}</h3>
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {user.title && user.firstName && user.lastName 
+                              ? `${user.title} ${user.firstName} ${user.lastName}` 
+                              : user.username}
+                          </h3>
                           <Badge className={roleInfo.color}>
                             <Shield className="w-3 h-3 mr-1" />
                             {roleInfo.label}
