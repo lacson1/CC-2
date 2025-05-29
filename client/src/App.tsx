@@ -16,7 +16,7 @@ import LabResults from "@/pages/lab-results";
 import Pharmacy from "@/pages/pharmacy";
 import Referrals from "@/pages/referrals";
 import ProfilePage from "@/pages/profile";
-import UserManagement from "@/pages/user-management";
+import UserManagementEnhanced from "@/pages/user-management-enhanced";
 import AuditLogs from "@/pages/audit-logs";
 import FormBuilder from "@/pages/form-builder";
 import ClinicalPerformance from "@/pages/clinical-performance";

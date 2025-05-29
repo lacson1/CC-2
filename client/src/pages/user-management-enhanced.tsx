@@ -1,22 +1,18 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { User, InsertUser } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus, Edit, Trash2, Shield, UserCheck, UserX, Eye, Key, MessageSquare, Activity, Settings, Mail, Search, Grid3X3, List, Upload, Camera, Stethoscope, Pill, Heart, Filter, X } from "lucide-react";
+import { UserPlus, Edit, Trash2, Shield, UserX, Settings, Search, Grid3X3, List, Filter, X, Stethoscope, Pill, Heart, Activity } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import { useMemo } from "react";
 
 const USER_ROLES = [
   { 
@@ -61,7 +57,7 @@ const USER_ROLES = [
   }
 ];
 
-export default function UserManagement() {
+export default function UserManagementEnhanced() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -87,12 +83,12 @@ export default function UserManagement() {
     organizationId: ""
   });
 
-  // Fetch all users
+  // Fetch users
   const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/users"],
   });
 
-  // Fetch all organizations for the dropdown
+  // Fetch organizations
   const { data: organizations = [] } = useQuery({
     queryKey: ["/api/organizations"],
   });
@@ -122,13 +118,12 @@ export default function UserManagement() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: async ({ id, userData }: { id: number; userData: Partial<User> }) => {
+    mutationFn: async ({ id, userData }: { id: number; userData: any }) => {
       return apiRequest("PATCH", `/api/users/${id}`, userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       setEditDialogOpen(false);
-      setSelectedUser(null);
       resetForm();
       toast({
         title: "Success",
@@ -204,17 +199,18 @@ export default function UserManagement() {
     const updateData: any = {
       username: formData.username,
       role: formData.role,
+      title: formData.title,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
       email: formData.email,
       phone: formData.phone,
       photoUrl: formData.photoUrl
     };
 
-    // Include organization if provided
     if (formData.organizationId) {
       updateData.organizationId = parseInt(formData.organizationId);
     }
 
-    // Only include password if it's provided
     if (formData.password) {
       updateData.password = formData.password;
     }
@@ -226,7 +222,7 @@ export default function UserManagement() {
     setSelectedUser(user);
     setFormData({
       username: user.username,
-      password: "", // Don't pre-fill password for security
+      password: "",
       role: user.role,
       title: user.title || "",
       firstName: user.firstName || "",
@@ -241,10 +237,6 @@ export default function UserManagement() {
 
   const handleDeleteUser = (id: number) => {
     deleteUserMutation.mutate(id);
-  };
-
-  const getRoleInfo = (role: string) => {
-    return USER_ROLES.find(r => r.value === role) || { label: role, color: "bg-gray-100 text-gray-800" };
   };
 
   // Photo upload handler
@@ -316,7 +308,7 @@ export default function UserManagement() {
   };
 
   const getRoleCounts = () => {
-    const counts = { all: users.length };
+    const counts: { [key: string]: number } = { all: users.length };
     USER_ROLES.forEach(role => {
       counts[role.value] = users.filter(u => u.role === role.value).length;
     });
@@ -355,444 +347,128 @@ export default function UserManagement() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Create New User</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="username">Username *</Label>
-                <Input
-                  id="username"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  placeholder="Enter username"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Enter password"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="role">Role *</Label>
-                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {USER_ROLES.map((role) => (
-                      <SelectItem key={role.value} value={role.value}>
-                        {role.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Select value={formData.title} onValueChange={(value) => setFormData({ ...formData, title: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Title" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Dr.">Dr.</SelectItem>
-                      <SelectItem value="Mr.">Mr.</SelectItem>
-                      <SelectItem value="Mrs.">Mrs.</SelectItem>
-                      <SelectItem value="Ms.">Ms.</SelectItem>
-                      <SelectItem value="Prof.">Prof.</SelectItem>
-                      <SelectItem value="Rev.">Rev.</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    placeholder="First name"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="organization">Organization *</Label>
-                <Select value={formData.organizationId} onValueChange={(value) => setFormData({ ...formData, organizationId: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select organization" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {organizations.map((org: any) => (
-                      <SelectItem key={org.id} value={org.id.toString()}>
-                        {org.name} ({org.type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="Enter email address"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  placeholder="Enter phone number"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateUser}
-                  disabled={createUserMutation.isPending}
-                >
-                  {createUserMutation.isPending ? "Creating..." : "Create User"}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Search and filters */}
-      <div className="flex gap-4">
-        <div className="flex-1">
-          <Input
-            placeholder="Search users by name, role, or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-      </div>
-
-      {/* Users list */}
-      <div className="grid gap-4">
-        {filteredUsers.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <UserX className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-              <p className="text-gray-600">
-                {searchTerm ? "Try adjusting your search terms" : "Get started by creating your first user"}
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredUsers.map((user) => {
-            const roleInfo = getRoleInfo(user.role);
-            return (
-              <Card key={user.id}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-start space-x-4">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all">
-                            {user.username.charAt(0).toUpperCase()}
-                          </div>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                          <div className="px-2 py-1.5 text-sm font-medium text-slate-900">
-                            {user.username}
-                          </div>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleEditClick(user)} className="flex items-center">
-                            <Eye className="mr-2 h-4 w-4" />
-                            View Profile
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditClick(user)} className="flex items-center">
-                            <Edit className="mr-2 h-4 w-4" />
-                            Edit Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            toast({
-                              title: "Password Reset",
-                              description: `Password reset email sent to ${user.email || user.username}`,
-                            });
-                          }} className="flex items-center">
-                            <Key className="mr-2 h-4 w-4" />
-                            Reset Password
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleEditClick(user)} className="flex items-center">
-                            <Settings className="mr-2 h-4 w-4" />
-                            Change Permissions
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => {
-                            toast({
-                              title: "Activity Log",
-                              description: `Viewing activity log for ${user.username}`,
-                            });
-                          }} className="flex items-center">
-                            <Activity className="mr-2 h-4 w-4" />
-                            View Activity Log
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            toast({
-                              title: "Message Sent",
-                              description: `Internal message sent to ${user.username}`,
-                            });
-                          }} className="flex items-center">
-                            <MessageSquare className="mr-2 h-4 w-4" />
-                            Send Message
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => {
-                            if (user.email) {
-                              window.location.href = `mailto:${user.email}`;
-                            } else {
-                              toast({
-                                title: "No Email",
-                                description: "This user doesn't have an email address on file",
-                                variant: "destructive"
-                              });
-                            }
-                          }} className="flex items-center">
-                            <Mail className="mr-2 h-4 w-4" />
-                            Send Email
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="flex items-center text-red-600 focus:text-red-600">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete User
-                              </DropdownMenuItem>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete User</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{user.username}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDeleteUser(user.id)}
-                                  className="bg-red-600 hover:bg-red-700"
-                                >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          <h3 className="text-lg font-semibold text-gray-900">
-                            {user.title && user.firstName && user.lastName 
-                              ? `${user.title} ${user.firstName} ${user.lastName}` 
-                              : user.username}
-                          </h3>
-                          <Badge className={roleInfo.color}>
-                            <Shield className="w-3 h-3 mr-1" />
-                            {roleInfo.label}
-                          </Badge>
-                        </div>
-                        
-                        <div className="space-y-1 text-sm text-gray-600">
-                          {user.email && (
-                            <div className="flex items-center">
-                              <span className="font-medium w-16">Email:</span>
-                              <span>{user.email}</span>
-                            </div>
-                          )}
-                          {user.phone && (
-                            <div className="flex items-center">
-                              <span className="font-medium w-16">Phone:</span>
-                              <span>{user.phone}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center">
-                            <span className="font-medium w-16">Created:</span>
-                            <span>{new Date(user.createdAt!).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
+                  <DialogHeader>
+                    <DialogTitle>Create New User</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="username">Username *</Label>
+                      <Input
+                        id="username"
+                        value={formData.username}
+                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                        placeholder="Enter username"
+                      />
                     </div>
                     
-                    <div className="text-xs text-slate-500">
-                      Click avatar for actions
+                    <div>
+                      <Label htmlFor="password">Password *</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="Enter password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="role">Role *</Label>
+                      <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {USER_ROLES.map((role) => (
+                            <SelectItem key={role.value} value={role.value}>
+                              {role.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                          id="title"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          placeholder="Dr."
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input
+                          id="firstName"
+                          value={formData.firstName}
+                          onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                          placeholder="First name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          value={formData.lastName}
+                          onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                          placeholder="Last name"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="Enter email"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input
+                        id="phone"
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="Enter phone number"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="organization">Organization *</Label>
+                      <Select value={formData.organizationId} onValueChange={(value) => setFormData({ ...formData, organizationId: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select organization" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(organizations as any[]).map((org) => (
+                            <SelectItem key={org.id} value={org.id.toString()}>
+                              {org.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleCreateUser}
+                        disabled={createUserMutation.isPending}
+                      >
+                        {createUserMutation.isPending ? "Creating..." : "Create User"}
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      {/* Edit User Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit User: {selectedUser?.username}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="edit-username">Username *</Label>
-              <Input
-                id="edit-username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                placeholder="Enter username"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-password">New Password (leave blank to keep current)</Label>
-              <Input
-                id="edit-password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Enter new password"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-role">Role *</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {USER_ROLES.map((role) => (
-                    <SelectItem key={role.value} value={role.value}>
-                      {role.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label htmlFor="edit-title">Title</Label>
-                <Select value={formData.title} onValueChange={(value) => setFormData({ ...formData, title: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Title" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Dr.">Dr.</SelectItem>
-                    <SelectItem value="Mr.">Mr.</SelectItem>
-                    <SelectItem value="Mrs.">Mrs.</SelectItem>
-                    <SelectItem value="Ms.">Ms.</SelectItem>
-                    <SelectItem value="Prof.">Prof.</SelectItem>
-                    <SelectItem value="Rev.">Rev.</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-firstName">First Name</Label>
-                <Input
-                  id="edit-firstName"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  placeholder="First name"
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="edit-lastName">Last Name</Label>
-                <Input
-                  id="edit-lastName"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  placeholder="Last name"
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-organization">Organization</Label>
-              <Select value={formData.organizationId} onValueChange={(value) => setFormData({ ...formData, organizationId: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.map((org: any) => (
-                    <SelectItem key={org.id} value={org.id.toString()}>
-                      {org.name} ({org.type})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-email">Email</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-phone">Phone</Label>
-              <Input
-                id="edit-phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Enter phone number"
-              />
-            </div>
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleUpdateUser}
-                disabled={updateUserMutation.isPending}
-              >
-                {updateUserMutation.isPending ? "Updating..." : "Update User"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </header>
@@ -936,9 +612,9 @@ export default function UserManagement() {
                               </div>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleConfig.color}`}>
+                              <Badge className={roleConfig.color}>
                                 {roleConfig.label}
-                              </span>
+                              </Badge>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" size="sm">
@@ -999,9 +675,9 @@ export default function UserManagement() {
                               </h3>
                               <p className="text-sm text-slate-600">{user.email || user.username}</p>
                             </div>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleConfig.color}`}>
+                            <Badge className={roleConfig.color}>
                               {roleConfig.label}
-                            </span>
+                            </Badge>
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1033,6 +709,132 @@ export default function UserManagement() {
             )}
           </div>
         </div>
+
+        {/* Edit User Dialog */}
+        <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="edit-username">Username *</Label>
+                <Input
+                  id="edit-username"
+                  value={formData.username}
+                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="Enter username"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-password">Password (leave blank to keep current)</Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="Enter new password"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-role">Role *</Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {USER_ROLES.map((role) => (
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input
+                    id="edit-title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Dr."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-firstName">First Name</Label>
+                  <Input
+                    id="edit-firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    placeholder="First name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-lastName">Last Name</Label>
+                  <Input
+                    id="edit-lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="Enter email"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-organization">Organization</Label>
+                <Select value={formData.organizationId} onValueChange={(value) => setFormData({ ...formData, organizationId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select organization" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(organizations as any[]).map((org) => (
+                      <SelectItem key={org.id} value={org.id.toString()}>
+                        {org.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateUser}
+                  disabled={updateUserMutation.isPending}
+                >
+                  {updateUserMutation.isPending ? "Updating..." : "Update User"}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );
