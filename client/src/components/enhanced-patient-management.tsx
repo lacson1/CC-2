@@ -422,9 +422,7 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
                               {patient.riskLevel?.toUpperCase()}
                             </Badge>
                             {patient.isPriority && (
-                              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
-                                Priority
-                              </Badge>
+                              <div className="w-2 h-2 bg-purple-400 rounded-full opacity-60" title="Priority Patient"></div>
                             )}
                           </div>
                         </div>
@@ -501,9 +499,7 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
                                 {patient.riskLevel?.toUpperCase()}
                               </Badge>
                               {patient.isPriority && (
-                                <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-800">
-                                  Priority
-                                </Badge>
+                                <div className="w-2 h-2 bg-purple-400 rounded-full opacity-60" title="Priority Patient"></div>
                               )}
                             </div>
                             <Link href={`/patients/${patient.id}`}>
