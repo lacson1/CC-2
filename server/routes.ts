@@ -635,13 +635,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Prescription routes
-  app.post("/api/patients/:id/prescriptions", async (req, res) => {
+  app.post("/api/patients/:id/prescriptions", authenticateToken, requireAnyRole(['doctor', 'admin']), async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
-      const prescriptionData = insertPrescriptionSchema.parse({ ...req.body, patientId });
+      const user = req.user!;
+      
+      // Add required fields from the authenticated user
+      const prescriptionData = insertPrescriptionSchema.parse({ 
+        ...req.body, 
+        patientId,
+        prescribedBy: user.username,
+        organizationId: user.organizationId || null
+      });
+      
       const prescription = await storage.createPrescription(prescriptionData);
+      
+      // Log audit trail
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logPrescriptionAction('create', prescription.id, {
+        patientId,
+        medicineId: prescription.medicineId,
+        dosage: prescription.dosage
+      });
+      
       res.json(prescription);
     } catch (error) {
+      console.error('Prescription creation error:', error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid prescription data", errors: error.errors });
       } else {
