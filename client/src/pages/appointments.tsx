@@ -9,9 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Clock, Plus, Search, User, Stethoscope } from 'lucide-react';
-import { format } from 'date-fns';
+import { CalendarIcon, Clock, Plus, Search, User, Stethoscope, Filter, Grid3X3, List, CheckCircle, XCircle, Calendar as CalendarView } from 'lucide-react';
+import { format, isSameDay, parseISO, startOfWeek, endOfWeek, addWeeks, subWeeks, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -55,6 +57,13 @@ export default function AppointmentsPage() {
   const [duration, setDuration] = useState('30');
   const [notes, setNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  
+  // New state for enhanced features
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [providerFilter, setProviderFilter] = useState<string>('all');
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [editingAppointment, setEditingAppointment] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
@@ -152,15 +161,50 @@ export default function AppointmentsPage() {
     updateAppointmentMutation.mutate({ id: appointmentId, status });
   };
 
-  // Filter appointments
+  // Enhanced filtering logic
   const filteredAppointments = appointments.filter((appointment: Appointment) => {
-    if (!searchTerm) return true;
-    return (
+    const matchesSearch = !searchTerm || (
       appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.doctorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.type?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+    const matchesProvider = providerFilter === 'all' || appointment.doctorId.toString() === providerFilter;
+    
+    return matchesSearch && matchesStatus && matchesProvider;
   });
+
+  // Get status badge variant
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'scheduled': return 'default';
+      case 'completed': return 'secondary';
+      case 'cancelled': return 'destructive';
+      case 'no-show': return 'outline';
+      default: return 'default';
+    }
+  };
+
+  // Group appointments by date for calendar view
+  const appointmentsByDate = filteredAppointments.reduce((acc: any, appointment: Appointment) => {
+    const date = appointment.appointmentDate;
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(appointment);
+    return acc;
+  }, {});
+
+  // Get week dates for calendar view
+  const getWeekDates = (startDate: Date) => {
+    const start = startOfWeek(startDate);
+    const dates = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
+      dates.push(date);
+    }
+    return dates;
+  };
 
   // Pre-fill patient if coming from patient profile
   React.useEffect(() => {
@@ -193,7 +237,7 @@ export default function AppointmentsPage() {
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -202,6 +246,54 @@ export default function AppointmentsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+            
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="scheduled">Scheduled</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="cancelled">Cancelled</SelectItem>
+                  <SelectItem value="no-show">No Show</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={providerFilter} onValueChange={setProviderFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Providers</SelectItem>
+                  {(healthcareStaff as HealthcareStaff[]).map((staff) => (
+                    <SelectItem key={staff.id} value={staff.id.toString()}>
+                      {staff.firstName || staff.username} {staff.lastName || ''} ({staff.role})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <div className="flex border rounded-md">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-r-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('calendar')}
+                  className="rounded-l-none"
+                >
+                  <CalendarView className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
