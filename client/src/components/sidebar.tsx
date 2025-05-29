@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight, Brain, Calendar, ClipboardList, Activity, Star, Building } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole, RoleGuard } from "@/components/role-guard";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ const getNavigationGroupsForRole = (role: string) => {
         { name: "Physiotherapy", href: "/physiotherapy", icon: Heart, roles: ["admin", "physiotherapist"] },
         { name: "Exercise Leaflets", href: "/exercise-leaflets", icon: FileText, roles: ["admin", "doctor", "physiotherapist"] },
         { name: "Wellness Center", href: "/wellness", icon: Heart, roles: ["admin", "doctor", "nurse", "physiotherapist"] },
+        { name: "Mental Health Support", href: "/mental-health", icon: Brain, roles: ["admin", "doctor", "nurse", "psychiatrist"] },
         { name: "Medical Tools", href: "/medical-tools", icon: Calculator, roles: ["admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
       ]
     },

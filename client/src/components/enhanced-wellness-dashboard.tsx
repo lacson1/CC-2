@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import MentalHealthSupport from '@/components/mental-health-support';
 import { 
   Heart, 
   Activity, 
@@ -268,7 +269,7 @@ export default function EnhancedWellnessDashboard({ wellnessScore, patientData }
 
       {/* Mental Health Focus Section */}
       <Tabs defaultValue="activities" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4 bg-gradient-to-r from-purple-100 to-pink-100">
+        <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-purple-100 to-pink-100">
           <TabsTrigger value="activities" className="flex items-center gap-2">
             <Brain className="w-4 h-4" />
             Mental Health Activities
@@ -276,6 +277,10 @@ export default function EnhancedWellnessDashboard({ wellnessScore, patientData }
           <TabsTrigger value="mood-tracking" className="flex items-center gap-2">
             <Smile className="w-4 h-4" />
             Mood Tracking
+          </TabsTrigger>
+          <TabsTrigger value="clinical-support" className="flex items-center gap-2">
+            <Brain className="w-4 h-4" />
+            Clinical Support
           </TabsTrigger>
           <TabsTrigger value="achievements" className="flex items-center gap-2">
             <Award className="w-4 h-4" />
@@ -429,6 +434,11 @@ export default function EnhancedWellnessDashboard({ wellnessScore, patientData }
               );
             })}
           </div>
+        </TabsContent>
+
+        {/* Clinical Mental Health Support */}
+        <TabsContent value="clinical-support" className="space-y-6">
+          <MentalHealthSupport patientId={patientData?.id} />
         </TabsContent>
 
         {/* Wellness Goals */}
