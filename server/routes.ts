@@ -332,6 +332,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced patients endpoint with analytics
+  app.get("/api/patients/enhanced", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patients = await storage.getPatients();
+      res.json(patients);
+    } catch (error) {
+      console.error('Error fetching enhanced patients:', error);
+      res.status(500).json({ message: "Failed to fetch patients" });
+    }
+  });
+
+  // Patient analytics endpoint
+  app.get("/api/patients/analytics", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patients = await storage.getPatients();
+      res.json(patients);
+    } catch (error) {
+      console.error('Error fetching patient analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   app.get("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       const search = req.query.search as string | undefined;

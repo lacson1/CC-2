@@ -62,12 +62,10 @@ export default function Patients() {
       </Tabs>
 
       {/* Patient Registration Modal */}
-      {showPatientModal && (
-        <PatientRegistrationModal 
-          isOpen={showPatientModal} 
-          onClose={() => setShowPatientModal(false)} 
-        />
-      )}
+      <PatientRegistrationModal 
+        open={showPatientModal} 
+        onOpenChange={setShowPatientModal} 
+      />
     </div>
   );
 }

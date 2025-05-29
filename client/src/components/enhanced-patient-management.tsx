@@ -42,7 +42,7 @@ export default function EnhancedPatientManagement({ user, onPatientSelect }: Enh
 
   // Fetch patients with enhanced data
   const { data: patients = [], isLoading } = useQuery<PatientWithStats[]>({
-    queryKey: ['/api/patients/enhanced'],
+    queryKey: ['/api/patients'],
     select: (data: any) => {
       // Transform patients to include calculated stats
       return (data as Patient[]).map(patient => ({

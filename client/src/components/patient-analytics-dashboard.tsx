@@ -21,7 +21,7 @@ interface PatientAnalytics {
 
 export default function PatientAnalyticsDashboard() {
   const { data: analytics, isLoading } = useQuery<PatientAnalytics>({
-    queryKey: ['/api/patients/analytics'],
+    queryKey: ['/api/patients'],
     select: (data: any) => {
       // Transform real patient data into analytics
       const patients = data as any[];
