@@ -269,7 +269,7 @@ export default function ConsultationFormSelector({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="consultation-forms">
       {/* Form Selection */}
       <Card>
         <CardHeader>
@@ -288,6 +288,7 @@ export default function ConsultationFormSelector({
               {forms.map((form) => (
                 <div
                   key={form.id}
+                  data-testid="form-card"
                   className={`p-4 border rounded-lg cursor-pointer transition-all ${
                     selectedFormId === form.id
                       ? 'border-blue-500 bg-blue-50 shadow-md'
@@ -301,7 +302,7 @@ export default function ConsultationFormSelector({
                       <p className="text-sm text-gray-600 mt-1">{form.description}</p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800" data-testid="specialist-role">
                         {form.specialistRole}
                       </Badge>
                       <Badge variant="outline">
