@@ -289,7 +289,7 @@ export default function UserManagementEnhanced() {
       );
     }
 
-    if (filterSpecialty) {
+    if (filterSpecialty && filterSpecialty !== "all") {
       filtered = filtered.filter(user => user.role === filterSpecialty);
     }
 
@@ -492,7 +492,7 @@ export default function UserManagementEnhanced() {
                   <SelectValue placeholder="Filter by role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Roles</SelectItem>
+                  <SelectItem value="all">All Roles</SelectItem>
                   {USER_ROLES.map((role) => (
                     <SelectItem key={role.value} value={role.value}>
                       {role.label}
@@ -500,13 +500,13 @@ export default function UserManagementEnhanced() {
                   ))}
                 </SelectContent>
               </Select>
-              {(searchTerm || filterSpecialty) && (
+              {(searchTerm || (filterSpecialty && filterSpecialty !== "all")) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
                     setSearchTerm("");
-                    setFilterSpecialty("");
+                    setFilterSpecialty("all");
                   }}
                   className="text-slate-500 hover:text-slate-700"
                 >
