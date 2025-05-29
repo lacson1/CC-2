@@ -44,12 +44,14 @@ interface FormField {
 interface ConsultationFormSelectorProps {
   patientId: number;
   visitId?: number;
+  patient?: any;
   onFormSubmit?: (data: any) => void;
 }
 
 export default function ConsultationFormSelector({ 
   patientId, 
   visitId, 
+  patient,
   onFormSubmit 
 }: ConsultationFormSelectorProps) {
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
@@ -383,7 +385,7 @@ export default function ConsultationFormSelector({
       )}
 
       {/* Consultation History */}
-      <ConsultationHistoryDisplay patientId={patientId} />
+      <ConsultationHistoryDisplay patientId={patientId} patient={patient} />
     </div>
   );
 }
