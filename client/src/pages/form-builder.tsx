@@ -81,6 +81,144 @@ const MEDICAL_TEMPLATES = {
   ]
 };
 
+// Specialized Care Templates
+const CARE_TEMPLATES = {
+  diabetesManagement: {
+    name: "Diabetes Management Assessment",
+    description: "Comprehensive diabetes care template for routine monitoring and management",
+    specialistRole: "Doctor/Nurse",
+    fields: [
+      // Patient Information
+      { id: "dm_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Main concern or reason for today's visit" },
+      
+      // Diabetes History
+      { id: "dm_type", label: "Diabetes Type", type: "select", required: true, section: "Diabetes History", options: ["Type 1", "Type 2", "Gestational", "MODY", "Secondary"] },
+      { id: "dm_duration", label: "Duration of Diabetes", type: "text", required: true, section: "Diabetes History", placeholder: "Years since diagnosis" },
+      { id: "dm_last_hba1c", label: "Last HbA1c Result", type: "text", required: false, section: "Diabetes History", placeholder: "% and date" },
+      { id: "dm_complications", label: "Known Complications", type: "checkbox", section: "Diabetes History", options: ["Retinopathy", "Nephropathy", "Neuropathy", "Cardiovascular Disease", "Foot Problems"] },
+      
+      // Current Management
+      { id: "dm_current_meds", label: "Current Diabetes Medications", type: "textarea", required: true, section: "Current Management", placeholder: "Include insulin, oral medications, doses, and frequency" },
+      { id: "dm_glucose_monitoring", label: "Blood Glucose Monitoring", type: "select", required: true, section: "Current Management", options: ["Self-monitoring daily", "Self-monitoring weekly", "CGM", "Flash glucose monitoring", "Not monitoring"] },
+      { id: "dm_recent_readings", label: "Recent Glucose Readings", type: "textarea", required: false, section: "Current Management", placeholder: "Fasting, pre/post meal readings if available" },
+      
+      // Physical Assessment
+      { id: "dm_weight", label: "Weight (kg)", type: "number", required: true, section: "Physical Assessment", validation: { min: 20, max: 200 } },
+      { id: "dm_bmi", label: "BMI", type: "number", required: false, section: "Physical Assessment", validation: { min: 10, max: 60 } },
+      { id: "dm_bp", label: "Blood Pressure", type: "text", required: true, section: "Physical Assessment", placeholder: "mmHg" },
+      { id: "dm_foot_exam", label: "Foot Examination", type: "select", required: true, section: "Physical Assessment", options: ["Normal", "Calluses", "Ulcers", "Infection", "Deformity", "Reduced sensation"] },
+      
+      // Lifestyle Assessment
+      { id: "dm_diet_adherence", label: "Diet Adherence", type: "select", required: true, section: "Lifestyle", options: ["Excellent", "Good", "Fair", "Poor"] },
+      { id: "dm_exercise", label: "Exercise Level", type: "select", required: true, section: "Lifestyle", options: ["Regular (>150min/week)", "Moderate (60-150min/week)", "Light (<60min/week)", "Sedentary"] },
+      { id: "dm_smoking", label: "Smoking Status", type: "select", required: true, section: "Lifestyle", options: ["Never", "Former", "Current"] },
+      
+      // Plan and Follow-up
+      { id: "dm_treatment_plan", label: "Treatment Plan", type: "textarea", required: true, section: "Management Plan", placeholder: "Medication adjustments, lifestyle recommendations, referrals" },
+      { id: "dm_education_provided", label: "Education Topics Covered", type: "checkbox", section: "Management Plan", options: ["Blood glucose monitoring", "Medication adherence", "Dietary advice", "Exercise recommendations", "Foot care", "Hypoglycemia management"] },
+      { id: "dm_next_review", label: "Next Review", type: "date", required: true, section: "Management Plan" },
+      { id: "dm_lab_requests", label: "Laboratory Requests", type: "checkbox", section: "Management Plan", options: ["HbA1c", "Lipid profile", "Kidney function", "Liver function", "Urinalysis"] }
+    ]
+  },
+  
+  weightManagement: {
+    name: "Weight Management Assessment",
+    description: "Comprehensive weight management template for obesity and weight-related health issues",
+    specialistRole: "Doctor/Nurse",
+    fields: [
+      // Initial Assessment
+      { id: "wm_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Weight-related concerns or goals" },
+      { id: "wm_goal", label: "Weight Management Goal", type: "select", required: true, section: "Assessment", options: ["Weight loss", "Weight gain", "Weight maintenance", "Body composition improvement"] },
+      
+      // Anthropometric Measurements
+      { id: "wm_current_weight", label: "Current Weight (kg)", type: "number", required: true, section: "Measurements", validation: { min: 20, max: 300 } },
+      { id: "wm_height", label: "Height (cm)", type: "number", required: true, section: "Measurements", validation: { min: 100, max: 250 } },
+      { id: "wm_bmi", label: "BMI", type: "number", required: false, section: "Measurements", validation: { min: 10, max: 80 } },
+      { id: "wm_waist_circumference", label: "Waist Circumference (cm)", type: "number", required: false, section: "Measurements", validation: { min: 50, max: 200 } },
+      { id: "wm_weight_history", label: "Weight History", type: "textarea", required: false, section: "Measurements", placeholder: "Previous weights, weight loss attempts, patterns" },
+      
+      // Medical History
+      { id: "wm_comorbidities", label: "Weight-Related Comorbidities", type: "checkbox", section: "Medical History", options: ["Type 2 Diabetes", "Hypertension", "Sleep Apnea", "PCOS", "Dyslipidemia", "Osteoarthritis", "GERD"] },
+      { id: "wm_medications", label: "Current Medications", type: "textarea", required: false, section: "Medical History", placeholder: "Include any medications that may affect weight" },
+      { id: "wm_previous_attempts", label: "Previous Weight Loss Attempts", type: "textarea", required: false, section: "Medical History", placeholder: "Diets tried, medications, surgery, outcomes" },
+      
+      // Lifestyle Assessment
+      { id: "wm_diet_pattern", label: "Current Diet Pattern", type: "select", required: true, section: "Lifestyle", options: ["Balanced diet", "High carbohydrate", "High fat", "High protein", "Irregular eating", "Emotional eating"] },
+      { id: "wm_meal_frequency", label: "Meal Frequency", type: "select", required: true, section: "Lifestyle", options: ["3 regular meals", "3 meals + snacks", "2 meals/day", "Irregular", "Frequent snacking"] },
+      { id: "wm_exercise_current", label: "Current Exercise Level", type: "select", required: true, section: "Lifestyle", options: ["No exercise", "Light activity (<1hr/week)", "Moderate activity (1-3hrs/week)", "Regular exercise (>3hrs/week)", "High intensity training"] },
+      { id: "wm_sleep_quality", label: "Sleep Quality", type: "select", required: true, section: "Lifestyle", options: ["Excellent (7-9hrs)", "Good (6-7hrs)", "Fair (5-6hrs)", "Poor (<5hrs)", "Sleep disorders"] },
+      
+      // Psychological Assessment
+      { id: "wm_motivation_level", label: "Motivation Level", type: "select", required: true, section: "Psychological", options: ["Very high", "High", "Moderate", "Low", "Very low"] },
+      { id: "wm_eating_behaviors", label: "Eating Behaviors", type: "checkbox", section: "Psychological", options: ["Emotional eating", "Binge eating", "Night eating", "Stress eating", "Social eating", "Mindful eating"] },
+      { id: "wm_support_system", label: "Support System", type: "select", required: true, section: "Psychological", options: ["Strong family support", "Some support", "Limited support", "No support", "Negative influences"] },
+      
+      // Management Plan
+      { id: "wm_calorie_target", label: "Recommended Calorie Target", type: "text", required: false, section: "Management Plan", placeholder: "Daily calorie goal" },
+      { id: "wm_diet_plan", label: "Dietary Recommendations", type: "textarea", required: true, section: "Management Plan", placeholder: "Specific dietary plan and recommendations" },
+      { id: "wm_exercise_plan", label: "Exercise Prescription", type: "textarea", required: true, section: "Management Plan", placeholder: "Type, frequency, duration, intensity of recommended exercise" },
+      { id: "wm_behavioral_strategies", label: "Behavioral Strategies", type: "checkbox", section: "Management Plan", options: ["Food diary", "Portion control", "Meal planning", "Stress management", "Sleep hygiene", "Regular weigh-ins"] },
+      { id: "wm_followup_schedule", label: "Follow-up Schedule", type: "select", required: true, section: "Management Plan", options: ["Weekly", "Bi-weekly", "Monthly", "3 months", "6 months"] },
+      { id: "wm_target_weight_loss", label: "Target Weight Loss", type: "text", required: false, section: "Management Plan", placeholder: "kg per week/month" }
+    ]
+  },
+  
+  elderlycare: {
+    name: "Elderly Care Assessment",
+    description: "Comprehensive geriatric assessment template for elderly patients",
+    specialistRole: "Doctor/Nurse",
+    fields: [
+      // Basic Information
+      { id: "ec_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Main concerns or reason for visit" },
+      { id: "ec_informant", label: "Information Source", type: "select", required: true, section: "Assessment", options: ["Patient", "Family member", "Caregiver", "Healthcare provider", "Mixed sources"] },
+      
+      // Functional Assessment
+      { id: "ec_activities_daily_living", label: "Activities of Daily Living", type: "checkbox", section: "Functional Status", options: ["Independent bathing", "Independent dressing", "Independent toileting", "Independent feeding", "Independent mobility", "Independent continence"] },
+      { id: "ec_instrumental_adl", label: "Instrumental ADLs", type: "checkbox", section: "Functional Status", options: ["Cooking", "Shopping", "Managing finances", "Using telephone", "Taking medications", "Transportation"] },
+      { id: "ec_mobility_status", label: "Mobility Status", type: "select", required: true, section: "Functional Status", options: ["Independent", "Uses walking stick", "Uses walker", "Uses wheelchair", "Bedbound", "Requires assistance"] },
+      { id: "ec_fall_history", label: "Fall History", type: "select", required: true, section: "Functional Status", options: ["No falls", "1 fall in past year", "2-3 falls in past year", ">3 falls in past year", "Recent fall"] },
+      
+      // Cognitive Assessment
+      { id: "ec_cognitive_status", label: "Cognitive Status", type: "select", required: true, section: "Cognitive Assessment", options: ["Normal", "Mild cognitive impairment", "Moderate impairment", "Severe impairment", "Dementia diagnosed"] },
+      { id: "ec_memory_concerns", label: "Memory Concerns", type: "checkbox", section: "Cognitive Assessment", options: ["Recent memory loss", "Difficulty with names", "Gets lost in familiar places", "Trouble with complex tasks", "Personality changes"] },
+      { id: "ec_orientation", label: "Orientation", type: "checkbox", section: "Cognitive Assessment", options: ["Oriented to time", "Oriented to place", "Oriented to person", "Oriented to situation"] },
+      
+      // Nutrition and Hydration
+      { id: "ec_nutritional_status", label: "Nutritional Status", type: "select", required: true, section: "Nutrition", options: ["Well-nourished", "At risk of malnutrition", "Malnourished", "Overweight", "Obese"] },
+      { id: "ec_weight_change", label: "Recent Weight Change", type: "select", required: true, section: "Nutrition", options: ["Stable", "Unintentional weight loss", "Unintentional weight gain", "Intentional weight loss"] },
+      { id: "ec_appetite", label: "Appetite", type: "select", required: true, section: "Nutrition", options: ["Good", "Fair", "Poor", "Variable"] },
+      { id: "ec_swallowing", label: "Swallowing", type: "select", required: true, section: "Nutrition", options: ["Normal", "Difficulty with liquids", "Difficulty with solids", "Choking episodes", "Modified diet required"] },
+      
+      // Medication Management
+      { id: "ec_medication_count", label: "Number of Regular Medications", type: "number", required: true, section: "Medications", validation: { min: 0, max: 50 } },
+      { id: "ec_medication_adherence", label: "Medication Adherence", type: "select", required: true, section: "Medications", options: ["Excellent", "Good", "Fair", "Poor", "Unable to manage"] },
+      { id: "ec_medication_management", label: "Medication Management", type: "select", required: true, section: "Medications", options: ["Self-managed", "Family assistance", "Caregiver managed", "Pharmacy packaging", "Unable to manage"] },
+      { id: "ec_adverse_effects", label: "Potential Adverse Drug Effects", type: "checkbox", section: "Medications", options: ["Dizziness", "Confusion", "Sedation", "GI upset", "Falls", "None observed"] },
+      
+      // Social Assessment
+      { id: "ec_living_situation", label: "Living Situation", type: "select", required: true, section: "Social", options: ["Lives alone", "Lives with spouse", "Lives with family", "Assisted living", "Nursing home", "Homeless"] },
+      { id: "ec_social_support", label: "Social Support", type: "select", required: true, section: "Social", options: ["Strong support network", "Moderate support", "Limited support", "Isolated", "No support"] },
+      { id: "ec_caregiver_stress", label: "Caregiver Stress Level", type: "select", required: false, section: "Social", options: ["None", "Mild", "Moderate", "High", "Severe", "No caregiver"] },
+      
+      // Mental Health
+      { id: "ec_mood", label: "Mood Assessment", type: "select", required: true, section: "Mental Health", options: ["Normal mood", "Mild depression", "Moderate depression", "Severe depression", "Anxiety", "Mixed"] },
+      { id: "ec_depression_screening", label: "Depression Symptoms", type: "checkbox", section: "Mental Health", options: ["Low mood", "Loss of interest", "Sleep disturbance", "Appetite changes", "Fatigue", "Hopelessness"] },
+      { id: "ec_behavioral_issues", label: "Behavioral Issues", type: "checkbox", section: "Mental Health", options: ["Agitation", "Wandering", "Sundowning", "Aggression", "Withdrawal", "None"] },
+      
+      // Safety Assessment
+      { id: "ec_home_safety", label: "Home Safety Concerns", type: "checkbox", section: "Safety", options: ["Stairs without rails", "Poor lighting", "Loose rugs", "Clutter", "No safety devices", "Needs assessment"] },
+      { id: "ec_driving_status", label: "Driving Status", type: "select", required: true, section: "Safety", options: ["Still driving", "Limited driving", "Stopped driving", "Never drove", "Safety concerns"] },
+      { id: "ec_abuse_risk", label: "Elder Abuse Risk", type: "select", required: true, section: "Safety", options: ["No concerns", "Financial exploitation", "Physical abuse", "Neglect", "Emotional abuse", "Self-neglect"] },
+      
+      // Care Plan
+      { id: "ec_goals_of_care", label: "Goals of Care", type: "textarea", required: true, section: "Care Planning", placeholder: "Patient and family goals, preferences, and priorities" },
+      { id: "ec_interventions", label: "Recommended Interventions", type: "checkbox", section: "Care Planning", options: ["Physical therapy", "Occupational therapy", "Dietitian referral", "Social work", "Home health", "Medication review"] },
+      { id: "ec_advance_directives", label: "Advance Directives", type: "select", required: true, section: "Care Planning", options: ["Completed", "In progress", "Discussed", "Refused", "Unknown"] },
+      { id: "ec_followup_plan", label: "Follow-up Plan", type: "textarea", required: true, section: "Care Planning", placeholder: "Monitoring plan, next appointments, and care coordination" }
+    ]
+  }
+};
+
 export default function FormBuilder() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -188,6 +326,23 @@ export default function FormBuilder() {
       toast({
         title: "Template Added",
         description: `Added ${template.length} ${templateKey} fields to your form.`,
+      });
+    }
+  };
+
+  // Load complete care template
+  const loadCareTemplate = (templateKey: string) => {
+    const template = CARE_TEMPLATES[templateKey as keyof typeof CARE_TEMPLATES];
+    if (template) {
+      setFormName(template.name);
+      setFormDescription(template.description);
+      setSpecialistRole(template.specialistRole);
+      setFields(template.fields);
+      setEditingForm(null); // Clear any existing form being edited
+      
+      toast({
+        title: "Care Template Loaded",
+        description: `Loaded ${template.name} with ${template.fields.length} fields. You can customize it before saving.`,
       });
     }
   };
@@ -470,10 +625,31 @@ export default function FormBuilder() {
                 />
               </div>
 
+              {/* Specialized Care Templates */}
+              <div className="border rounded-lg p-4 bg-green-50">
+                <h3 className="text-sm font-semibold text-green-900 mb-2">Complete Care Templates</h3>
+                <p className="text-xs text-green-700 mb-3">Ready-to-use comprehensive assessment forms for specialized care</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {Object.entries(CARE_TEMPLATES).map(([key, template]) => (
+                    <Button
+                      key={key}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => loadCareTemplate(key)}
+                      disabled={previewMode}
+                      className="text-xs h-auto p-2 flex flex-col items-start"
+                    >
+                      <span className="font-medium">{template.name}</span>
+                      <span className="text-gray-600 text-left">{template.fields.length} fields</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {/* Medical Template Section */}
               <div className="border rounded-lg p-4 bg-blue-50">
-                <h3 className="text-sm font-semibold text-blue-900 mb-2">Quick Start: Medical Templates</h3>
-                <p className="text-xs text-blue-700 mb-3">Add pre-built medical field sets to speed up form creation</p>
+                <h3 className="text-sm font-semibold text-blue-900 mb-2">Quick Start: Medical Field Sets</h3>
+                <p className="text-xs text-blue-700 mb-3">Add individual medical field sets to customize your form</p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {Object.entries(MEDICAL_TEMPLATES).map(([key, template]) => (
                     <Button
