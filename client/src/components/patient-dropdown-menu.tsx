@@ -68,7 +68,14 @@ export function PatientDropdownMenu({
             </div>
           </>
         )}
-        <DropdownMenuItem onClick={onEditPatient}>
+        <DropdownMenuItem onClick={() => {
+          if (onEditPatient) {
+            onEditPatient();
+          } else {
+            // Navigate to patient profile with edit mode
+            navigate(`/patients/${patient.id}?edit=true`);
+          }
+        }}>
           <Edit className="mr-2 h-4 w-4" />
           Edit Patient Info
         </DropdownMenuItem>
@@ -77,7 +84,7 @@ export function PatientDropdownMenu({
           <Pill className="mr-2 h-4 w-4" />
           Add Prescription
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate(`/lab-orders?patientId=${patient.id}`)}>
+        <DropdownMenuItem onClick={() => navigate(`/lab-results?patientId=${patient.id}`)}>
           <FlaskRound className="mr-2 h-4 w-4" />
           Order Lab Tests
         </DropdownMenuItem>
@@ -94,11 +101,7 @@ export function PatientDropdownMenu({
           <Users className="mr-2 h-4 w-4" />
           Create Referral
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => {
-          // Switch to vitals tab in current patient view
-          const vitalsTab = document.querySelector('[data-state="inactive"][value="vitals"]') as HTMLElement;
-          if (vitalsTab) vitalsTab.click();
-        }}>
+        <DropdownMenuItem onClick={() => navigate(`/patients/${patient.id}?tab=vitals`)}>
           <Monitor className="mr-2 h-4 w-4" />
           Record Vital Signs
         </DropdownMenuItem>
@@ -107,7 +110,14 @@ export function PatientDropdownMenu({
           Upload Documents
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={onPrintRecord}>
+        <DropdownMenuItem onClick={() => {
+          if (onPrintRecord) {
+            onPrintRecord();
+          } else {
+            // Navigate to patient profile with print mode
+            navigate(`/patients/${patient.id}?action=print`);
+          }
+        }}>
           <Share className="mr-2 h-4 w-4" />
           Print/Export Records
         </DropdownMenuItem>
@@ -122,13 +132,35 @@ export function PatientDropdownMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem 
           className="text-red-600" 
-          onClick={() => {
+          onClick={async () => {
             if (confirm(`Are you sure you want to archive ${patient.firstName} ${patient.lastName}? This will hide the patient from active lists but preserve all medical records.`)) {
-              // TODO: Implement patient archiving API call
-              toast({
-                title: 'Archive Patient',
-                description: 'Patient archiving functionality will be implemented in the next update.',
-              });
+              try {
+                const response = await fetch(`/api/patients/${patient.id}/archive`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                  },
+                  body: JSON.stringify({ archived: true })
+                });
+
+                if (response.ok) {
+                  toast({
+                    title: 'Patient Archived',
+                    description: `${patient.firstName} ${patient.lastName} has been archived successfully.`,
+                  });
+                  // Refresh the page to update the patient list
+                  window.location.reload();
+                } else {
+                  throw new Error('Failed to archive patient');
+                }
+              } catch (error) {
+                toast({
+                  title: 'Archive Failed',
+                  description: 'Unable to archive patient. Please try again.',
+                  variant: 'destructive'
+                });
+              }
             }
           }}
         >

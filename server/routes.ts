@@ -457,6 +457,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Archive/unarchive patient
+  app.patch("/api/patients/:id/archive", authenticateToken, requireAnyRole(['doctor', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { archived } = req.body;
+      
+      const updatedPatient = await storage.updatePatient(id, { archived: archived || false });
+      if (!updatedPatient) {
+        res.status(404).json({ message: "Patient not found" });
+        return;
+      }
+
+      // Log the archive action
+      await req.auditLogger?.logPatientAction(
+        archived ? 'ARCHIVE' : 'UNARCHIVE',
+        id,
+        { archived }
+      );
+
+      res.json({ 
+        message: `Patient ${archived ? 'archived' : 'unarchived'} successfully`, 
+        patient: updatedPatient 
+      });
+    } catch (error) {
+      console.error('Error archiving patient:', error);
+      res.status(500).json({ message: "Failed to archive patient" });
+    }
+  });
+
   // Visits routes - Only doctors can create visits
   app.post("/api/patients/:id/visits", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
