@@ -246,7 +246,13 @@ export default function VisitRecordingModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      if (!newOpen) {
+        handleClose();
+      } else {
+        onOpenChange(newOpen);
+      }
+    }}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" onEscapeKeyDown={() => onOpenChange(false)}>
         <DialogHeader>
           <DialogTitle>Record Patient Visit</DialogTitle>
