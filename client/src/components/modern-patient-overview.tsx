@@ -566,9 +566,8 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PatientSafetyAlerts 
+              <PatientSafetyAlertsRealtime 
                 patientId={patient.id} 
-                patient={patient}
                 compact={false}
               />
             </CardContent>
