@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,6 @@ import {
   TriangleAlert,
   Settings,
   Building,
-  Shield,
-  FileText,
   TrendingUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -56,33 +54,33 @@ export default function Dashboard() {
   });
 
   // Fetch recent patients
-  const { data: recentPatients } = useQuery({
+  const { data: recentPatients = [] } = useQuery({
     queryKey: ['/api/patients/recent'],
     enabled: !!user,
   });
 
   // Fetch all patients for search
-  const { data: allPatients } = useQuery({
+  const { data: allPatients = [] } = useQuery({
     queryKey: ['/api/patients'],
     enabled: !!user,
   });
 
   // Fetch low stock medicines
-  const { data: lowStockMedicines } = useQuery({
+  const { data: lowStockMedicines = [] } = useQuery({
     queryKey: ['/api/medicines/low-stock'],
     enabled: !!user,
   });
 
   // Fetch referrals for doctors
-  const { data: doctorReferrals, isLoading: referralsLoading } = useQuery({
+  const { data: doctorReferrals = [], isLoading: referralsLoading } = useQuery({
     queryKey: ['/api/referrals'],
     enabled: isDoctor,
   });
 
   // Filter patients based on search
-  const filteredPatients = (allPatients && Array.isArray(allPatients)) ? allPatients.filter((patient: any) =>
+  const filteredPatients = allPatients.filter((patient: any) =>
     `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  );
 
   // Helper functions
   const getPatientInitials = (firstName: string, lastName: string) => {
@@ -376,7 +374,7 @@ export default function Dashboard() {
                     <p className="text-sm text-slate-500">Loading referrals...</p>
                   ) : (
                     <div className="space-y-3">
-                      {doctorReferrals && Array.isArray(doctorReferrals) && doctorReferrals.length > 0 ? (
+                      {doctorReferrals.length > 0 ? (
                         doctorReferrals.slice(0, 3).map((referral: any) => (
                           <div key={referral.id} className="p-3 bg-slate-50 rounded">
                             <p className="font-medium text-sm">{referral.patient?.firstName} {referral.patient?.lastName}</p>
@@ -398,7 +396,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Recent Patients - For all roles */}
+        {/* Recent Patients & Low Stock - For all roles */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -406,7 +404,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentPatients && Array.isArray(recentPatients) && recentPatients.length > 0 ? (
+                {recentPatients.length > 0 ? (
                   recentPatients.slice(0, 5).map((patient: any, index: number) => (
                     <div key={patient.id || index} className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded">
                       <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm">
@@ -438,7 +436,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {lowStockMedicines && Array.isArray(lowStockMedicines) && lowStockMedicines.length > 0 ? (
+                {lowStockMedicines.length > 0 ? (
                   lowStockMedicines.slice(0, 5).map((medicine: any, index: number) => (
                     <div key={medicine.id || index} className="flex items-center justify-between p-2 bg-red-50 rounded">
                       <div>
@@ -460,7 +458,7 @@ export default function Dashboard() {
                 ) : (
                   <p className="text-sm text-slate-500">All medicines well stocked</p>
                 )}
-                {lowStockMedicines && Array.isArray(lowStockMedicines) && lowStockMedicines.length > 5 && (
+                {lowStockMedicines.length > 5 && (
                   <Button variant="outline" className="w-full" asChild>
                     <Link href="/pharmacy">View All ({lowStockMedicines.length} items)</Link>
                   </Button>
