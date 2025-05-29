@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -82,21 +83,40 @@ export function ModernPatientOverview({
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  // Convert visits to timeline events
-  const timelineEvents = visits.map(visit => ({
-    id: visit.id,
-    type: 'visit' as const,
-    date: visit.visitDate,
-    title: `${visit.visitType} Visit`,
-    description: visit.complaint || visit.diagnosis || 'Routine visit',
-    status: visit.diagnosis ? 'Completed' : 'Draft',
-    details: {
-      bloodPressure: visit.bloodPressure,
-      heartRate: visit.heartRate,
-      temperature: visit.temperature,
-      weight: visit.weight
-    }
-  }));
+  // Use comprehensive activity trail data instead of just visits
+  const [activityTrail, setActivityTrail] = useState<any[]>([]);
+  
+  useEffect(() => {
+    const fetchActivityTrail = async () => {
+      try {
+        const response = await fetch(`/api/patients/${patient.id}/activity-trail`);
+        if (response.ok) {
+          const data = await response.json();
+          setActivityTrail(data);
+        }
+      } catch (error) {
+        console.error('Error fetching activity trail:', error);
+        // Fallback to visits if activity trail fails
+        const fallbackEvents = visits.map(visit => ({
+          id: visit.id,
+          type: 'visit' as const,
+          date: visit.visitDate,
+          title: `${visit.visitType} Visit`,
+          description: visit.complaint || visit.diagnosis || 'Routine visit',
+          status: visit.diagnosis ? 'Completed' : 'Draft',
+          details: {
+            bloodPressure: visit.bloodPressure,
+            heartRate: visit.heartRate,
+            temperature: visit.temperature,
+            weight: visit.weight
+          }
+        }));
+        setActivityTrail(fallbackEvents);
+      }
+    };
+    
+    fetchActivityTrail();
+  }, [patient.id, visits]);
 
   return (
     <div className="space-y-4 min-h-screen w-full">
@@ -277,7 +297,7 @@ export function ModernPatientOverview({
 
               {/* Middle Panel - Timeline & Main Content */}
               <div className="lg:col-span-2">
-                <PatientTimeline events={timelineEvents} />
+                <PatientTimeline events={activityTrail} />
               </div>
             </div>
           </TabsContent>
