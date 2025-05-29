@@ -30,6 +30,8 @@ import EditVisit from "@/pages/edit-visit";
 import AppointmentsPage from "@/pages/appointments";
 import LabOrdersPage from "@/pages/lab-orders";
 import DocumentsPage from "@/pages/documents";
+import RevenueAnalytics from "@/pages/revenue-analytics";
+import TelemedicinePage from "@/pages/telemedicine";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 

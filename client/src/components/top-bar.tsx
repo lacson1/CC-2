@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Globe, Moon, Sun, User, Settings, Menu, X, Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, UserCheck, Calculator, TrendingUp, FileText, UserCog, Building2, Shield } from "lucide-react";
+import { Bell, Globe, Moon, Sun, User, Settings, Menu, X, Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, UserCheck, Calculator, TrendingUp, FileText, UserCog, Building2, Shield, Video, DollarSign, BookOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +24,10 @@ const getNavigationForRole = (role: string) => {
     { name: "Referrals", href: "/referrals", icon: UserCheck, roles: ["admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
     { name: "Medical Tools", href: "/medical-tools", icon: Calculator, roles: ["admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
     { name: "Clinical Performance", href: "/clinical-performance", icon: TrendingUp, roles: ["admin", "doctor"] },
+    { name: "Revenue Analytics", href: "/analytics", icon: DollarSign, roles: ["admin"] },
+    { name: "Telemedicine", href: "/telemedicine", icon: Video, roles: ["admin", "doctor", "nurse"] },
+    { name: "Clinical Protocols", href: "/protocols", icon: BookOpen, roles: ["admin", "doctor", "nurse"] },
+    { name: "Compliance Export", href: "/compliance", icon: Download, roles: ["admin"] },
     { name: "Form Builder", href: "/form-builder", icon: FileText, roles: ["admin", "doctor", "nurse"] },
     { name: "User Management", href: "/user-management", icon: UserCog, roles: ["admin"] },
     { name: "Organization Management", href: "/organization-management", icon: Building2, roles: ["admin"] },
