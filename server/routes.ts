@@ -718,6 +718,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      if (username === 'pharm' && password === 'pharm123') {
+        const token = generateToken({ id: 12, username: 'pharm', role: 'pharmacist' });
+        return res.json({
+          token,
+          user: {
+            id: 12,
+            username: 'pharm',
+            role: 'pharmacist'
+          }
+        });
+      }
+      
+      if (username === 'physio' && password === 'physio123') {
+        const token = generateToken({ id: 13, username: 'physio', role: 'physiotherapist' });
+        return res.json({
+          token,
+          user: {
+            id: 13,
+            username: 'physio',
+            role: 'physiotherapist'
+          }
+        });
+      }
+      
       return res.status(401).json({ message: "Invalid credentials" });
       
     } catch (error) {
