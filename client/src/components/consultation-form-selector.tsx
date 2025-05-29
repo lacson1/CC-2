@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Send, Clock, User, Calendar, Activity, Pill } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import ConsultationHistoryDisplay from "./consultation-history-display";
 
 interface ConsultationForm {
   id: number;
@@ -62,10 +63,7 @@ export default function ConsultationFormSelector({
     queryKey: ['/api/consultation-forms'],
   });
 
-  // Fetch detailed consultation records with complete form data
-  const { data: consultationHistory = [], isLoading: historyLoading } = useQuery({
-    queryKey: ['/api/patients', patientId, 'consultation-records'],
-  });
+  // Remove the broken consultation history query since we'll use the separate component
 
   // Get selected form details
   const selectedForm = forms.find(form => form.id === selectedFormId);
@@ -431,6 +429,13 @@ export default function ConsultationFormSelector({
               <div className="relative">
                 {/* Timeline line */}
                 <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
                 
                 <div className="space-y-6">
                   {(consultationHistory as any[]).map((consultation: any, index: number) => (
@@ -543,6 +548,8 @@ export default function ConsultationFormSelector({
           )}
         </CardContent>
       </Card>
+      {/* Consultation History */}
+      <ConsultationHistoryDisplay patientId={patientId} />
     </div>
   );
 }
