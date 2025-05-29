@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { PatientTimeline } from './patient-timeline';
 import { PatientAlertsPanel } from './patient-alerts-panel';
@@ -34,6 +35,7 @@ import {
   Stethoscope,
   Plus,
   ChevronDown,
+  ChevronRight,
   Edit,
   Share,
   UserCheck,
@@ -97,6 +99,7 @@ export function ModernPatientOverview({
 }: ModernPatientOverviewProps) {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const [isConsultationHistoryOpen, setIsConsultationHistoryOpen] = useState(false);
 
   // Fetch consultation records for this patient
   const { data: consultationRecords = [] } = useQuery({
@@ -551,8 +554,42 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
           </Card>
         </TabsContent>
 
-        {/* Overview Tab - Optimized Layout */}
+        {/* Overview Tab - Reorganized Layout */}
         <TabsContent value="overview" className="space-y-4">
+          {/* Record Patient Form - Moved to Top */}
+          <Card className="border-blue-200 bg-blue-50/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-700">
+                <Stethoscope className="h-5 w-5" />
+                Record Patient Visit
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-blue-600">
+                  Document a new visit for {patient.firstName} {patient.lastName} including vital signs, symptoms, diagnosis, and treatment plans.
+                </p>
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={() => navigate(`/patients/${patient.id}/record-visit`)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Stethoscope className="h-4 w-4 mr-2" />
+                    Start New Visit Recording
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={onAddPrescription}
+                    className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                  >
+                    <Pill className="h-4 w-4 mr-2" />
+                    Add Prescription
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Patient Card - Enhanced */}
             <Card className="lg:col-span-2">
@@ -666,6 +703,125 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
               </CardContent>
             </Card>
           </div>
+
+          {/* Collapsible Consultation History */}
+          <Collapsible 
+            open={isConsultationHistoryOpen} 
+            onOpenChange={setIsConsultationHistoryOpen}
+          >
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-gray-600" />
+                      Recent Visits & Consultations
+                      <Badge variant="secondary" className="ml-2">
+                        {combinedVisits.length}
+                      </Badge>
+                    </CardTitle>
+                    {isConsultationHistoryOpen ? (
+                      <ChevronDown className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4 text-gray-500" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent>
+                  {combinedVisits.length > 0 ? (
+                    <div className="space-y-3">
+                      {combinedVisits.slice(0, 5).map((item: any) => (
+                        <div key={`${item.type}-${item.id}`} className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${item.type === 'consultation' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}
+                                >
+                                  {item.title}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(item.date).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 mb-1">
+                                {item.description}
+                              </p>
+                              {item.type === 'visit' && item.bloodPressure && (
+                                <div className="text-xs text-gray-500">
+                                  BP: {item.bloodPressure}
+                                  {item.heartRate && ` • HR: ${item.heartRate}`}
+                                </div>
+                              )}
+                              {item.type === 'consultation' && (
+                                <div className="text-xs text-gray-500">
+                                  Recorded by: {item.recordedBy}
+                                </div>
+                              )}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-[200px]">
+                                {item.type === 'visit' ? (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleViewVisit(item.id)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleEditVisit(item.id)}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit Visit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleCopyVisit(item)}>
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Copy Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                      onClick={() => handleDeleteVisit(item.id)}
+                                      className="text-red-600 focus:text-red-600"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete Visit
+                                    </DropdownMenuItem>
+                                  </>
+                                ) : (
+                                  <>
+                                    <DropdownMenuItem onClick={() => handleViewConsultation(item.id)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View Consultation
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => navigator.clipboard.writeText(JSON.stringify(item.responses, null, 2))}>
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Copy Responses
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Stethoscope className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <h3 className="font-medium text-gray-600 mb-1">No visits or consultations recorded yet</h3>
+                      <p className="text-sm">Start by recording the first visit for this patient</p>
+                    </div>
+                  )}
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Patient Alerts - Full Width */}
           <PatientAlertsPanel
