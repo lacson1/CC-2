@@ -77,6 +77,12 @@ export function EnhancedMedicationReview({ selectedPatientId, onReviewCompleted 
     enabled: !!activePatientId,
   });
 
+  // Fetch patient details
+  const { data: selectedPatient } = useQuery({
+    queryKey: ['/api/patients', activePatientId],
+    enabled: !!activePatientId,
+  });
+
   // Fetch medication reviews for the patient
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
     queryKey: ['/api/patients', activePatientId, 'medication-reviews'],
@@ -161,8 +167,6 @@ export function EnhancedMedicationReview({ selectedPatientId, onReviewCompleted 
     }
   };
 
-  const selectedPatient = patients.find((p: any) => p.id === activePatientId);
-
   return (
     <Card className="w-full">
       <CardHeader className="bg-green-50 border-b border-green-200">
@@ -192,15 +196,130 @@ export function EnhancedMedicationReview({ selectedPatientId, onReviewCompleted 
                 )}
               </DialogHeader>
               
+              {/* Current Medications Section */}
+              {selectedPatient && prescriptions.length > 0 && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                    <Pill className="w-5 h-5" />
+                    Current Medications for {selectedPatient.firstName} {selectedPatient.lastName}
+                  </h3>
+                  <div className="grid gap-3">
+                    {prescriptions.map((prescription: any, index: number) => (
+                      <div key={prescription.id || index} className="bg-white p-3 rounded border border-blue-200 flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-800">{prescription.medicationName || prescription.medication}</p>
+                          <div className="text-sm text-gray-600 flex items-center gap-4 mt-1">
+                            <span>Dosage: {prescription.dosage}</span>
+                            <span>Frequency: {prescription.frequency}</span>
+                            <span>Duration: {prescription.duration}</span>
+                          </div>
+                          {prescription.instructions && (
+                            <p className="text-sm text-gray-500 mt-1">Instructions: {prescription.instructions}</p>
+                          )}
+                        </div>
+                        <div className="text-right text-sm text-gray-500">
+                          <p>Prescribed: {prescription.createdAt ? format(new Date(prescription.createdAt), 'MMM dd, yyyy') : 'N/A'}</p>
+                          {prescription.status && (
+                            <Badge variant={prescription.status === 'active' ? 'default' : 'secondary'} className="mt-1">
+                              {prescription.status}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3 text-sm text-blue-700">
+                    <strong>Total medications to review: {prescriptions.length}</strong>
+                  </div>
+                </div>
+              )}
+
+              {selectedPatient && prescriptions.length === 0 && (
+                <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-yellow-800">
+                    <AlertTriangle className="w-5 h-5" />
+                    <span className="font-medium">No current medications found for {selectedPatient.firstName} {selectedPatient.lastName}</span>
+                  </div>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    This patient may not have any active prescriptions or they may need to be updated.
+                  </p>
+                </div>
+              )}
+
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <Tabs defaultValue="clinical" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
+                  <Tabs defaultValue="medications" className="w-full">
+                    <TabsList className="grid w-full grid-cols-5">
+                      <TabsTrigger value="medications">Current Meds</TabsTrigger>
                       <TabsTrigger value="clinical">Clinical Assessment</TabsTrigger>
                       <TabsTrigger value="counseling">Patient Counseling</TabsTrigger>
                       <TabsTrigger value="professional">Professional Notes</TabsTrigger>
                       <TabsTrigger value="summary">Review Summary</TabsTrigger>
                     </TabsList>
+
+                    <TabsContent value="medications" className="space-y-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-800 mb-3">Medication Reconciliation</h4>
+                        <FormField
+                          control={form.control}
+                          name="medicationReconciliation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reconciliation Notes</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Review and verify all current medications, document any discrepancies, discontinued medications, or new additions..."
+                                  className="min-h-24"
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-gray-800 mb-3">Drug Interactions & Contraindications</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={form.control}
+                            name="drugInteractions"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Drug Interactions</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Document any identified drug interactions, severity, and recommendations..."
+                                    className="min-h-20"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name="contraindications"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Contraindications</FormLabel>
+                                <FormControl>
+                                  <Textarea 
+                                    placeholder="Note any contraindications based on patient's medical history..."
+                                    className="min-h-20"
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
 
                     <TabsContent value="clinical" className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
