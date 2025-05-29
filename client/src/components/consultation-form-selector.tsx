@@ -248,7 +248,7 @@ export default function ConsultationFormSelector({
   };
 
   // Group fields by section if sections exist
-  const groupedFields = selectedForm?.formStructure.fields.reduce((acc, field) => {
+  const groupedFields = selectedForm?.formStructure?.fields?.reduce((acc, field) => {
     const section = field.section || 'General';
     if (!acc[section]) acc[section] = [];
     acc[section].push(field);
@@ -305,7 +305,7 @@ export default function ConsultationFormSelector({
                         {form.specialistRole}
                       </Badge>
                       <Badge variant="outline">
-                        {form.formStructure.fields.length} fields
+                        {form.formStructure?.fields?.length || 0} fields
                       </Badge>
                     </div>
                   </div>
