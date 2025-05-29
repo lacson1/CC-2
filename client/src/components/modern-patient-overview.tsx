@@ -188,16 +188,37 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
     prescriptions: true
   });
 
-  // Fetch patient prescriptions from the API
-  const { data: patientPrescriptions = [], isLoading: prescriptionsLoading } = useQuery({
+  // Fetch patient prescriptions from the API with proper error handling and caching
+  const { data: patientPrescriptions = [], isLoading: prescriptionsLoading, error: prescriptionsError } = useQuery({
     queryKey: ['/api/patients', patient.id, 'prescriptions'],
-    queryFn: () => fetch(`/api/patients/${patient.id}/prescriptions`).then(res => res.json())
+    queryFn: async () => {
+      const response = await fetch(`/api/patients/${patient.id}/prescriptions`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch prescriptions');
+      }
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Cache for 10 minutes
+    retry: 3,
+    refetchOnWindowFocus: false, // Prevent refetch on window focus to maintain data
+    enabled: !!patient.id
   });
 
-  // Use fetched prescriptions if available, otherwise use passed activePrescriptions
-  // Prevent empty state flickering by maintaining previous data during loading
-  const displayPrescriptions = patientPrescriptions.length > 0 ? patientPrescriptions : 
-    (prescriptionsLoading && activePrescriptions.length > 0) ? activePrescriptions : patientPrescriptions;
+  // Use fetched prescriptions with proper fallback logic
+  // Always prefer API data when available, fall back to passed props only when API fails
+  const displayPrescriptions = React.useMemo(() => {
+    if (prescriptionsLoading && !patientPrescriptions.length) {
+      // Show passed prescriptions during initial load only
+      return activePrescriptions;
+    }
+    if (prescriptionsError && !patientPrescriptions.length) {
+      // Show passed prescriptions if API fails
+      return activePrescriptions;
+    }
+    // Always prefer API data when available
+    return patientPrescriptions;
+  }, [patientPrescriptions, activePrescriptions, prescriptionsLoading, prescriptionsError]);
 
   // Toggle filter function
   const toggleFilter = (filterType: keyof typeof timelineFilters) => {
