@@ -890,13 +890,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      if (username === 'physio' && password === 'physio123') {
-        const token = generateToken({ id: 13, username: 'physio', role: 'physiotherapist' });
+      if (username === 'Mr Seye' && password === 'physio123') {
+        const token = generateToken({ id: 13, username: 'Mr Seye', role: 'physiotherapist' });
         return res.json({
           token,
           user: {
             id: 13,
-            username: 'physio',
+            username: 'Mr Seye',
             role: 'physiotherapist'
           }
         });
