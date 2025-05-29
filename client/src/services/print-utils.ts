@@ -5,9 +5,39 @@ export async function fetchPrintData() {
   const userResponse = await fetch('/api/me');
   const currentUser = await userResponse.json();
   
-  // Fetch organization info based on user's organization
-  const orgResponse = await fetch(`/api/organizations/${currentUser.organizationId}`);
-  const organization = await orgResponse.json();
+  // Fetch organization info - handle case where organizationId might not exist
+  let organization = {
+    name: 'Healthcare Facility',
+    type: 'clinic',
+    address: '',
+    phone: '',
+    email: '',
+    website: ''
+  };
+  
+  if (currentUser.organizationId) {
+    try {
+      const orgResponse = await fetch(`/api/organizations/${currentUser.organizationId}`);
+      if (orgResponse.ok) {
+        organization = await orgResponse.json();
+      }
+    } catch (error) {
+      console.warn('Could not fetch organization info, using default');
+    }
+  } else {
+    // Fallback: try to get the first organization
+    try {
+      const orgsResponse = await fetch('/api/organizations');
+      if (orgsResponse.ok) {
+        const organizations = await orgsResponse.json();
+        if (organizations.length > 0) {
+          organization = organizations[0];
+        }
+      }
+    } catch (error) {
+      console.warn('Could not fetch organizations, using default');
+    }
+  }
   
   return {
     currentUser,

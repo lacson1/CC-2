@@ -23,22 +23,26 @@ import { printConsultation } from "@/services/print-utils";
 
 interface ConsultationDropdownMenuProps {
   consultation: any;
+  patient?: any;
   onView?: (consultation: any) => void;
   onEdit?: (consultation: any) => void;
   onCopy?: (consultation: any) => void;
   onDelete?: (consultation: any) => void;
   onExport?: (consultation: any) => void;
   onShare?: (consultation: any) => void;
+  onPrint?: (consultation: any, patient?: any) => void;
 }
 
 export function ConsultationDropdownMenu({
   consultation,
+  patient,
   onView,
   onEdit,
   onCopy,
   onDelete,
   onExport,
-  onShare
+  onShare,
+  onPrint
 }: ConsultationDropdownMenuProps) {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -135,6 +139,33 @@ Type: ${consultation.formDescription || 'General consultation'}
     setIsOpen(false);
   };
 
+  const handlePrint = async () => {
+    try {
+      if (onPrint) {
+        onPrint(consultation, patient);
+      } else if (patient) {
+        await printConsultation(consultation, patient);
+        toast({
+          title: "Printing Consultation",
+          description: `Opening print dialog for consultation #${consultation.id}`,
+        });
+      } else {
+        toast({
+          title: "Print Error",
+          description: "Patient information not available for printing",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Print Failed",
+        description: "Unable to print consultation record",
+        variant: "destructive",
+      });
+    }
+    setIsOpen(false);
+  };
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
@@ -169,6 +200,10 @@ Type: ${consultation.formDescription || 'General consultation'}
         <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
           <Share2 className="mr-2 h-4 w-4" />
           Share Record
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handlePrint} className="cursor-pointer">
+          <Printer className="mr-2 h-4 w-4" />
+          Print Record
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem 

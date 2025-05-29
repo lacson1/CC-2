@@ -8,9 +8,10 @@ import { useState } from "react";
 
 interface ConsultationHistoryDisplayProps {
   patientId: number;
+  patient?: any;
 }
 
-export default function ConsultationHistoryDisplay({ patientId }: ConsultationHistoryDisplayProps) {
+export default function ConsultationHistoryDisplay({ patientId, patient }: ConsultationHistoryDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
   
   // Fetch detailed consultation records with complete form data
@@ -145,7 +146,7 @@ export default function ConsultationHistoryDisplay({ patientId }: ConsultationHi
                               <Badge variant="secondary">
                                 {new Date(consultation.createdAt).toLocaleDateString()}
                               </Badge>
-                              <ConsultationDropdownMenu consultation={consultation} />
+                              <ConsultationDropdownMenu consultation={consultation} patient={patient} />
                             </div>
                           </div>
                           
