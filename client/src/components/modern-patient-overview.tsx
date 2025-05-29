@@ -180,40 +180,28 @@ export function ModernPatientOverview({
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  // Use comprehensive activity trail data instead of just visits
-  const [activityTrail, setActivityTrail] = useState<any[]>([]);
-  
-  useEffect(() => {
-    const fetchActivityTrail = async () => {
-      try {
-        const response = await fetch(`/api/patients/${patient.id}/activity-trail`);
-        if (response.ok) {
-          const data = await response.json();
-          setActivityTrail(data);
-        }
-      } catch (error) {
-        console.error('Error fetching activity trail:', error);
-        // Fallback to visits if activity trail fails
-        const fallbackEvents = visits.map(visit => ({
-          id: visit.id,
-          type: 'visit' as const,
-          date: visit.visitDate,
-          title: `${visit.visitType} Visit`,
-          description: visit.complaint || visit.diagnosis || 'Routine visit',
-          status: visit.diagnosis ? 'Completed' : 'Draft',
-          details: {
-            bloodPressure: visit.bloodPressure,
-            heartRate: visit.heartRate,
-            temperature: visit.temperature,
-            weight: visit.weight
-          }
-        }));
-        setActivityTrail(fallbackEvents);
-      }
-    };
-    
-    fetchActivityTrail();
-  }, [patient.id, visits]);
+  // Fetch activity trail using React Query
+  const { data: activityTrail = [] } = useQuery({
+    queryKey: ['/api/patients', patient.id, 'activity-trail'],
+    queryFn: () => fetch(`/api/patients/${patient.id}/activity-trail`).then(res => res.json())
+  });
+
+  // Filter activity trail based on selected filters
+  const filteredActivityTrail = activityTrail.filter((event: any) => {
+    switch (event.type) {
+      case 'visit':
+        return timelineFilters.visits;
+      case 'lab':
+      case 'lab_result':
+        return timelineFilters.labResults;
+      case 'consultation':
+        return timelineFilters.consultations;
+      case 'prescription':
+        return timelineFilters.prescriptions;
+      default:
+        return true;
+    }
+  });
 
   return (
     <div className="space-y-4 min-h-screen w-full">
