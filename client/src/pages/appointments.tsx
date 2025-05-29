@@ -32,14 +32,16 @@ interface Doctor {
 interface Appointment {
   id: number;
   patientId: number;
+  patientName: string;
   doctorId: number;
-  scheduledAt: string;
+  doctorName: string;
+  appointmentDate: string;
+  appointmentTime: string;
   duration: number;
   type: string;
   status: string;
   notes?: string;
-  patient?: Patient;
-  doctor?: Doctor;
+  priority?: string;
 }
 
 export default function AppointmentsPage() {
@@ -129,18 +131,19 @@ export default function AppointmentsPage() {
       return;
     }
 
-    const scheduledAt = new Date(selectedDate);
-    const [hours, minutes] = selectedTime.split(':');
-    scheduledAt.setHours(parseInt(hours), parseInt(minutes));
+    // Format date as YYYY-MM-DD for the backend
+    const appointmentDate = selectedDate.toISOString().split('T')[0];
 
     createAppointmentMutation.mutate({
       patientId: selectedPatient,
       doctorId: selectedDoctor,
-      scheduledAt: scheduledAt.toISOString(),
+      appointmentDate: appointmentDate,
+      appointmentTime: selectedTime,
       duration: parseInt(duration),
       type: appointmentType,
       status: 'scheduled',
-      notes
+      priority: 'medium',
+      notes: notes || undefined
     });
   };
 
@@ -151,12 +154,9 @@ export default function AppointmentsPage() {
   // Filter appointments
   const filteredAppointments = appointments.filter((appointment: Appointment) => {
     if (!searchTerm) return true;
-    const patient = appointment.patient;
-    const doctor = appointment.doctor;
     return (
-      patient?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      patient?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doctor?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      appointment.doctorName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       appointment.type?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
@@ -367,16 +367,21 @@ export default function AppointmentsPage() {
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-blue-600" />
                         <span className="font-medium">
-                          {appointment.patient?.firstName} {appointment.patient?.lastName}
+                          {appointment.patientName}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Stethoscope className="h-4 w-4 text-green-600" />
-                        <span>Dr. {appointment.doctor?.username}</span>
+                        <span>Dr. {appointment.doctorName}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-orange-600" />
-                        <span>{appointment.scheduledAt ? format(new Date(appointment.scheduledAt), 'MMM dd, yyyy - HH:mm') : 'No date set'}</span>
+                        <span>
+                          {appointment.appointmentDate && appointment.appointmentTime ? 
+                            `${format(new Date(appointment.appointmentDate), 'MMM dd, yyyy')} - ${appointment.appointmentTime}` : 
+                            'No date set'
+                          }
+                        </span>
                       </div>
                       <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
                         {appointment.type}

@@ -2441,7 +2441,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/appointments", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertAppointmentSchema.parse(req.body);
+      // Add organization ID from authenticated user
+      const appointmentData = {
+        ...req.body,
+        organizationId: req.user?.organizationId || 1 // Default to organization 1 if not set
+      };
+
+      const validatedData = insertAppointmentSchema.parse(appointmentData);
 
       const [appointment] = await db.insert(appointments)
         .values(validatedData)
@@ -2459,6 +2465,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(appointment);
     } catch (error) {
       console.error('Error creating appointment:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          message: "Validation error", 
+          details: error.issues 
+        });
+      }
       res.status(500).json({ message: "Failed to create appointment" });
     }
   });
