@@ -35,33 +35,39 @@ export default function Patients() {
 
         {/* Enhanced Tabs */}
         <Tabs defaultValue="patients" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="patients" className="flex items-center gap-2">
-            <Users className="w-4 h-4" />
-            Patient Records
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="appointments" className="flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Appointments
-          </TabsTrigger>
-        </TabsList>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="patients" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Patient Records
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="appointments" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Appointments
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
-        <TabsContent value="patients" className="mt-6">
-          <EnhancedPatientManagementFixed user={user} />
-        </TabsContent>
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto p-6">
+        <Tabs defaultValue="patients" className="w-full">
+          <TabsContent value="patients" className="mt-0">
+            <EnhancedPatientManagementFixed user={user} />
+          </TabsContent>
 
-        <TabsContent value="analytics" className="mt-6">
-          <PatientAnalyticsDashboard />
-        </TabsContent>
+          <TabsContent value="analytics" className="mt-0">
+            <PatientAnalyticsDashboard />
+          </TabsContent>
 
-        <TabsContent value="appointments" className="mt-6">
-          <SmartAppointmentScheduler />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="appointments" className="mt-0">
+            <SmartAppointmentScheduler />
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Patient Registration Modal */}
       <PatientRegistrationModal 
