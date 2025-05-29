@@ -26,7 +26,8 @@ import {
   CalendarDays,
   Monitor,
   FileText,
-  Stethoscope
+  Stethoscope,
+  Plus
 } from 'lucide-react';
 
 interface Patient {
@@ -60,13 +61,15 @@ interface ModernPatientOverviewProps {
   visits: Visit[];
   recentLabs?: any[];
   activePrescriptions?: any[];
+  onAddPrescription?: () => void;
 }
 
 export function ModernPatientOverview({ 
   patient, 
   visits, 
   recentLabs = [], 
-  activePrescriptions = [] 
+  activePrescriptions = [],
+  onAddPrescription 
 }: ModernPatientOverviewProps) {
   const [, navigate] = useLocation();
   
@@ -199,7 +202,7 @@ export function ModernPatientOverview({
                   <Pill className="h-5 w-5 text-purple-500" />
                   Medications & Prescriptions
                 </span>
-                <Button size="sm" onClick={() => setShowPrescriptionModal?.(true)} className="bg-purple-600 hover:bg-purple-700">
+                <Button size="sm" onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Prescription
                 </Button>
@@ -270,7 +273,7 @@ export function ModernPatientOverview({
                     <Pill className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 className="text-lg font-medium text-gray-700 mb-2">No Active Prescriptions</h3>
                     <p className="text-sm text-gray-500 mb-4">Start by adding the first prescription for this patient</p>
-                    <Button onClick={() => setShowPrescriptionModal?.(true)} className="bg-purple-600 hover:bg-purple-700">
+                    <Button onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700">
                       <Plus className="w-4 h-4 mr-2" />
                       Add First Prescription
                     </Button>
