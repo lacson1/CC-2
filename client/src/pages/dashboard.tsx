@@ -69,16 +69,16 @@ export default function Dashboard() {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card className="stat-card stat-card-patients text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TOTAL PATIENTS</p>
-                <div className="text-3xl font-bold text-white">{stats?.totalPatients || 6}</div>
-                <p className="text-xs text-white/70">+12% from last month</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-            </CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TOTAL PATIENTS</p>
+                  <div className="text-3xl font-bold text-white">{stats?.totalPatients || 6}</div>
+                  <p className="text-xs text-white/70">+12% from last month</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
           </Card>
 
           <Card className="stat-card stat-card-visits text-white">
@@ -302,7 +302,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-          </div>
         </div>
       </main>
 
