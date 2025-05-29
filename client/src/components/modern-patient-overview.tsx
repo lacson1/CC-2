@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { PatientTimeline } from './patient-timeline';
 import { PatientAlertsPanel } from './patient-alerts-panel';
 import { PatientSafetyAlerts, QuickSafetyIndicator } from './patient-safety-alerts';
@@ -27,7 +28,12 @@ import {
   Monitor,
   FileText,
   Stethoscope,
-  Plus
+  Plus,
+  ChevronDown,
+  Edit,
+  Share,
+  UserCheck,
+  Archive
 } from 'lucide-react';
 
 interface Patient {
@@ -62,6 +68,9 @@ interface ModernPatientOverviewProps {
   recentLabs?: any[];
   activePrescriptions?: any[];
   onAddPrescription?: () => void;
+  onRecordVisit?: () => void;
+  onEditPatient?: () => void;
+  onPrintRecord?: () => void;
 }
 
 export function ModernPatientOverview({ 
@@ -69,7 +78,10 @@ export function ModernPatientOverview({
   visits, 
   recentLabs = [], 
   activePrescriptions = [],
-  onAddPrescription 
+  onAddPrescription,
+  onRecordVisit,
+  onEditPatient,
+  onPrintRecord
 }: ModernPatientOverviewProps) {
   const [, navigate] = useLocation();
   
@@ -138,12 +150,44 @@ export function ModernPatientOverview({
             <div className="flex-1">
               <div className="flex items-center space-x-3">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap">
-                    {patient.firstName} {patient.lastName}
-                  </h2>
-                  <p className="text-xs text-gray-500">
-                    ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
-                  </p>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-auto p-0 hover:bg-gray-100 rounded-md px-2 py-1">
+                        <div className="text-left">
+                          <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap flex items-center gap-1">
+                            {patient.firstName} {patient.lastName}
+                            <ChevronDown className="h-4 w-4 text-gray-400" />
+                          </h2>
+                          <p className="text-xs text-gray-500">
+                            ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
+                          </p>
+                        </div>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-56">
+                      <DropdownMenuItem onClick={onEditPatient}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Patient Info
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onRecordVisit}>
+                        <Stethoscope className="mr-2 h-4 w-4" />
+                        Record Visit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={onAddPrescription}>
+                        <Pill className="mr-2 h-4 w-4" />
+                        Add Prescription
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={onPrintRecord}>
+                        <Share className="mr-2 h-4 w-4" />
+                        Print/Export Records
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Archive className="mr-2 h-4 w-4" />
+                        Archive Patient
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <QuickSafetyIndicator patient={patient} />
               </div>
