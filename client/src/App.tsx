@@ -43,26 +43,28 @@ function AuthenticatedApp() {
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar />
         <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-4 lg:p-8">
-            <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/dashboard" component={Dashboard} />
-              <Route path="/patients" component={Patients} />
-              <Route path="/patients/:id" component={PatientProfile} />
-              <Route path="/patients/:patientId/record-visit" component={RecordVisitPage} />
-              <Route path="/visits" component={Visits} />
-              <Route path="/lab-results" component={LabResults} />
-              <Route path="/pharmacy" component={Pharmacy} />
-              <Route path="/referrals" component={Referrals} />
-              <Route path="/form-builder" component={FormBuilder} />
-              <Route path="/medical-tools" component={MedicalToolsPage} />
-              <Route path="/clinical-performance" component={ClinicalPerformance} />
-              <Route path="/profile" component={ProfilePage} />
-              <Route path="/user-management" component={UserManagementEnhanced} />
-              <Route path="/audit-logs" component={AuditLogs} />
-              <Route path="/organization-management" component={OrganizationManagement} />
-              <Route component={NotFound} />
-            </Switch>
+          <div className="flex-1 overflow-y-auto p-4 lg:p-8 transition-all duration-300 ease-in-out">
+            <div className="animate-in fade-in-0 duration-300">
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/dashboard" component={Dashboard} />
+                <Route path="/patients" component={Patients} />
+                <Route path="/patients/:id" component={PatientProfile} />
+                <Route path="/patients/:patientId/record-visit" component={RecordVisitPage} />
+                <Route path="/visits" component={Visits} />
+                <Route path="/lab-results" component={LabResults} />
+                <Route path="/pharmacy" component={Pharmacy} />
+                <Route path="/referrals" component={Referrals} />
+                <Route path="/form-builder" component={FormBuilder} />
+                <Route path="/medical-tools" component={MedicalToolsPage} />
+                <Route path="/clinical-performance" component={ClinicalPerformance} />
+                <Route path="/profile" component={ProfilePage} />
+                <Route path="/user-management" component={UserManagementEnhanced} />
+                <Route path="/audit-logs" component={AuditLogs} />
+                <Route path="/organization-management" component={OrganizationManagement} />
+                <Route component={NotFound} />
+              </Switch>
+            </div>
           </div>
         </main>
       </div>
@@ -90,8 +92,12 @@ function Router() {
         {() => {
           if (isLoading) {
             return (
-              <div className="min-h-screen flex items-center justify-center">
-                <div className="text-lg">Loading...</div>
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                  <div className="text-lg font-medium text-gray-700">Loading ClinicConnect...</div>
+                  <div className="text-sm text-gray-500">Preparing your healthcare workspace</div>
+                </div>
               </div>
             );
           }
