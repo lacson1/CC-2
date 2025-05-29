@@ -411,7 +411,7 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
               {viewMode === "grid" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredAndSortedPatients.map((patient) => (
-                    <Card key={patient.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                    <Card key={patient.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => window.location.href = `/patients/${patient.id}`}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center">
@@ -514,7 +514,7 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
               ) : (
                 <div className="space-y-2">
                   {filteredAndSortedPatients.map((patient) => (
-                    <Card key={patient.id} className="hover:shadow-sm transition-shadow">
+                    <Card key={patient.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => window.location.href = `/patients/${patient.id}`}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
