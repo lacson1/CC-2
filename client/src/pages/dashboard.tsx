@@ -59,84 +59,88 @@ export default function Dashboard() {
   }
 
   return (
-    <>
-      <main className="p-6 space-y-6 bg-gray-50 min-h-screen">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome back, monitor your clinic's performance</p>
+    <div className="h-full flex flex-col bg-gray-50">
+        {/* Fixed Header and Stats Section */}
+        <div className="bg-gray-50 border-b border-gray-200 p-6 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+              <p className="text-sm text-gray-600">Welcome back, monitor your clinic's performance</p>
+            </div>
+            <div className="relative max-w-md">
+              <Input
+                type="text"
+                placeholder="Search patients..."
+                className="pl-10 bg-white"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            </div>
           </div>
-          <div className="relative max-w-md">
-            <Input
-              type="text"
-              placeholder="Search patients..."
-              className="pl-10 bg-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+
+          {/* Beautiful Blue Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="stat-card stat-card-patients text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TOTAL PATIENTS</p>
+                  <div className="text-3xl font-bold text-white">{stats?.totalPatients || 6}</div>
+                  <p className="text-xs text-white/70">+12% from last month</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="stat-card stat-card-visits text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TODAY'S VISITS</p>
+                  <div className="text-3xl font-bold text-white">{stats?.todayVisits || 0}</div>
+                  <p className="text-xs text-white/70">+6 from yesterday</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Calendar className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="stat-card stat-card-pending text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <p className="text-sm font-medium text-white/80 uppercase tracking-wide">PENDING LABS</p>
+                  <div className="text-3xl font-bold text-white">{stats?.pendingLabs || 0}</div>
+                  <p className="text-xs text-white/70">⏳ Awaiting results</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="stat-card stat-card-revenue text-white">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div>
+                  <p className="text-sm font-medium text-white/80 uppercase tracking-wide">LOW STOCK ITEMS</p>
+                  <div className="text-3xl font-bold text-white">{stats?.lowStockItems || 1}</div>
+                  <p className="text-xs text-white/70">⚠️ Requires attention</p>
+                </div>
+                <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                  <Activity className="h-6 w-6 text-white" />
+                </div>
+              </CardHeader>
+            </Card>
           </div>
         </div>
 
-        {/* Beautiful Blue Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="stat-card stat-card-patients text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TOTAL PATIENTS</p>
-                <div className="text-3xl font-bold text-white">{stats?.totalPatients || 6}</div>
-                <p className="text-xs text-white/70">+12% from last month</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-white" />
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="stat-card stat-card-visits text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TODAY'S VISITS</p>
-                <div className="text-3xl font-bold text-white">{stats?.todayVisits || 0}</div>
-                <p className="text-xs text-white/70">+6 from yesterday</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-white" />
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="stat-card stat-card-pending text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <p className="text-sm font-medium text-white/80 uppercase tracking-wide">PENDING LABS</p>
-                <div className="text-3xl font-bold text-white">{stats?.pendingLabs || 0}</div>
-                <p className="text-xs text-white/70">⏳ Awaiting results</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-            </CardHeader>
-          </Card>
-
-          <Card className="stat-card stat-card-revenue text-white">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <p className="text-sm font-medium text-white/80 uppercase tracking-wide">LOW STOCK ITEMS</p>
-                <div className="text-3xl font-bold text-white">{stats?.lowStockItems || 1}</div>
-                <p className="text-xs text-white/70">⚠️ Requires attention</p>
-              </div>
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Admin Dashboard */}
-        {isAdmin && (
-          <div className="space-y-6">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Admin Dashboard */}
+          {isAdmin && (
+            <div className="space-y-6">
             <h2 className="text-xl font-semibold text-gray-900">Admin Dashboard</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -243,82 +247,82 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {/* Recent Patients & Quick Actions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-lg font-semibold text-gray-900">Recent Patients</CardTitle>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/patients">View All</Link>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {Array.isArray(allPatients) && allPatients.length > 0 ? (
+                    allPatients.slice(0, 5).map((patient: any) => (
+                      <div key={patient.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg">
+                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                          {patient.firstName?.charAt(0)}{patient.lastName?.charAt(0)}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">{patient.firstName} {patient.lastName}</p>
+                          <p className="text-sm text-gray-500">{patient.phone}</p>
+                        </div>
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/patients/${patient.id}`}>View</Link>
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No patients registered yet</p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button 
+                  onClick={() => setShowPatientModal(true)} 
+                  className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Add New Patient
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/visits">
+                    <Activity className="mr-2 h-4 w-4" />
+                    Record Visit
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/lab-results">
+                    <Activity className="mr-2 h-4 w-4" />
+                    Lab Results
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/pharmacy">
+                    <Activity className="mr-2 h-4 w-4" />
+                    Pharmacy
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
           </div>
-        )}
-
-        {/* Recent Patients & Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="bg-white border border-gray-200">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900">Recent Patients</CardTitle>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/patients">View All</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {allPatients.length > 0 ? (
-                  allPatients.slice(0, 5).map((patient: any) => (
-                    <div key={patient.id} className="flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {patient.firstName?.charAt(0)}{patient.lastName?.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{patient.firstName} {patient.lastName}</p>
-                        <p className="text-sm text-gray-500">{patient.phone}</p>
-                      </div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/patients/${patient.id}`}>View</Link>
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No patients registered yet</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-white border border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button 
-                onClick={() => setShowPatientModal(true)} 
-                className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add New Patient
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/visits">
-                  <Activity className="mr-2 h-4 w-4" />
-                  Record Visit
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/lab-results">
-                  <Activity className="mr-2 h-4 w-4" />
-                  Lab Results
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start" asChild>
-                <Link href="/pharmacy">
-                  <Activity className="mr-2 h-4 w-4" />
-                  Pharmacy
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
         </div>
-      </main>
+      </div>
 
       {/* Patient Registration Modal */}
       <PatientRegistrationModal
         open={showPatientModal}
         onOpenChange={setShowPatientModal}
       />
-    </>
+    </div>
   );
 }

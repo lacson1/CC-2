@@ -16,23 +16,25 @@ export default function Patients() {
   const { user } = useRole();
 
   return (
-    <div className="space-y-6">
-      {/* Enhanced Header */}
-      <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Patient Management</h1>
-          <p className="text-slate-600 mt-1">Advanced patient records, analytics, and appointment management</p>
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* Fixed Header Section */}
+      <div className="bg-gray-50 border-b border-gray-200 p-6 space-y-6">
+        {/* Enhanced Header */}
+        <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:items-center md:space-y-0">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Patient Management</h1>
+            <p className="text-slate-600 mt-1">Advanced patient records, analytics, and appointment management</p>
+          </div>
+          {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
+            <Button onClick={() => setShowPatientModal(true)} className="bg-primary hover:bg-primary/90">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add New Patient
+            </Button>
+          )}
         </div>
-        {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
-          <Button onClick={() => setShowPatientModal(true)} className="bg-primary hover:bg-primary/90">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add New Patient
-          </Button>
-        )}
-      </div>
 
-      {/* Enhanced Tabs */}
-      <Tabs defaultValue="patients" className="w-full">
+        {/* Enhanced Tabs */}
+        <Tabs defaultValue="patients" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="patients" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
