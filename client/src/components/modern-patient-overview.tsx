@@ -33,7 +33,9 @@ import {
   Edit,
   Share,
   UserCheck,
-  Archive
+  Archive,
+  Users,
+  Upload
 } from 'lucide-react';
 
 interface Patient {
@@ -142,11 +144,75 @@ export function ModernPatientOverview({
       <Card className="w-full">
         <CardContent className="p-3">
           <div className="flex items-center space-x-4">
-            <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                {getPatientInitials(patient.firstName, patient.lastName)}
-              </AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-auto p-0 rounded-full hover:scale-105 transition-transform">
+                  <Avatar className="w-10 h-10 cursor-pointer">
+                    <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
+                      {getPatientInitials(patient.firstName, patient.lastName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <div className="px-3 py-2 border-b">
+                  <p className="text-sm font-medium">{patient.firstName} {patient.lastName}</p>
+                  <p className="text-xs text-gray-500">ID: HC{patient.id?.toString().padStart(6, "0")}</p>
+                </div>
+                <DropdownMenuItem onClick={onEditPatient}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Patient Info
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onRecordVisit}>
+                  <Stethoscope className="mr-2 h-4 w-4" />
+                  Record New Visit
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onAddPrescription}>
+                  <Pill className="mr-2 h-4 w-4" />
+                  Add Prescription
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Order lab tests')}>
+                  <FlaskRound className="mr-2 h-4 w-4" />
+                  Order Lab Tests
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Create consultation form')}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Create Consultation Form
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Schedule appointment')}>
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  Schedule Appointment
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => console.log('Create referral')}>
+                  <Users className="mr-2 h-4 w-4" />
+                  Create Referral
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Record vitals')}>
+                  <Monitor className="mr-2 h-4 w-4" />
+                  Record Vital Signs
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Upload documents')}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload Documents
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onPrintRecord}>
+                  <Share className="mr-2 h-4 w-4" />
+                  Print/Export Records
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => console.log('Send message')}>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  Send Message
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600">
+                  <Archive className="mr-2 h-4 w-4" />
+                  Archive Patient
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <div className="flex-1">
               <div className="flex items-center space-x-3">
                 <div>
@@ -164,25 +230,56 @@ export function ModernPatientOverview({
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuContent align="start" className="w-64">
                       <DropdownMenuItem onClick={onEditPatient}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit Patient Info
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={onRecordVisit}>
                         <Stethoscope className="mr-2 h-4 w-4" />
-                        Record Visit
+                        Record New Visit
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={onAddPrescription}>
                         <Pill className="mr-2 h-4 w-4" />
                         Add Prescription
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Order lab tests')}>
+                        <FlaskRound className="mr-2 h-4 w-4" />
+                        Order Lab Tests
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Create consultation form')}>
+                        <FileText className="mr-2 h-4 w-4" />
+                        Create Consultation Form
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Schedule appointment')}>
+                        <CalendarDays className="mr-2 h-4 w-4" />
+                        Schedule Appointment
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => console.log('Create referral')}>
+                        <Users className="mr-2 h-4 w-4" />
+                        Create Referral
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Record vitals')}>
+                        <Monitor className="mr-2 h-4 w-4" />
+                        Record Vital Signs
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Upload documents')}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Documents
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={onPrintRecord}>
                         <Share className="mr-2 h-4 w-4" />
                         Print/Export Records
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => console.log('Send message')}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Send Message
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-600">
                         <Archive className="mr-2 h-4 w-4" />
                         Archive Patient
                       </DropdownMenuItem>
