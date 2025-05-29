@@ -44,30 +44,31 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
-      {/* Fixed Header and Stats Section */}
-      <div className="bg-gray-50 border-b border-gray-200 p-6 space-y-6">
-        {/* Header */}
+    <div className="h-full flex flex-col">
+      {/* Fixed Top Bar */}
+      <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome back, monitor your clinic's performance</p>
+            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+            <p className="text-slate-600 mt-1">Welcome to ClinicConnect - Your healthcare management overview</p>
           </div>
-          <div className="relative max-w-md">
-            <Input
-              type="text"
-              placeholder="Search patients..."
-              className="pl-10 bg-white"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className="flex items-center space-x-3">
+            {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
+              <Button onClick={() => setShowPatientModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Patient
+              </Button>
+            )}
           </div>
         </div>
+      </header>
 
-        {/* Beautiful Blue Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="stat-card stat-card-patients text-white">
+      {/* Scrollable Main Content */}
+      <main className="flex-1 overflow-y-auto p-6 bg-slate-50">
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="stat-card stat-card-patients text-white">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <p className="text-sm font-medium text-white/80 uppercase tracking-wide">TOTAL PATIENTS</p>
@@ -301,7 +302,9 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
-      </div>
+          </div>
+        </div>
+      </main>
 
       {/* Patient Registration Modal */}
       <PatientRegistrationModal
