@@ -127,6 +127,15 @@ export default function PatientProfile() {
             recentLabs={labResults || []}
             activePrescriptions={prescriptions || []}
             onAddPrescription={() => setShowPrescriptionModal(true)}
+            onRecordVisit={() => setShowVisitModal(true)}
+            onEditPatient={() => {
+              // Handle edit patient functionality
+              console.log('Edit patient clicked');
+            }}
+            onPrintRecord={() => {
+              // Handle print/export functionality
+              console.log('Print record clicked');
+            }}
           />
         </div>
         

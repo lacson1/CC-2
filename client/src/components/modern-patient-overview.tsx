@@ -496,6 +496,77 @@ export function ModernPatientOverview({
           </div>
         </TabsContent>
 
+        {/* Record Visit Tab - Dedicated */}
+        <TabsContent value="record-visit" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5 text-blue-500" />
+                Record Patient Visit
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h3 className="font-medium text-blue-900 mb-2">Visit Recording Interface</h3>
+                  <p className="text-sm text-blue-700 mb-4">
+                    Record comprehensive visit details including vital signs, symptoms, diagnosis, and treatment plans.
+                  </p>
+                  <Button 
+                    onClick={onRecordVisit}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Start New Visit Recording
+                  </Button>
+                </div>
+
+                {/* Recent Visits Summary */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-gray-900">Recent Visits</h4>
+                  {visits.length > 0 ? (
+                    <div className="space-y-2">
+                      {visits.slice(0, 5).map((visit: any) => (
+                        <div key={visit.id} className="border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {visit.visitType || 'Consultation'}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(visit.visitDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 mb-1">
+                                {visit.complaint || visit.diagnosis || 'No details recorded'}
+                              </p>
+                              {visit.bloodPressure && (
+                                <div className="text-xs text-gray-500">
+                                  BP: {visit.bloodPressure}
+                                  {visit.heartRate && ` • HR: ${visit.heartRate}`}
+                                </div>
+                              )}
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-gray-500">
+                      <Stethoscope className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">No visits recorded yet</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
           {/* Vital Signs Tab */}
           <TabsContent value="vitals" className="space-y-6">
             <PatientVitalSignsTracker patientId={patient.id} />
