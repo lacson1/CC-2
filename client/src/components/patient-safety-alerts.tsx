@@ -1,16 +1,22 @@
 import React from 'react';
-import { AlertTriangle, Heart, Shield, Info, Clock } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle, Heart, Shield, Info, Clock, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface SafetyAlert {
-  id: string;
+  id: string | number;
   type: 'critical' | 'warning' | 'info' | 'chronic';
   title: string;
   description: string;
-  category: 'allergy' | 'medication' | 'condition' | 'note' | 'emergency';
+  category: 'allergy' | 'medication' | 'condition' | 'vitals' | 'note' | 'emergency';
   priority: 'high' | 'medium' | 'low';
   dateAdded?: string;
+  isActive?: boolean;
+  metadata?: any;
 }
 
 interface PatientSafetyAlertsProps {
