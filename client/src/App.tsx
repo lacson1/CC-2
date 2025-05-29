@@ -8,6 +8,8 @@ import { useOnboarding } from "@/hooks/use-onboarding";
 import OnboardingTour from "@/components/onboarding-tour";
 import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/top-bar";
+import TouchQuickActions from "@/components/touch-quick-actions";
+import OfflineStatusBar from "@/components/offline-status-bar";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
 import PatientProfile from "@/pages/patient-profile-clean";
@@ -43,6 +45,7 @@ function AuthenticatedApp() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
+      <OfflineStatusBar />
       <Sidebar onStartTour={startTour} />
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar />
@@ -76,6 +79,9 @@ function AuthenticatedApp() {
           </div>
         </main>
       </div>
+
+      {/* Mobile Touch Actions */}
+      <TouchQuickActions />
 
       {/* Onboarding Tour */}
       <OnboardingTour

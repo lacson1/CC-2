@@ -142,6 +142,67 @@
   @apply space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200;
 }
 
+/* Mobile and Touch Optimizations */
+@media (max-width: 768px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .touch-spacing {
+    padding: 12px;
+  }
+  
+  .mobile-card {
+    @apply p-4 m-2 rounded-xl shadow-sm border border-gray-200;
+  }
+}
+
+/* Touch-friendly button improvements */
+.btn-touch {
+  @apply min-h-[44px] px-4 py-3 text-base font-medium;
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-layout {
+    @apply grid-cols-2 gap-6;
+  }
+  
+  .tablet-sidebar {
+    @apply w-20;
+  }
+}
+
+/* Offline mode styling */
+.offline-mode {
+  @apply opacity-75 pointer-events-none;
+}
+
+.offline-indicator {
+  @apply fixed top-0 left-0 right-0 bg-amber-500 text-white text-center py-2 z-50;
+}
+
+/* PWA specific styles */
+.pwa-prompt {
+  @apply fixed bottom-4 left-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50;
+}
+
+/* Quick action floating button */
+.quick-action-fab {
+  @apply fixed bottom-6 right-6 w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center z-40;
+  transition: all 0.3s ease;
+}
+
+.quick-action-fab:hover {
+  @apply scale-110 shadow-xl;
+}
+
+/* Touch feedback */
+.touch-feedback {
+  @apply active:scale-95 transition-transform duration-100;
+}
+
 /* Table Enhancements */
 .data-table th {
   @apply bg-slate-100 font-semibold text-slate-700;
