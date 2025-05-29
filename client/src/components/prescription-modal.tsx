@@ -215,7 +215,7 @@ export default function PrescriptionModal({
     const prescriptionData: InsertPrescription = {
       ...data,
       patientId: selectedPatientId,
-      medicineId: selectedMedicine?.id || 0, // Use 0 for manual entries
+      medicationId: selectedMedicine?.id || null, // null for manual entries
       // Add medication name for manual entries
       ...(manualMedicationName && { medicationName: manualMedicationName }),
     };

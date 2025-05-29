@@ -368,9 +368,9 @@ export const prescriptionsRelations = relations(prescriptions, ({ one }) => ({
     fields: [prescriptions.visitId],
     references: [visits.id],
   }),
-  medicine: one(medicines, {
-    fields: [prescriptions.medicineId],
-    references: [medicines.id],
+  medication: one(medications, {
+    fields: [prescriptions.medicationId],
+    references: [medications.id],
   }),
 }));
 
