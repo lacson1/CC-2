@@ -1,13 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Clock, User, Activity, Pill, Calendar } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { FileText, Clock, User, Activity, Pill, Calendar, ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface ConsultationHistoryDisplayProps {
   patientId: number;
 }
 
 export default function ConsultationHistoryDisplay({ patientId }: ConsultationHistoryDisplayProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  
   // Fetch detailed consultation records with complete form data
   const { data: consultationHistory = [], isLoading: historyLoading } = useQuery({
     queryKey: ['/api/patients', patientId, 'consultation-records'],
@@ -54,13 +58,24 @@ export default function ConsultationHistoryDisplay({ patientId }: ConsultationHi
 
   return (
     <Card data-testid="consultation-history">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Clock className="h-5 w-5" />
-          Consultation History ({consultationHistory.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Consultation History ({consultationHistory.length})
+              </div>
+              {isOpen ? (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              )}
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent>
         <div className="relative">
           {/* Timeline line */}
           <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
@@ -319,7 +334,9 @@ export default function ConsultationHistoryDisplay({ patientId }: ConsultationHi
             </div>
           </div>
         </div>
-      </CardContent>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 }
