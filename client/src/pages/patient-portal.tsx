@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,6 +19,7 @@ import {
   Shield,
   Eye,
   EyeOff,
+  Send,
   Phone,
   MapPin,
   Activity,
@@ -46,6 +48,11 @@ export default function PatientPortal() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showMessaging, setShowMessaging] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const [messageSubject, setMessageSubject] = useState('');
+  
+  const queryClient = useQueryClient();
 
   // Patient authentication
   const handleLogin = async (e: React.FormEvent) => {
@@ -103,6 +110,46 @@ export default function PatientPortal() {
         day: 'numeric'
       });
     };
+
+  // Messaging functionality
+  const { data: messages = [] } = useQuery({
+    queryKey: ['/api/patient-portal/messages'],
+    enabled: isAuthenticated && !!patientSession
+  });
+
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: { subject: string; message: string }) => {
+      const response = await fetch('/api/patient-portal/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('patientToken')}`
+        },
+        body: JSON.stringify(messageData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/patient-portal/messages'] });
+      setNewMessage('');
+      setMessageSubject('');
+      setShowMessaging(false);
+    }
+  });
+
+  const handleSendMessage = () => {
+    if (messageSubject.trim() && newMessage.trim()) {
+      sendMessageMutation.mutate({
+        subject: messageSubject.trim(),
+        message: newMessage.trim()
+      });
+    }
+  };
 
     return `
     <!DOCTYPE html>
@@ -646,18 +693,99 @@ export default function PatientPortal() {
           <TabsContent value="messages">
             <Card>
               <CardHeader>
-                <CardTitle>Messages</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Secure Messaging</span>
+                  <Button 
+                    onClick={() => setShowMessaging(true)}
+                    size="sm"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    New Message
+                  </Button>
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Secure Messaging</h3>
-                  <p className="text-gray-600 mb-4">Communicate securely with your healthcare team</p>
-                  <Button>
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Start Conversation
-                  </Button>
-                </div>
+                {showMessaging ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="subject">Subject</Label>
+                      <Input
+                        id="subject"
+                        placeholder="Message subject..."
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="message">Message</Label>
+                      <Textarea
+                        id="message"
+                        placeholder="Type your message to your healthcare team..."
+                        rows={4}
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={handleSendMessage}
+                        disabled={!messageSubject.trim() || !newMessage.trim() || sendMessageMutation.isPending}
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        {sendMessageMutation.isPending ? 'Sending...' : 'Send Message'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          setShowMessaging(false);
+                          setNewMessage('');
+                          setMessageSubject('');
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.length > 0 ? (
+                      <div className="space-y-3">
+                        {messages.map((message: any) => (
+                          <div key={message.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <h4 className="font-medium">{message.subject}</h4>
+                              <Badge variant={message.status === 'unread' ? 'default' : 'secondary'}>
+                                {message.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{message.message}</p>
+                            <div className="flex items-center justify-between text-xs text-gray-500">
+                              <span>To: {message.recipientType || 'Healthcare Team'}</span>
+                              <span>{new Date(message.sentAt).toLocaleDateString()}</span>
+                            </div>
+                            {message.reply && (
+                              <div className="mt-3 pt-3 border-t bg-gray-50 rounded p-3">
+                                <p className="text-sm font-medium text-blue-600 mb-1">Reply from Healthcare Team:</p>
+                                <p className="text-sm">{message.reply}</p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(message.repliedAt).toLocaleDateString()}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8">
+                        <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No Messages Yet</h3>
+                        <p className="text-gray-600 mb-4">
+                          Start a conversation with your healthcare team using secure messaging
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
