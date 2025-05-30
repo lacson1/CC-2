@@ -92,29 +92,11 @@ export default function PatientPortal() {
     setLoginData({ patientId: '', phone: '', dateOfBirth: '' });
   };
 
-  const handleDownloadReport = (visit: any) => {
-    const reportContent = generateMedicalReport(visit, patientSession);
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(reportContent);
-      printWindow.document.close();
-      printWindow.print();
-    }
-  };
-
-  const generateMedicalReport = (visit: any, patient: PatientSession | null): string => {
-    const formatDate = (date: string | Date) => {
-      return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    };
-
   // Messaging functionality
   const { data: messages = [] } = useQuery({
     queryKey: ['/api/patient-portal/messages'],
-    enabled: isAuthenticated && !!patientSession
+    enabled: isAuthenticated && !!patientSession,
+    staleTime: 30000
   });
 
   const sendMessageMutation = useMutation({
@@ -150,6 +132,25 @@ export default function PatientPortal() {
       });
     }
   };
+
+  const handleDownloadReport = (visit: any) => {
+    const reportContent = generateMedicalReport(visit, patientSession);
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(reportContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const generateMedicalReport = (visit: any, patient: PatientSession | null): string => {
+    const formatDate = (date: string | Date) => {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    };
 
     return `
     <!DOCTYPE html>

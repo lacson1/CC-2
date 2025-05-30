@@ -9,6 +9,11 @@ import jwt from "jsonwebtoken";
 import { db } from "./db";
 import { eq, desc, or, ilike, gte, and, isNotNull, inArray, sql } from "drizzle-orm";
 import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
+
+// Extend AuthRequest interface to include patient authentication
+interface PatientAuthRequest extends AuthRequest {
+  patient?: any;
+}
 import { checkPermission, getUserPermissions } from "./middleware/permissions";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
 import { AuditLogger, AuditActions } from "./audit";
@@ -3267,6 +3272,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error creating medication review:', error);
       res.status(500).json({ error: 'Failed to create medication review' });
+    }
+  });
+
+  // Patient authentication middleware
+  const authenticatePatient = async (req: PatientAuthRequest, res: any, next: any) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+      }
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as any;
+      if (decoded.type !== 'patient') {
+        return res.status(401).json({ error: 'Invalid token type' });
+      }
+
+      // Find the patient to attach to request
+      const [patient] = await db.select()
+        .from(patients)
+        .where(eq(patients.id, decoded.patientId));
+
+      if (!patient) {
+        return res.status(401).json({ error: 'Patient not found' });
+      }
+
+      req.patient = patient;
+      next();
+    } catch (error) {
+      console.error('Patient authentication error:', error);
+      res.status(401).json({ error: 'Invalid token' });
+    }
+  };
+
+  // Patient Portal Messaging API endpoints
+  app.get('/api/patient-portal/messages', authenticatePatient, async (req: PatientAuthRequest, res) => {
+    try {
+      const patientId = req.patient?.id;
+      if (!patientId) {
+        return res.status(401).json({ error: 'Patient authentication required' });
+      }
+
+      // For now, return empty array as no messages table exists
+      // This will need to be implemented when messaging schema is added
+      res.json([]);
+    } catch (error) {
+      console.error('Error fetching patient messages:', error);
+      res.status(500).json({ error: 'Failed to fetch messages' });
+    }
+  });
+
+  app.post('/api/patient-portal/messages', authenticatePatient, async (req: PatientAuthRequest, res) => {
+    try {
+      const patientId = req.patient?.id;
+      if (!patientId) {
+        return res.status(401).json({ error: 'Patient authentication required' });
+      }
+
+      const { subject, message } = req.body;
+      
+      if (!subject || !message) {
+        return res.status(400).json({ error: 'Subject and message are required' });
+      }
+
+      // For now, return success response
+      // This will need actual message creation when messaging schema is implemented
+      const messageData = {
+        id: Date.now(),
+        patientId,
+        subject,
+        message,
+        status: 'sent',
+        sentAt: new Date(),
+        recipientType: 'Healthcare Team'
+      };
+
+      res.status(201).json(messageData);
+    } catch (error) {
+      console.error('Error sending patient message:', error);
+      res.status(500).json({ error: 'Failed to send message' });
     }
   });
 
