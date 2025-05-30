@@ -68,7 +68,7 @@ export default function Login() {
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
-                  ClinicConnect
+                  Bluequee
                 </h1>
                 <p className="text-cyan-200/90 font-medium tracking-wide">
                   Modern Healthcare Management
@@ -260,7 +260,7 @@ export default function Login() {
                 <Stethoscope className="w-4 h-4 text-white" />
               </div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                ClinicConnect
+                Bluequee
               </h1>
             </div>
             <p className="text-sm text-gray-600">Advanced Healthcare Management Platform</p>

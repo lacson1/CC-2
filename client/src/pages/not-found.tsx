@@ -226,7 +226,7 @@ export default function NotFound() {
 
             <div className="mt-6 p-4 bg-blue-50 rounded-lg text-center">
               <p className="text-xs text-blue-700 font-medium">
-                ClinicConnect - Healthcare Management System
+                Bluequee - Healthcare Management System
               </p>
             </div>
           </CardContent>

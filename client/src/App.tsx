@@ -150,7 +150,7 @@ function Router() {
                   
                   {/* Brand and Status */}
                   <div className="text-center space-y-2">
-                    <div className="text-2xl font-bold text-gray-800 tracking-tight">ClinicConnect</div>
+                    <div className="text-2xl font-bold text-gray-800 tracking-tight">Bluequee</div>
                     <div className="text-lg font-medium text-gray-600">Loading your workspace...</div>
                     <div className="text-sm text-gray-500">Preparing healthcare tools and patient data</div>
                   </div>

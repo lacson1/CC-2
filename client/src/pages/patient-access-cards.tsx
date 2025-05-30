@@ -173,7 +173,7 @@ export default function PatientAccessCards() {
         <div class="${cardClass}">
           <div class="header">
             <div class="clinic-logo">🏥</div>
-            <div class="clinic-name">ClinicConnect Patient Portal</div>
+            <div class="clinic-name">Bluequee Patient Portal</div>
           </div>
           <div class="patient-section">
             <div class="patient-name">${patient.first_name} ${patient.last_name}</div>

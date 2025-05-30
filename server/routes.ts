@@ -3537,7 +3537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           phone: patient.phone,
           dob: patient.dateOfBirth,
           portalUrl,
-          clinicName: 'ClinicConnect'
+          clinicName: 'Bluequee'
         };
 
         if (type === 'email' && patient.email) {
