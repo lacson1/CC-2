@@ -26,119 +26,133 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/30 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Clean Futuristic Background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/90 to-indigo-900/80 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Advanced Futuristic Background */}
       <div className="absolute inset-0">
-        {/* Simplified gradient orbs */}
-        <div className="absolute top-20 -right-32 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-indigo-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
+        {/* Animated gradient mesh */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_80%,_#3b82f6_0%,_transparent_50%)] animate-pulse"></div>
+          <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,_#06b6d4_0%,_transparent_50%)] animate-pulse [animation-delay:1s]"></div>
+          <div className="absolute bottom-0 left-0 w-full h-full bg-[radial-gradient(circle_at_40%_40%,_#8b5cf6_0%,_transparent_50%)] animate-pulse [animation-delay:2s]"></div>
+        </div>
         
-        {/* Geometric patterns */}
-        <div className="absolute top-1/4 right-1/4 w-1 h-32 bg-gradient-to-b from-blue-400/30 to-transparent transform rotate-45"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-1 h-24 bg-gradient-to-t from-cyan-400/30 to-transparent transform -rotate-45"></div>
+        {/* Dynamic grid pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="h-full w-full bg-[linear-gradient(rgba(59,130,246,0.5)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.5)_1px,transparent_1px)] bg-[size:60px_60px] animate-pulse"></div>
+        </div>
         
-        {/* Minimal floating elements */}
-        <div className="absolute top-1/3 right-1/5 w-2 h-2 bg-blue-400/60 rounded-full animate-pulse"></div>
-        <div className="absolute bottom-1/3 left-1/5 w-1.5 h-1.5 bg-cyan-400/60 rounded-full animate-pulse delay-1000"></div>
+        {/* Futuristic geometric elements */}
+        <div className="absolute top-20 right-20 w-32 h-32 border border-cyan-400/30 rounded-lg animate-spin [animation-duration:20s]"></div>
+        <div className="absolute top-40 left-20 w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full animate-bounce [animation-duration:3s]"></div>
+        <div className="absolute bottom-32 right-32 w-8 h-8 bg-gradient-to-r from-cyan-400/40 to-blue-400/40 rounded-full animate-ping"></div>
+        <div className="absolute bottom-20 left-20 w-24 h-1 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent animate-pulse"></div>
+        <div className="absolute top-1/2 right-10 w-1 h-20 bg-gradient-to-b from-cyan-400/30 to-transparent animate-pulse [animation-delay:1s]"></div>
+        
+        {/* Floating particles */}
+        <div className="absolute top-1/4 left-1/3 w-1 h-1 bg-white/60 rounded-full animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-cyan-300/60 rounded-full animate-pulse [animation-delay:2s]"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-1 h-1 bg-blue-300/60 rounded-full animate-pulse [animation-delay:3s]"></div>
       </div>
       
       <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
-        {/* Left Side - Clean Futuristic Branding */}
+        {/* Left Side - Futuristic Branding */}
         <div className="hidden lg:block space-y-10">
           <div className="space-y-8">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
-                  <Stethoscope className="w-7 h-7 text-white" />
+                <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/20">
+                  <Stethoscope className="w-8 h-8 text-white drop-shadow-lg" />
                 </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
                   ClinicConnect
                 </h1>
-                <p className="text-slate-600 font-medium">
-                  Next-Generation Healthcare Platform
+                <p className="text-cyan-200/90 font-medium tracking-wide">
+                  AI-Powered Healthcare Evolution
                 </p>
               </div>
             </div>
             
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-slate-800">
-                AI-Powered Healthcare Platform
+            <div className="space-y-6">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
+                Neural Healthcare Intelligence
               </h2>
-              <p className="text-slate-600 leading-relaxed">
-                Intelligent healthcare automation with advanced analytics, predictive insights, and seamless patient care coordination.
+              <p className="text-cyan-100/80 leading-relaxed text-lg">
+                Advanced quantum-enhanced diagnostics with neural pattern recognition, real-time health monitoring, and predictive medical interventions.
               </p>
-              <div className="flex items-center space-x-6 text-sm text-slate-500">
-                <span className="flex items-center">
+              <div className="flex flex-wrap gap-4 text-sm">
+                <span className="flex items-center bg-cyan-500/20 backdrop-blur-sm px-3 py-2 rounded-full border border-cyan-400/30">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                  AI Diagnostics
+                  <span className="text-cyan-200">Neural Diagnostics</span>
                 </span>
-                <span className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
-                  Smart Analytics
+                <span className="flex items-center bg-blue-500/20 backdrop-blur-sm px-3 py-2 rounded-full border border-blue-400/30">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse [animation-delay:0.5s]"></div>
+                  <span className="text-blue-200">Quantum Analytics</span>
                 </span>
-                <span className="flex items-center">
-                  <div className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
-                  Predictive Care
+                <span className="flex items-center bg-purple-500/20 backdrop-blur-sm px-3 py-2 rounded-full border border-purple-400/30">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse [animation-delay:1s]"></div>
+                  <span className="text-purple-200">Predictive AI</span>
                 </span>
               </div>
             </div>
           </div>
           
-          {/* Clean Feature Grid */}
+          {/* Futuristic Feature Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3">
-                <Brain className="w-5 h-5 text-white" />
+            <div className="group bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl border border-cyan-400/20 hover:border-cyan-400/40 hover:bg-slate-800/60 transition-all duration-500">
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Brain className="w-6 h-6 text-white drop-shadow-lg" />
               </div>
-              <h3 className="font-semibold text-slate-800 mb-1">AI Diagnostics</h3>
-              <p className="text-sm text-slate-600">Intelligent health insights</p>
+              <h3 className="font-bold text-cyan-200 mb-2">Neural Engine</h3>
+              <p className="text-sm text-cyan-300/80">Quantum-enhanced diagnostic intelligence</p>
             </div>
             
-            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-200 hover:shadow-lg transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center mb-3">
-                <BarChart3 className="w-5 h-5 text-white" />
+            <div className="group bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl border border-blue-400/20 hover:border-blue-400/40 hover:bg-slate-800/60 transition-all duration-500">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <BarChart3 className="w-6 h-6 text-white drop-shadow-lg" />
               </div>
-              <h3 className="font-semibold text-slate-800 mb-1">Smart Analytics</h3>
-              <p className="text-sm text-slate-600">Predictive healthcare data</p>
+              <h3 className="font-bold text-blue-200 mb-2">Predictive Matrix</h3>
+              <p className="text-sm text-blue-300/80">Advanced healthcare forecasting</p>
             </div>
             
-            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mb-3">
-                <Heart className="w-5 h-5 text-white" />
+            <div className="group bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl border border-purple-400/20 hover:border-purple-400/40 hover:bg-slate-800/60 transition-all duration-500">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Heart className="w-6 h-6 text-white drop-shadow-lg" />
               </div>
-              <h3 className="font-semibold text-slate-800 mb-1">Patient Monitoring</h3>
-              <p className="text-sm text-slate-600">Real-time health tracking</p>
+              <h3 className="font-bold text-purple-200 mb-2">Vital Stream</h3>
+              <p className="text-sm text-purple-300/80">Real-time biometric monitoring</p>
             </div>
             
-            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-slate-600 rounded-lg flex items-center justify-center mb-3">
-                <Shield className="w-5 h-5 text-white" />
+            <div className="group bg-slate-800/40 backdrop-blur-xl p-6 rounded-2xl border border-green-400/20 hover:border-green-400/40 hover:bg-slate-800/60 transition-all duration-500">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Shield className="w-6 h-6 text-white drop-shadow-lg" />
               </div>
-              <h3 className="font-semibold text-slate-800 mb-1">Secure Platform</h3>
-              <p className="text-sm text-slate-600">HIPAA-compliant security</p>
+              <h3 className="font-bold text-green-200 mb-2">Quantum Shield</h3>
+              <p className="text-sm text-green-300/80">Military-grade data protection</p>
             </div>
           </div>
         </div>
         
-        {/* Right Side - Clean Futuristic Login Form */}
+        {/* Right Side - Futuristic Login Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <Card className="bg-white/95 backdrop-blur-xl border-0 shadow-xl ring-1 ring-slate-200/50">
+          <Card className="bg-slate-900/60 backdrop-blur-2xl border-0 shadow-2xl ring-1 ring-cyan-400/30">
             <CardHeader className="space-y-6 pb-8">
               <div className="text-center space-y-4">
                 <div className="relative mx-auto">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Stethoscope className="w-8 h-8 text-white" />
+                  <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/20">
+                    <Stethoscope className="w-10 h-10 text-white drop-shadow-xl" />
                   </div>
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full animate-pulse"></div>
                 </div>
-                <div className="space-y-2">
-                  <CardTitle className="text-2xl font-bold text-slate-800">
-                    Welcome Back
+                <div className="space-y-3">
+                  <CardTitle className="text-3xl font-bold bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent">
+                    Neural Access
                   </CardTitle>
-                  <CardDescription className="text-slate-600">
-                    Access your healthcare dashboard
+                  <CardDescription className="text-cyan-200/70 text-base">
+                    Enter the quantum healthcare matrix
                   </CardDescription>
                 </div>
               </div>
@@ -146,87 +160,90 @@ export default function Login() {
             
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-5">
-                <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-slate-700">Username</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="username" className="text-sm font-medium text-cyan-200/90">Neural ID</Label>
                   <Input
                     id="username"
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter username"
+                    placeholder="Enter neural identifier"
                     required
                     disabled={isLoading}
-                    className="h-12 bg-white border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
+                    className="h-14 bg-slate-800/50 border-cyan-400/30 focus:border-cyan-400 focus:ring-cyan-400/20 text-cyan-100 placeholder:text-cyan-300/50 backdrop-blur-sm"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-slate-700">Password</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="password" className="text-sm font-medium text-cyan-200/90">Quantum Key</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter password"
+                      placeholder="Enter quantum security key"
                       required
                       disabled={isLoading}
-                      className="h-12 bg-white border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 pr-12"
+                      className="h-14 bg-slate-800/50 border-cyan-400/30 focus:border-cyan-400 focus:ring-cyan-400/20 text-cyan-100 placeholder:text-cyan-300/50 backdrop-blur-sm pr-14"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600"
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-cyan-300/70 hover:text-cyan-200 transition-colors"
                     >
                       {showPassword ? (
-                        <EyeOff className="w-4 h-4" />
+                        <EyeOff className="w-5 h-5" />
                       ) : (
-                        <Eye className="w-4 h-4" />
+                        <Eye className="w-5 h-5" />
                       )}
                     </button>
                   </div>
                 </div>
                 
                 {error && (
-                  <Alert variant="destructive" className="border-red-200 bg-red-50/80">
-                    <AlertDescription className="text-red-700">{error}</AlertDescription>
+                  <Alert variant="destructive" className="border-red-400/30 bg-red-900/30 backdrop-blur-sm">
+                    <AlertDescription className="text-red-300">{error}</AlertDescription>
                   </Alert>
                 )}
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300" 
+                  className="w-full h-14 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-500 text-white font-semibold shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 backdrop-blur-sm border border-white/20" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                      <span>Establishing neural link...</span>
                     </>
                   ) : (
-                    'Access Dashboard'
+                    <>
+                      <Zap className="mr-3 h-5 w-5" />
+                      <span>Access Neural Matrix</span>
+                    </>
                   )}
                 </Button>
               </form>
               
-              {/* Demo Accounts */}
-              <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
-                <p className="text-sm font-semibold text-blue-900 mb-3 flex items-center">
-                  <Users className="w-4 h-4 mr-2" />
-                  Demo Accounts
+              {/* Neural Access Codes */}
+              <div className="p-5 bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-cyan-400/20">
+                <p className="text-sm font-bold text-cyan-200 mb-4 flex items-center">
+                  <Zap className="w-4 h-4 mr-2" />
+                  Neural Access Codes
                 </p>
-                <div className="grid grid-cols-1 gap-2 text-xs">
-                  <div className="flex justify-between items-center py-1 px-2 bg-white/60 rounded-lg">
-                    <span className="font-medium text-gray-700">Admin</span>
-                    <span className="text-blue-600 font-mono">admin / admin123</span>
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
+                    <span className="text-cyan-300 font-medium">System Admin</span>
+                    <span className="text-cyan-100 font-mono">admin / admin123</span>
                   </div>
-                  <div className="flex justify-between items-center py-1 px-2 bg-white/60 rounded-lg">
-                    <span className="font-medium text-gray-700">Doctor</span>
-                    <span className="text-blue-600 font-mono">ade / doctor123</span>
+                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
+                    <span className="text-blue-300 font-medium">Neural Physician</span>
+                    <span className="text-blue-100 font-mono">ade / doctor123</span>
                   </div>
-                  <div className="flex justify-between items-center py-1 px-2 bg-white/60 rounded-lg">
-                    <span className="font-medium text-gray-700">Nurse</span>
-                    <span className="text-blue-600 font-mono">syb / nurse123</span>
+                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
+                    <span className="text-purple-300 font-medium">Care Specialist</span>
+                    <span className="text-purple-100 font-mono">syb / nurse123</span>
                   </div>
                 </div>
               </div>
