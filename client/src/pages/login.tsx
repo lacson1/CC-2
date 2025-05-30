@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Heart, Shield, Activity, Stethoscope, Users, Eye, EyeOff, Zap, Star, CheckCircle } from 'lucide-react';
+import { Loader2, Heart, Shield, Activity, Stethoscope, Users, Eye, EyeOff, Zap, Star, CheckCircle, Brain, BarChart3 } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -26,142 +26,119 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Enhanced Background Graphics */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-indigo-50/30 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Clean Futuristic Background */}
       <div className="absolute inset-0">
-        {/* Main gradient orbs */}
-        <div className="absolute top-20 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/30 to-cyan-400/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-indigo-400/30 to-blue-400/30 rounded-full blur-3xl animate-pulse"></div>
+        {/* Simplified gradient orbs */}
+        <div className="absolute top-20 -right-32 w-80 h-80 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-indigo-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
         
-        {/* Secondary accent orbs */}
-        <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-gradient-to-br from-cyan-300/20 to-blue-300/20 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-1/4 right-1/3 w-72 h-72 bg-gradient-to-tr from-blue-300/25 to-indigo-300/25 rounded-full blur-2xl"></div>
+        {/* Geometric patterns */}
+        <div className="absolute top-1/4 right-1/4 w-1 h-32 bg-gradient-to-b from-blue-400/30 to-transparent transform rotate-45"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-1 h-24 bg-gradient-to-t from-cyan-400/30 to-transparent transform -rotate-45"></div>
         
-        {/* Medical graphics */}
-        <div className="absolute top-10 left-10 opacity-10">
-          <Heart className="w-24 h-24 text-blue-600 rotate-12" />
-        </div>
-        <div className="absolute bottom-10 right-10 opacity-10">
-          <Activity className="w-32 h-32 text-indigo-600 -rotate-12" />
-        </div>
-        <div className="absolute top-1/2 left-5 opacity-8">
-          <Stethoscope className="w-20 h-20 text-cyan-600 rotate-45" />
-        </div>
-        
-        {/* Floating elements */}
-        <div className="absolute top-1/4 right-20 w-3 h-3 bg-blue-400 rounded-full animate-bounce"></div>
-        <div className="absolute top-2/3 left-20 w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-300"></div>
-        <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-indigo-400 rounded-full animate-bounce delay-700"></div>
+        {/* Minimal floating elements */}
+        <div className="absolute top-1/3 right-1/5 w-2 h-2 bg-blue-400/60 rounded-full animate-pulse"></div>
+        <div className="absolute bottom-1/3 left-1/5 w-1.5 h-1.5 bg-cyan-400/60 rounded-full animate-pulse delay-1000"></div>
       </div>
       
       <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
-        {/* Left Side - Enhanced Branding & Features */}
-        <div className="hidden lg:block space-y-8">
-          <div className="space-y-6">
+        {/* Left Side - Clean Futuristic Branding */}
+        <div className="hidden lg:block space-y-10">
+          <div className="space-y-8">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-300">
-                  <Stethoscope className="w-8 h-8 text-white" />
-                </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
-                  <Star className="w-3 h-3 text-white" />
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Stethoscope className="w-7 h-7 text-white" />
                 </div>
               </div>
               <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-blue-600 bg-clip-text text-transparent">
                   ClinicConnect
                 </h1>
-                <p className="text-blue-600 font-medium flex items-center">
-                  <Zap className="w-4 h-4 mr-1" />
-                  Advanced Healthcare Management
+                <p className="text-slate-600 font-medium">
+                  Next-Generation Healthcare Platform
                 </p>
               </div>
             </div>
             
-            <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-2xl border border-blue-100">
-              <h2 className="text-3xl font-bold text-blue-900">
-                Transform Your Healthcare Practice
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold text-slate-800">
+                AI-Powered Healthcare Platform
               </h2>
-              <p className="text-lg text-blue-700 leading-relaxed">
-                Experience the future of clinic management with our comprehensive platform designed specifically for Southwest Nigerian healthcare providers.
+              <p className="text-slate-600 leading-relaxed">
+                Intelligent healthcare automation with advanced analytics, predictive insights, and seamless patient care coordination.
               </p>
-              <div className="flex items-center space-x-4 text-sm text-blue-600">
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Multi-tenant Support
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  HIPAA Compliant
-                </div>
-                <div className="flex items-center">
-                  <CheckCircle className="w-4 h-4 mr-1" />
-                  Real-time Updates
-                </div>
+              <div className="flex items-center space-x-6 text-sm text-slate-500">
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                  AI Diagnostics
+                </span>
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+                  Smart Analytics
+                </span>
+                <span className="flex items-center">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
+                  Predictive Care
+                </span>
               </div>
             </div>
           </div>
           
-          {/* Enhanced Feature Highlights */}
-          <div className="grid grid-cols-2 gap-6">
-            <div className="group bg-gradient-to-br from-blue-50/90 to-indigo-50/90 backdrop-blur-sm p-6 rounded-2xl border border-blue-200/50 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div className="relative w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
-                <Users className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-400 rounded-full animate-ping"></div>
+          {/* Clean Feature Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3">
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-bold text-blue-900 mb-2">Patient Management</h3>
-              <p className="text-sm text-blue-700">Complete patient records and visit tracking with real-time updates</p>
+              <h3 className="font-semibold text-slate-800 mb-1">AI Diagnostics</h3>
+              <p className="text-sm text-slate-600">Intelligent health insights</p>
             </div>
             
-            <div className="group bg-gradient-to-br from-cyan-50/90 to-blue-50/90 backdrop-blur-sm p-6 rounded-2xl border border-cyan-200/50 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div className="relative w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
-                <Activity className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-400 rounded-full animate-ping"></div>
+            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-200 hover:shadow-lg transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg flex items-center justify-center mb-3">
+                <BarChart3 className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-bold text-cyan-900 mb-2">Lab Management</h3>
-              <p className="text-sm text-cyan-700">435+ comprehensive laboratory tests across all medical specialties</p>
+              <h3 className="font-semibold text-slate-800 mb-1">Smart Analytics</h3>
+              <p className="text-sm text-slate-600">Predictive healthcare data</p>
             </div>
             
-            <div className="group bg-gradient-to-br from-indigo-50/90 to-purple-50/90 backdrop-blur-sm p-6 rounded-2xl border border-indigo-200/50 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div className="relative w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
-                <Heart className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-400 rounded-full animate-ping"></div>
+            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-indigo-200 hover:shadow-lg transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mb-3">
+                <Heart className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-bold text-indigo-900 mb-2">Specialist Care</h3>
-              <p className="text-sm text-indigo-700">26 specialist consultation forms for comprehensive care</p>
+              <h3 className="font-semibold text-slate-800 mb-1">Patient Monitoring</h3>
+              <p className="text-sm text-slate-600">Real-time health tracking</p>
             </div>
             
-            <div className="group bg-gradient-to-br from-blue-50/90 to-cyan-50/90 backdrop-blur-sm p-6 rounded-2xl border border-blue-200/50 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300">
-              <div className="relative w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform duration-300">
-                <Shield className="w-6 h-6 text-white" />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
+            <div className="group bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-slate-200 hover:border-blue-200 hover:shadow-lg transition-all duration-300">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-slate-600 rounded-lg flex items-center justify-center mb-3">
+                <Shield className="w-5 h-5 text-white" />
               </div>
-              <h3 className="font-bold text-blue-900 mb-2">Secure & Compliant</h3>
-              <p className="text-sm text-blue-700">Multi-tenant architecture with advanced role-based access control</p>
+              <h3 className="font-semibold text-slate-800 mb-1">Secure Platform</h3>
+              <p className="text-sm text-slate-600">HIPAA-compliant security</p>
             </div>
           </div>
         </div>
         
-        {/* Right Side - Enhanced Login Form */}
+        {/* Right Side - Clean Futuristic Login Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <Card className="bg-gradient-to-br from-white/95 to-blue-50/95 backdrop-blur-xl border-0 shadow-2xl ring-1 ring-blue-200/50">
+          <Card className="bg-white/95 backdrop-blur-xl border-0 shadow-xl ring-1 ring-slate-200/50">
             <CardHeader className="space-y-6 pb-8">
               <div className="text-center space-y-4">
                 <div className="relative mx-auto">
-                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl hover:scale-110 transition-transform duration-300">
-                    <Stethoscope className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center animate-pulse">
-                    <Star className="w-4 h-4 text-white" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Stethoscope className="w-8 h-8 text-white" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-800 to-cyan-700 bg-clip-text text-transparent">
+                  <CardTitle className="text-2xl font-bold text-slate-800">
                     Welcome Back
                   </CardTitle>
-                  <CardDescription className="text-blue-600 font-medium">
-                    Sign in to access your clinic dashboard
+                  <CardDescription className="text-slate-600">
+                    Access your healthcare dashboard
                   </CardDescription>
                 </div>
               </div>
@@ -170,36 +147,36 @@ export default function Login() {
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="username" className="text-sm font-medium text-gray-700">Username</Label>
+                  <Label htmlFor="username" className="text-sm font-medium text-slate-700">Username</Label>
                   <Input
                     id="username"
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your username"
+                    placeholder="Enter username"
                     required
                     disabled={isLoading}
-                    className="h-12 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                    className="h-12 bg-white border-slate-200 focus:border-blue-400 focus:ring-blue-400/20"
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-sm font-medium text-gray-700">Password</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-slate-700">Password</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
+                      placeholder="Enter password"
                       required
                       disabled={isLoading}
-                      className="h-12 bg-white/80 border-gray-200 focus:border-blue-500 focus:ring-blue-500/20 pr-12"
+                      className="h-12 bg-white border-slate-200 focus:border-blue-400 focus:ring-blue-400/20 pr-12"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-600"
+                      className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-slate-600"
                     >
                       {showPassword ? (
                         <EyeOff className="w-4 h-4" />
@@ -211,27 +188,23 @@ export default function Login() {
                 </div>
                 
                 {error && (
-                  <Alert variant="destructive" className="border-red-200 bg-red-50">
+                  <Alert variant="destructive" className="border-red-200 bg-red-50/80">
                     <AlertDescription className="text-red-700">{error}</AlertDescription>
                   </Alert>
                 )}
                 
                 <Button 
                   type="submit" 
-                  className="w-full h-14 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 hover:from-blue-700 hover:via-blue-600 hover:to-cyan-600 text-white font-semibold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 relative overflow-hidden group" 
+                  className="w-full h-12 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300" 
                   disabled={isLoading}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Signing in...
                     </>
                   ) : (
-                    <>
-                      <Zap className="mr-2 h-5 w-5" />
-                      Sign In to Dashboard
-                    </>
+                    'Access Dashboard'
                   )}
                 </Button>
               </form>
