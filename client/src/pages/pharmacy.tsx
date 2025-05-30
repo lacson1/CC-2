@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertMedicineSchema, type Medicine, type InsertMedicine } from "@shared/schema";
 import { PharmacyActivityLog } from "@/components/pharmacy-activity-log";
 import { EnhancedMedicationReview } from "@/components/enhanced-medication-review";
+import { PrescriptionQueue } from "@/components/prescription-queue";
 
 import { z } from "zod";
 
@@ -388,14 +389,20 @@ export default function Pharmacy() {
 
       {/* Pharmacy Tabs */}
       <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="inventory" className="h-full flex flex-col">
+        <Tabs defaultValue="prescriptions" className="h-full flex flex-col">
           <div className="px-6 py-3 bg-gray-50 border-b">
-            <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+              <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
               <TabsTrigger value="inventory">Inventory</TabsTrigger>
               <TabsTrigger value="activities">Activities</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
           </div>
+
+          {/* Prescriptions Tab */}
+          <TabsContent value="prescriptions" className="flex-1 overflow-hidden m-0 p-0">
+            <PrescriptionQueue />
+          </TabsContent>
 
           <TabsContent value="inventory" className="flex-1 overflow-hidden m-0 p-0">
             <div className="h-full flex flex-col">
