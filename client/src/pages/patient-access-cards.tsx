@@ -593,7 +593,7 @@ export default function PatientAccessCards() {
                   {accessCards.map((card, index) => (
                     <div key={index} className="border rounded-lg p-4 bg-white shadow-sm">
                       <div className="text-center mb-3">
-                        <div className="text-sm font-medium text-blue-600 mb-1">🏥 ClinicConnect Patient Portal</div>
+                        <div className="text-sm font-medium text-blue-600 mb-1">🏥 Bluequee Patient Portal</div>
                         <div className="font-bold text-lg">{card.patient.first_name} {card.patient.last_name}</div>
                       </div>
                       
