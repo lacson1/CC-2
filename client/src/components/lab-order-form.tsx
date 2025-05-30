@@ -302,12 +302,14 @@ export default function LabOrderForm({ patientId, onOrderCreated }: LabOrderForm
                   {tests.map(test => (
                     <div
                       key={test.id}
-                      className="flex items-start space-x-3 p-3 bg-white dark:bg-gray-700 rounded border"
+                      className="flex items-start space-x-3 p-3 bg-white dark:bg-gray-700 rounded border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                      onClick={() => handleTestToggle(test.id)}
                     >
                       <Checkbox
                         id={`test-${test.id}`}
                         checked={selectedTests.includes(test.id)}
                         onCheckedChange={() => handleTestToggle(test.id)}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <div className="flex-1">
                         <label
