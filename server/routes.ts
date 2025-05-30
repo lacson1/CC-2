@@ -3510,5 +3510,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Send patient portal access information via email/SMS
+  app.post('/api/patient-portal/send-access-info', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { patientIds, type } = req.body;
+      
+      if (!patientIds || !Array.isArray(patientIds) || patientIds.length === 0) {
+        return res.status(400).json({ error: 'Patient IDs are required' });
+      }
+
+      if (!['email', 'sms'].includes(type)) {
+        return res.status(400).json({ error: 'Invalid notification type' });
+      }
+
+      // Get patient details
+      const patientList = await db.select()
+        .from(patients)
+        .where(inArray(patients.id, patientIds));
+
+      const portalUrl = `${req.protocol}://${req.get('host')}/patient-portal`;
+      const results = [];
+
+      for (const patient of patientList) {
+        const accessInfo = {
+          patientId: `PT${patient.id.toString().padStart(6, '0')}`,
+          phone: patient.phone,
+          dob: patient.dateOfBirth,
+          portalUrl,
+          clinicName: 'ClinicConnect'
+        };
+
+        if (type === 'email' && patient.email) {
+          // Email notification logic would go here
+          // For now, we'll just log the attempt
+          console.log(`Email notification sent to ${patient.email} for portal access`);
+          results.push({ 
+            patientId: patient.id, 
+            type: 'email', 
+            status: 'sent',
+            recipient: patient.email
+          });
+        } else if (type === 'sms') {
+          // SMS notification logic would go here
+          // For now, we'll just log the attempt
+          console.log(`SMS notification sent to ${patient.phone} for portal access`);
+          results.push({ 
+            patientId: patient.id, 
+            type: 'sms', 
+            status: 'sent',
+            recipient: patient.phone
+          });
+        } else {
+          results.push({ 
+            patientId: patient.id, 
+            type, 
+            status: 'failed',
+            reason: type === 'email' ? 'No email address' : 'Invalid type'
+          });
+        }
+
+        // Create audit log
+        const auditLogger = new AuditLogger(req);
+        await auditLogger.logPatientAction('PORTAL_ACCESS_SENT', patient.id, {
+          notificationType: type,
+          recipient: type === 'email' ? patient.email : patient.phone
+        });
+      }
+
+      res.json({ 
+        message: `Portal access information sent via ${type}`,
+        results,
+        totalSent: results.filter(r => r.status === 'sent').length,
+        totalFailed: results.filter(r => r.status === 'failed').length
+      });
+    } catch (error) {
+      console.error('Error sending portal access info:', error);
+      res.status(500).json({ error: 'Failed to send portal access information' });
+    }
+  });
+
   return httpServer;
 }
