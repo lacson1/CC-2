@@ -309,7 +309,6 @@ export default function LabOrderForm({ patientId, onOrderCreated }: LabOrderForm
                         id={`test-${test.id}`}
                         checked={selectedTests.includes(test.id)}
                         onCheckedChange={() => handleTestToggle(test.id)}
-                        onClick={(e) => e.stopPropagation()}
                       />
                       <div className="flex-1">
                         <label
