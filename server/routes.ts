@@ -12,6 +12,173 @@ import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePa
 import { checkPermission, getUserPermissions } from "./middleware/permissions";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
 import { AuditLogger, AuditActions } from "./audit";
+import { format } from 'date-fns';
+
+// Helper function to generate lab order HTML for printing
+function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
+  const formatDate = (date: string | Date) => {
+    return format(new Date(date), 'PPP');
+  };
+
+  const formatDateTime = (date: string | Date) => {
+    return format(new Date(date), 'PPP p');
+  };
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Order - ${orderResult.orderId}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .letterhead { border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .org-logo { float: left; width: 80px; height: 80px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px; }
+        .org-info { margin-left: 100px; }
+        .org-name { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
+        .org-details { color: #64748b; line-height: 1.4; }
+        .document-title { text-align: center; font-size: 20px; font-weight: bold; color: #1e40af; margin: 30px 0; padding: 10px; border: 2px solid #e2e8f0; background: #f8fafc; }
+        .section { margin: 25px 0; }
+        .section-title { font-weight: bold; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .info-item { margin-bottom: 8px; }
+        .label { font-weight: bold; color: #4b5563; }
+        .value { color: #1f2937; }
+        .test-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .test-table th, .test-table td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
+        .test-table th { background: #f3f4f6; font-weight: bold; }
+        .status-pending { color: #d97706; font-weight: bold; }
+        .status-completed { color: #059669; font-weight: bold; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
+        .signature-area { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .signature-box { border-top: 1px solid #9ca3af; padding-top: 10px; text-align: center; }
+        @media print {
+            body { print-color-adjust: exact; }
+            .letterhead { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="letterhead">
+        <div class="org-logo">HC</div>
+        <div class="org-info">
+            <div class="org-name">HealthCare Connect</div>
+            <div class="org-details">
+                Lagos State Teaching Hospital<br>
+                123 Medical District, Ikeja, Lagos State<br>
+                Phone: +234-1-234-5678 | Email: info@healthcareconnect.ng<br>
+                License: NG-MED-2024-001
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="document-title">LABORATORY ORDER REQUEST</div>
+
+    <div class="section">
+        <div class="section-title">PATIENT INFORMATION</div>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <span class="label">Patient Name:</span> 
+                    <span class="value">${orderResult.patientFirstName} ${orderResult.patientLastName}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Date of Birth:</span> 
+                    <span class="value">${orderResult.patientDateOfBirth ? formatDate(orderResult.patientDateOfBirth) : 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Gender:</span> 
+                    <span class="value">${orderResult.patientGender || 'Not specified'}</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="label">Patient ID:</span> 
+                    <span class="value">P${String(orderResult.patientId).padStart(6, '0')}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Phone:</span> 
+                    <span class="value">${orderResult.patientPhone || 'Not provided'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Order Date:</span> 
+                    <span class="value">${formatDate(orderResult.createdAt)}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">ORDERING PHYSICIAN</div>
+        <div class="info-item">
+            <span class="label">Doctor:</span> 
+            <span class="value">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Department:</span> 
+            <span class="value">General Medicine</span>
+        </div>
+        <div class="info-item">
+            <span class="label">Order ID:</span> 
+            <span class="value">LAB-${String(orderResult.orderId).padStart(3, '0')}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">LABORATORY TESTS REQUESTED</div>
+        <table class="test-table">
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    <th>Category</th>
+                    <th>Reference Range</th>
+                    <th>Status</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${orderItems.map(item => `
+                <tr>
+                    <td>${item.testName || 'Unknown Test'}</td>
+                    <td>${item.testCategory || 'General'}</td>
+                    <td>${item.referenceRange || 'See lab standards'}</td>
+                    <td><span class="status-${item.status}">${item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || 'Pending'}</span></td>
+                    <td>${item.result || '-'}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">CLINICAL NOTES</div>
+        <div style="padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
+            Laboratory tests requested for clinical assessment. Please process samples according to standard laboratory protocols and contact ordering physician if results are critical.
+        </div>
+    </div>
+
+    <div class="signature-area">
+        <div class="signature-box">
+            <strong>Ordering Physician</strong><br>
+            Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}<br>
+            Date: ${formatDate(orderResult.createdAt)}
+        </div>
+        <div class="signature-box">
+            <strong>Laboratory Use Only</strong><br>
+            Received By: ________________<br>
+            Date: _______________________
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Order ID:</strong> LAB-${String(orderResult.orderId).padStart(3, '0')} | 
+        <strong>Generated:</strong> ${formatDateTime(new Date())} | 
+        <strong>System:</strong> HealthCare Connect v2.0<br>
+        <em>This is an official medical document. Please handle with appropriate confidentiality and care.</em>
+    </div>
+</body>
+</html>`;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Firebase for push notifications
@@ -1246,6 +1413,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(orderItems);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch lab order items" });
+    }
+  });
+
+  // Print lab order with professional letterhead
+  app.get('/api/lab-orders/:id/print', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const labOrderId = parseInt(req.params.id);
+      
+      // Get lab order details with patient info
+      const [orderResult] = await db.select({
+        orderId: labOrders.id,
+        patientId: labOrders.patientId,
+        orderedBy: labOrders.orderedBy,
+        status: labOrders.status,
+        createdAt: labOrders.createdAt,
+        patientFirstName: patients.firstName,
+        patientLastName: patients.lastName,
+        patientDateOfBirth: patients.dateOfBirth,
+        patientGender: patients.gender,
+        patientPhone: patients.phone,
+        doctorUsername: users.username,
+        doctorFirstName: users.firstName,
+        doctorLastName: users.lastName
+      })
+      .from(labOrders)
+      .leftJoin(patients, eq(labOrders.patientId, patients.id))
+      .leftJoin(users, eq(labOrders.orderedBy, users.id))
+      .where(eq(labOrders.id, labOrderId));
+
+      if (!orderResult) {
+        return res.status(404).json({ message: "Lab order not found" });
+      }
+
+      // Get order items
+      const orderItems = await db.select({
+        testName: labTests.name,
+        testCategory: labTests.category,
+        referenceRange: labTests.referenceRange,
+        units: labTests.units,
+        status: labOrderItems.status,
+        result: labOrderItems.result,
+        remarks: labOrderItems.remarks
+      })
+      .from(labOrderItems)
+      .leftJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
+      .where(eq(labOrderItems.labOrderId, labOrderId))
+      .orderBy(labTests.name);
+
+      // Generate HTML for printing
+      const html = generateLabOrderHTML(orderResult, orderItems);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Print lab order error:', error);
+      res.status(500).json({ message: "Failed to generate lab order print" });
     }
   });
 
