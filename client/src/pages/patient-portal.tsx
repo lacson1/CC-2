@@ -57,7 +57,9 @@ export default function PatientPortal() {
     preferredDate: '',
     preferredTime: '',
     reason: '',
-    notes: ''
+    notes: '',
+    messageType: 'general',
+    priority: 'normal'
   });
   
   const queryClient = useQueryClient();
@@ -136,7 +138,9 @@ export default function PatientPortal() {
     if (messageSubject.trim() && newMessage.trim()) {
       sendMessageMutation.mutate({
         subject: messageSubject.trim(),
-        message: newMessage.trim()
+        message: newMessage.trim(),
+        messageType: appointmentData.messageType || 'general',
+        priority: appointmentData.priority || 'normal'
       });
     }
   };
@@ -172,7 +176,9 @@ export default function PatientPortal() {
         preferredDate: '',
         preferredTime: '',
         reason: '',
-        notes: ''
+        notes: '',
+        messageType: 'general',
+        priority: 'normal'
       });
       setShowAppointmentForm(false);
     }
@@ -777,7 +783,9 @@ export default function PatientPortal() {
                             preferredDate: '',
                             preferredTime: '',
                             reason: '',
-                            notes: ''
+                            notes: '',
+                            messageType: 'general',
+                            priority: 'normal'
                           });
                         }}
                       >
@@ -900,11 +908,51 @@ export default function PatientPortal() {
               <CardContent>
                 {showMessaging ? (
                   <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="messageType">Message Type</Label>
+                        <select
+                          id="messageType"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={appointmentData.messageType || 'general'}
+                          onChange={(e) => setAppointmentData(prev => ({
+                            ...prev,
+                            messageType: e.target.value
+                          }))}
+                        >
+                          <option value="general">General Question</option>
+                          <option value="medical">Medical Consultation</option>
+                          <option value="medication">Medication Question</option>
+                          <option value="appointment">Appointment Request</option>
+                          <option value="lab-results">Lab Results Inquiry</option>
+                          <option value="prescription">Prescription Refill</option>
+                          <option value="physiotherapy">Physiotherapy Question</option>
+                          <option value="billing">Billing/Administrative</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label htmlFor="priority">Priority Level</Label>
+                        <select
+                          id="priority"
+                          className="w-full p-2 border border-gray-300 rounded-md"
+                          value={appointmentData.priority || 'normal'}
+                          onChange={(e) => setAppointmentData(prev => ({
+                            ...prev,
+                            priority: e.target.value
+                          }))}
+                        >
+                          <option value="low">Low - General inquiry</option>
+                          <option value="normal">Normal - Standard question</option>
+                          <option value="high">High - Needs prompt attention</option>
+                          <option value="urgent">Urgent - Medical concern</option>
+                        </select>
+                      </div>
+                    </div>
                     <div>
                       <Label htmlFor="subject">Subject</Label>
                       <Input
                         id="subject"
-                        placeholder="Message subject..."
+                        placeholder="Brief description of your message..."
                         value={messageSubject}
                         onChange={(e) => setMessageSubject(e.target.value)}
                       />

@@ -3329,22 +3329,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Patient authentication required' });
       }
 
-      const { subject, message } = req.body;
+      const { subject, message, messageType = 'general', priority = 'normal' } = req.body;
       
       if (!subject || !message) {
         return res.status(400).json({ error: 'Subject and message are required' });
       }
 
-      // For now, return success response
-      // This will need actual message creation when messaging schema is implemented
+      // Smart message routing logic
+      const routingInfo = await routeMessageToProvider(messageType, priority, patientId);
+
       const messageData = {
         id: Date.now(),
         patientId,
         subject,
         message,
+        messageType,
+        priority,
         status: 'sent',
         sentAt: new Date(),
-        recipientType: 'Healthcare Team'
+        recipientType: routingInfo.recipientType,
+        recipientRole: routingInfo.recipientRole,
+        assignedTo: routingInfo.assignedTo,
+        routingReason: routingInfo.reason
       };
 
       res.status(201).json(messageData);
@@ -3353,6 +3359,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to send message' });
     }
   });
+
+  // Smart message routing function
+  async function routeMessageToProvider(messageType: string, priority: string, patientId: number) {
+    try {
+      // Get available healthcare staff
+      const availableStaff = await db.select({
+        id: users.id,
+        username: users.username,
+        role: users.role
+      })
+      .from(users)
+      .where(inArray(users.role, ['doctor', 'nurse', 'pharmacist', 'physiotherapist', 'admin']));
+
+      // Smart routing based on message type
+      let preferredRoles: string[] = [];
+      let recipientType = 'Healthcare Team';
+      let reason = 'General routing';
+
+      switch (messageType) {
+        case 'medical':
+        case 'lab-results':
+          preferredRoles = ['doctor'];
+          recipientType = 'Medical Team';
+          reason = 'Medical consultation requires doctor review';
+          break;
+        
+        case 'medication':
+        case 'prescription':
+          preferredRoles = ['pharmacist', 'doctor'];
+          recipientType = 'Pharmacy Team';
+          reason = 'Medication questions routed to pharmacist';
+          break;
+        
+        case 'physiotherapy':
+          preferredRoles = ['physiotherapist'];
+          recipientType = 'Physiotherapy Team';
+          reason = 'Therapy-related questions routed to physiotherapist';
+          break;
+        
+        case 'appointment':
+          preferredRoles = ['nurse', 'admin'];
+          recipientType = 'Scheduling Team';
+          reason = 'Appointment requests routed to scheduling staff';
+          break;
+        
+        case 'billing':
+          preferredRoles = ['admin'];
+          recipientType = 'Administrative Team';
+          reason = 'Billing inquiries routed to admin staff';
+          break;
+        
+        default: // 'general'
+          preferredRoles = ['nurse', 'doctor'];
+          recipientType = 'General Care Team';
+          reason = 'General questions routed to nursing staff';
+      }
+
+      // For urgent messages, always include doctors
+      if (priority === 'urgent') {
+        if (!preferredRoles.includes('doctor')) {
+          preferredRoles.unshift('doctor');
+        }
+        recipientType = 'Urgent Care Team';
+        reason = 'Urgent priority - routed to medical team';
+      }
+
+      // Find available staff matching preferred roles
+      const matchingStaff = availableStaff.filter(staff => 
+        preferredRoles.includes(staff.role)
+      );
+
+      let assignedTo = null;
+      let recipientRole = preferredRoles[0] || 'nurse';
+
+      if (matchingStaff.length > 0) {
+        // For now, assign to first available staff member
+        // In a real system, this could consider workload, availability, specialization
+        assignedTo = matchingStaff[0].id;
+        recipientRole = matchingStaff[0].role;
+      }
+
+      return {
+        recipientType,
+        recipientRole,
+        assignedTo,
+        reason,
+        availableStaff: matchingStaff.length
+      };
+
+    } catch (error) {
+      console.error('Error in message routing:', error);
+      return {
+        recipientType: 'Healthcare Team',
+        recipientRole: 'nurse',
+        assignedTo: null,
+        reason: 'Default routing due to system error'
+      };
+    }
+  }
 
   // Patient portal appointment endpoints
   app.get('/api/patient-portal/appointments', authenticatePatient, async (req: PatientAuthRequest, res) => {
