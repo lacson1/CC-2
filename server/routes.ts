@@ -63,10 +63,11 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
         <div class="org-info">
             <div class="org-name">HealthCare Connect</div>
             <div class="org-details">
-                Lagos State Teaching Hospital<br>
-                123 Medical District, Ikeja, Lagos State<br>
-                Phone: +234-1-234-5678 | Email: info@healthcareconnect.ng<br>
-                License: NG-MED-2024-001
+                Advanced Digital Health Solutions<br>
+                Lagos State Medical Complex, Ikeja<br>
+                Phone: +234-1-234-5678 | Fax: +234-1-234-5679<br>
+                Email: lab@healthcareconnect.ng | Emergency: +234-803-555-0123<br>
+                Medical License: NG-MED-2024-001 | CAP Accredited Lab
             </div>
         </div>
         <div style="clear: both;"></div>

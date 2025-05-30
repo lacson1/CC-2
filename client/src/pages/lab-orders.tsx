@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { FlaskRound, Plus, Search, User, TestTube, Clock, FileText } from 'lucide-react';
+import { FlaskRound, Plus, Search, User, TestTube, Clock, FileText, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -128,6 +128,15 @@ export default function LabOrdersPage() {
       setSelectedTests([...selectedTests, testId]);
     } else {
       setSelectedTests(selectedTests.filter(id => id !== testId));
+    }
+  };
+
+  const handlePrintLabOrder = (orderId: number) => {
+    const printWindow = window.open(`/api/lab-orders/${orderId}/print`, '_blank');
+    if (printWindow) {
+      printWindow.addEventListener('load', () => {
+        printWindow.print();
+      });
     }
   };
 
@@ -337,14 +346,25 @@ export default function LabOrdersPage() {
                         {order.status}
                       </span>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate(`/lab-results?orderId=${order.id}`)}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => navigate(`/lab-results?orderId=${order.id}`)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        View Details
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handlePrintLabOrder(order.id)}
+                        title="Print Lab Order with Organization Details"
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Print
+                      </Button>
+                    </div>
                   </div>
                   
                   {order.items && order.items.length > 0 && (
