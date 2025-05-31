@@ -90,7 +90,7 @@ export default function PatientQRCard({ patient, baseUrl = window.location.origi
       printWindow.document.write(`
         <html>
           <head>
-            <title>Patient QR Code - ${patient.firstName} ${patient.lastName}</title>
+            <title>Patient QR Code - ${patient.title ? `${patient.title} ` : ''}${patient.firstName} ${patient.lastName}</title>
             <style>
               body { 
                 font-family: Arial, sans-serif; 
@@ -131,7 +131,7 @@ export default function PatientQRCard({ patient, baseUrl = window.location.origi
           <body>
             <div class="qr-container">
               <div class="patient-info">
-                <div class="patient-name">${patient.firstName} ${patient.lastName}</div>
+                <div class="patient-name">${patient.title ? `${patient.title} ` : ''}${patient.firstName} ${patient.lastName}</div>
                 <div class="patient-details">ID: HC${patient.id?.toString().padStart(6, "0")} | Age: ${patientAge} | ${patient.gender}</div>
                 ${patient.phone ? `<div class="patient-details">Phone: ${patient.phone}</div>` : ''}
                 ${patient.allergies ? `<div class="patient-details" style="color: #dc2626;">⚠️ Allergies: ${patient.allergies}</div>` : ''}
