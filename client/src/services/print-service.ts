@@ -75,72 +75,91 @@ export class PrintService {
         
         .header {
             text-align: center;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
+            border-bottom: 3px solid #1e40af;
+            padding: 25px 20px;
+            margin-bottom: 35px;
+            background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+            border-radius: 8px 8px 0 0;
         }
         
         .org-name {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: bold;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             color: #1e40af;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .org-type {
-            font-size: 18px;
+            font-size: 16px;
             color: #3730a3;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 3px;
         }
         
         .org-details {
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             color: #4b5563;
+            padding: 12px 0;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 15px;
         }
         
         .document-title {
             text-align: center;
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
-            margin: 20px 0;
+            margin: 30px 0;
             text-transform: uppercase;
-            border: 2px solid #000;
-            padding: 10px;
+            border: 3px solid #1e40af;
+            padding: 15px;
+            background: #f8faff;
+            color: #1e40af;
+            letter-spacing: 2px;
+            border-radius: 8px;
         }
         
         .info-section {
-            margin: 15px 0;
-            border: 1px solid #ccc;
-            padding: 10px;
+            margin: 25px 0;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background: #fafbfc;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .info-title {
             font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 8px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 3px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #1e40af;
+            padding-bottom: 8px;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         
         .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 12px;
+            gap: 15px;
+            font-size: 14px;
         }
         
         .info-item {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            padding: 5px 0;
         }
         
         .label {
             font-weight: bold;
             display: inline-block;
-            min-width: 100px;
+            min-width: 120px;
+            color: #374151;
         }
         
         .content-section {
@@ -274,9 +293,6 @@ export class PrintService {
             </div>
             <div class="info-item">
                 <span class="label">Role:</span> ${staffInfo.role}
-            </div>
-            <div class="info-item">
-                <span class="label">Username:</span> ${staffInfo.username}
             </div>
             ${staffInfo.phone ? `<div class="info-item"><span class="label">Phone:</span> ${staffInfo.phone}</div>` : ''}
         </div>
