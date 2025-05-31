@@ -56,6 +56,7 @@ import SuperAdminControlPanel from "@/pages/super-admin-control-panel";
 import ProceduralReports from "@/pages/procedural-reports";
 import ConsentManagement from "@/pages/consent-management";
 import StaffMessages from "@/pages/staff-messages";
+import BillingPage from "@/pages/billing";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import ConsultationRecordDetails from "@/pages/consultation-record-details";
@@ -113,6 +114,7 @@ function AuthenticatedApp() {
                   <Route path="/appointments" component={AppointmentsPage} />
                   <Route path="/lab-orders" component={LabOrdersPage} />
                   <Route path="/documents" component={DocumentsPage} />
+                  <Route path="/billing" component={BillingPage} />
                   <Route path="/analytics" component={RevenueAnalytics} />
                   <Route path="/telemedicine" component={TelemedicinePage} />
                   <Route path="/physiotherapy" component={PhysiotherapyPage} />

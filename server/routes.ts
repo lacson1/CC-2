@@ -7,7 +7,7 @@ import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMe
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
-import { eq, desc, or, ilike, gte, and, isNotNull, isNull, inArray, sql, notExists } from "drizzle-orm";
+import { eq, desc, or, ilike, gte, lte, and, isNotNull, isNull, inArray, sql, notExists } from "drizzle-orm";
 import { authenticateToken, requireRole, requireAnyRole, requireSuperOrOrgAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 
 // Extend AuthRequest interface to include patient authentication

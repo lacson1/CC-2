@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight, Brain, Calendar, ClipboardList, Activity, Star, Building, CreditCard, Mail } from "lucide-react";
+import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight, Brain, Calendar, ClipboardList, Activity, Star, Building, CreditCard, Mail, DollarSign, Receipt } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole, RoleGuard } from "@/components/role-guard";
 import { Button } from "@/components/ui/button";
@@ -96,11 +96,18 @@ const getNavigationGroupsForRole = (role: string) => {
       ]
     },
     {
+      name: "Financial Management",
+      icon: DollarSign,
+      items: [
+        { name: "Billing & Invoicing", href: "/billing", icon: Receipt, roles: ["superadmin", "admin", "nurse"] },
+        { name: "Revenue Analytics", href: "/analytics", icon: TrendingUp, roles: ["superadmin", "admin"] },
+      ]
+    },
+    {
       name: "Analytics & Reports",
       icon: TrendingUp,
       items: [
         { name: "Clinical Performance", href: "/clinical-performance", icon: TrendingUp, roles: ["superadmin", "admin", "doctor"] },
-        { name: "Revenue Analytics", href: "/analytics", icon: TrendingUp, roles: ["superadmin", "admin"] },
         { name: "Form Builder", href: "/form-builder", icon: FileText, roles: ["superadmin", "admin", "doctor", "nurse"] },
       ]
     },
