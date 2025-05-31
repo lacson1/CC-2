@@ -160,7 +160,7 @@ export function setupOrganizationStaffRoutes(app: Express) {
         .where(eq(patientsTable.organizationId, req.tenant.id))
         .orderBy(desc(patientsTable.createdAt));
 
-      res.json(patients);
+      res.json(organizationPatients);
     } catch (error) {
       console.error('Error fetching organization patients:', error);
       res.status(500).json({ error: 'Failed to fetch patients' });
