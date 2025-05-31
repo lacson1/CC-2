@@ -39,41 +39,56 @@ export default function RevenueAnalytics() {
   const [timeRange, setTimeRange] = useState('30');
   const [reportType, setReportType] = useState('summary');
 
-  const { data: revenueData, isLoading } = useQuery({
-    queryKey: ['/api/analytics/revenue', timeRange],
+  const { data: comprehensiveData, isLoading } = useQuery({
+    queryKey: ['/api/analytics/comprehensive', timeRange],
     enabled: true
   });
 
-  const { data: paymentMethods } = useQuery({
-    queryKey: ['/api/analytics/payment-methods', timeRange],
+  const { data: revenueData, isLoading: revenueLoading } = useQuery({
+    queryKey: ['/api/revenue-analytics'],
     enabled: true
   });
 
-  const { data: serviceRevenue } = useQuery({
-    queryKey: ['/api/analytics/service-revenue', timeRange],
-    enabled: true
-  });
+  const organization = comprehensiveData?.organization;
+  const revenue = comprehensiveData?.revenue;
+  const patients = comprehensiveData?.patients;
+  const services = comprehensiveData?.services;
+  const trends = comprehensiveData?.trends;
 
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const exportReport = () => {
-    if (!revenueData || !serviceRevenue) return;
+    if (!comprehensiveData) return;
     
-    // Create CSV content
-    const csvContent = `Revenue Analytics Report (${timeRange} days)\n\n` +
-      `Total Revenue,${revenueData.totalRevenue || 0}\n` +
-      `Total Patients,${revenueData.totalPatients || 0}\n` +
-      `Average Revenue per Patient,${revenueData.avgRevenuePerPatient || 0}\n` +
-      `Growth Rate,${revenueData.growthRate || 0}%\n\n` +
-      `Service Revenue Breakdown\n` +
-      `Service,Revenue,Percentage\n` +
-      (serviceRevenue || []).map((item: any) => `${item.service},${item.revenue},${item.percentage}%`).join('\n');
+    const { organization, revenue, patients, services } = comprehensiveData;
+    
+    // Create comprehensive CSV content with real data
+    const csvContent = `${organization?.name || 'Healthcare Organization'} - Revenue Analytics Report\n` +
+      `Report Period: ${comprehensiveData.period?.startDate} to ${comprehensiveData.period?.endDate}\n\n` +
+      `FINANCIAL SUMMARY\n` +
+      `Total Revenue,₦${revenue?.total?.toLocaleString() || 0}\n` +
+      `Outstanding Receivables,₦${revenue?.outstanding?.toLocaleString() || 0}\n` +
+      `Collection Rate,${revenue?.collectionRate || 0}%\n` +
+      `Payment Transactions,${revenue?.paymentCount || 0}\n\n` +
+      `PATIENT ANALYTICS\n` +
+      `Total Patients Billed,${patients?.total || 0}\n` +
+      `Average Revenue per Patient,₦${patients?.averageRevenuePerPatient?.toLocaleString() || 0}\n\n` +
+      `TOP PAYING PATIENTS\n` +
+      `Patient Name,Total Spent,Invoice Count,Last Visit\n` +
+      (patients?.topPaying || []).map((patient: any) => 
+        `${patient.patientName},₦${patient.totalSpent?.toLocaleString()},${patient.invoiceCount},${patient.lastVisit}`
+      ).join('\n') + '\n\n' +
+      `SERVICE REVENUE BREAKDOWN\n` +
+      `Service Type,Total Revenue,Transaction Count,Average Price\n` +
+      (services?.breakdown || []).map((service: any) => 
+        `${service.serviceType},₦${service.totalRevenue?.toLocaleString()},${service.transactionCount},₦${service.averagePrice?.toLocaleString()}`
+      ).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `revenue-analytics-${timeRange}days.csv`;
+    a.download = `${organization?.name || 'healthcare'}-analytics-${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
