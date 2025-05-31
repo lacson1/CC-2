@@ -759,7 +759,11 @@ If no complications occurred, state 'No intraoperative complications'"
                       </div>
                       <div className="flex items-center gap-2">
                         {getStatusBadge(report.status)}
-                        <Button variant="ghost" size="sm">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setSelectedReport(report)}
+                        >
                           <Eye className="w-4 h-4" />
                         </Button>
                       </div>
@@ -816,6 +820,181 @@ If no complications occurred, state 'No intraoperative complications'"
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Report Details Modal */}
+      {selectedReport && (
+        <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {selectedReport.procedureName}
+              </DialogTitle>
+              <DialogDescription>
+                Procedure performed on {new Date(selectedReport.createdAt).toLocaleDateString()}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="font-medium">Patient</Label>
+                  <p className="text-sm">{selectedReport.patientName || `Patient #${selectedReport.patientId}`}</p>
+                </div>
+                <div>
+                  <Label className="font-medium">Performed By</Label>
+                  <p className="text-sm">{selectedReport.performerName || `Staff #${selectedReport.performedBy}`}</p>
+                </div>
+                <div>
+                  <Label className="font-medium">Procedure Type</Label>
+                  <p className="text-sm">{selectedReport.procedureType}</p>
+                </div>
+                <div>
+                  <Label className="font-medium">Status</Label>
+                  <div className="mt-1">{getStatusBadge(selectedReport.status)}</div>
+                </div>
+              </div>
+
+              {/* Clinical Details */}
+              <Separator />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Clinical Information</h3>
+                
+                <div>
+                  <Label className="font-medium">Indication</Label>
+                  <p className="text-sm mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                    {selectedReport.indication}
+                  </p>
+                </div>
+
+                {selectedReport.preOpDiagnosis && (
+                  <div>
+                    <Label className="font-medium">Pre-operative Diagnosis</Label>
+                    <p className="text-sm mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      {selectedReport.preOpDiagnosis}
+                    </p>
+                  </div>
+                )}
+
+                {selectedReport.postOpDiagnosis && (
+                  <div>
+                    <Label className="font-medium">Post-operative Diagnosis</Label>
+                    <p className="text-sm mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md">
+                      {selectedReport.postOpDiagnosis}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Theatre Documentation */}
+              <Separator />
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Theatre Documentation</h3>
+                
+                <div>
+                  <Label className="font-medium">Procedure Details</Label>
+                  <p className="text-sm mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md whitespace-pre-wrap">
+                    {selectedReport.procedureDetails}
+                  </p>
+                </div>
+
+                {selectedReport.findings && (
+                  <div>
+                    <Label className="font-medium">Operative Findings</Label>
+                    <p className="text-sm mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md whitespace-pre-wrap">
+                      {selectedReport.findings}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {selectedReport.anesthesia && (
+                    <div>
+                      <Label className="font-medium">Anesthesia</Label>
+                      <p className="text-sm">{selectedReport.anesthesia}</p>
+                    </div>
+                  )}
+                  {selectedReport.duration && (
+                    <div>
+                      <Label className="font-medium">Duration</Label>
+                      <p className="text-sm">{selectedReport.duration} minutes</p>
+                    </div>
+                  )}
+                  {selectedReport.bloodLoss && (
+                    <div>
+                      <Label className="font-medium">Blood Loss</Label>
+                      <p className="text-sm">{selectedReport.bloodLoss} ml</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedReport.complications && (
+                  <div>
+                    <Label className="font-medium">Complications</Label>
+                    <p className="text-sm mt-1 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                      {selectedReport.complications}
+                    </p>
+                  </div>
+                )}
+
+                {selectedReport.specimens && (
+                  <div>
+                    <Label className="font-medium">Specimens Collected</Label>
+                    <p className="text-sm mt-1 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md whitespace-pre-wrap">
+                      {selectedReport.specimens}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Post-operative Care */}
+              {selectedReport.postOpInstructions && (
+                <>
+                  <Separator />
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Post-operative Instructions</h3>
+                    <p className="text-sm p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md whitespace-pre-wrap">
+                      {selectedReport.postOpInstructions}
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {/* Follow-up Information */}
+              {selectedReport.followUpRequired && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold">Follow-up Required</h3>
+                    <div className="flex items-center gap-2 text-blue-600">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Follow-up appointment scheduled</span>
+                      {selectedReport.followUpDate && (
+                        <span>for {new Date(selectedReport.followUpDate).toLocaleDateString()}</span>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <Button variant="outline" onClick={() => setSelectedReport(null)}>
+                Close
+              </Button>
+              <Button variant="outline">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Report
+              </Button>
+              <Button variant="outline">
+                <Printer className="w-4 h-4 mr-2" />
+                Print Report
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
