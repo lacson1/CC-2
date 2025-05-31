@@ -1254,7 +1254,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         newRole: role
       });
       
-      res.json({ ...updatedUser, password: undefined }); // Don't return password
+      // If the updated user is the current user, send a signal to refresh their session
+      const response: any = { ...updatedUser, password: undefined };
+      if (req.user?.id === userId) {
+        response.sessionRefreshRequired = true;
+      }
+      
+      res.json(response);
     } catch (error) {
       res.status(500).json({ message: "Failed to update user" });
     }
