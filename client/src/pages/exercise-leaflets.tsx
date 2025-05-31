@@ -57,6 +57,47 @@ export default function ExerciseLeafletsPage() {
 
   const currentCategoryExercises = exerciseCategories.find(cat => cat.value === selectedCategory)?.exercises || [];
 
+  const generatePDF = () => {
+    const printContent = document.querySelector('.exercise-leaflet-content');
+    if (printContent) {
+      const originalContents = document.body.innerHTML;
+      const printContents = printContent.innerHTML;
+      
+      document.body.innerHTML = `
+        <html>
+          <head>
+            <title>Exercise Prescription - ${selectedPatient?.firstName} ${selectedPatient?.lastName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .text-center { text-align: center; }
+              .border-b-2 { border-bottom: 2px solid #2563eb; padding-bottom: 16px; }
+              .text-blue-600 { color: #2563eb; }
+              .text-gray-600 { color: #6b7280; }
+              .grid { display: grid; gap: 16px; }
+              .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+              .bg-gray-50 { background-color: #f9fafb; padding: 16px; border-radius: 8px; }
+              .bg-blue-50 { background-color: #eff6ff; padding: 16px; border-radius: 8px; }
+              .bg-yellow-50 { background-color: #fefce8; padding: 16px; border-radius: 8px; border: 2px solid #fde047; }
+              .border-l-4 { border-left: 4px solid #60a5fa; padding-left: 16px; }
+              .space-y-4 > * + * { margin-top: 16px; }
+              .text-sm { font-size: 14px; }
+              .text-xs { font-size: 12px; }
+              .font-bold { font-weight: bold; }
+              .font-semibold { font-weight: 600; }
+              .flex { display: flex; align-items: center; gap: 4px; }
+              .justify-center { justify-content: center; }
+            </style>
+          </head>
+          <body>${printContents}</body>
+        </html>
+      `;
+      
+      window.print();
+      document.body.innerHTML = originalContents;
+      window.location.reload();
+    }
+  };
+
   const handleExerciseToggle = (exercise: string) => {
     setSelectedExercises(prev => 
       prev.includes(exercise) 
@@ -240,7 +281,7 @@ export default function ExerciseLeafletsPage() {
                     <DialogTitle>Exercise Prescription Leaflet</DialogTitle>
                   </DialogHeader>
                   
-                  <div className="space-y-6 p-6 bg-white">
+                  <div className="exercise-leaflet-content space-y-6 p-6 bg-white">
                     {/* Organization Header */}
                     {organizationData && (
                       <div className="text-center border-b-2 border-blue-600 pb-4 mb-6">
@@ -328,7 +369,7 @@ export default function ExerciseLeafletsPage() {
                       <div>
                         <h3 className="font-semibold text-blue-800 mb-2">Prescribed by:</h3>
                         <p className="text-sm text-blue-700">
-                          {user?.title ? `${user.title} ` : ''}{user?.firstName} {user?.lastName}
+                          {user?.username}
                         </p>
                         <p className="text-xs text-blue-600">{user?.role}</p>
                       </div>
@@ -371,7 +412,7 @@ export default function ExerciseLeafletsPage() {
                       <Printer className="w-4 h-4 mr-2" />
                       Print Leaflet
                     </Button>
-                    <Button>
+                    <Button onClick={() => generatePDF()}>
                       <Download className="w-4 h-4 mr-2" />
                       Download PDF
                     </Button>
