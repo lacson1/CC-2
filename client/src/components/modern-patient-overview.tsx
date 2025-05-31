@@ -401,16 +401,46 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         const repeatData = await response.json();
         queryClient.invalidateQueries(['/api/patients', patient.id, 'prescriptions']);
         
+        // Notify pharmacy about new repeat prescription
+        try {
+          const pharmacyNotificationResponse = await fetch('/api/notifications/staff', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'repeat_prescription_issued',
+              patientId: patient.id,
+              patientName: `${patient.firstName} ${patient.lastName}`,
+              medicationName: medicationName,
+              prescriptionId: repeatData.id,
+              priority: 'normal',
+              assignedTo: ['pharmacist', 'pharmacy_technician'], // Notify pharmacy staff
+              message: `New repeat prescription ready for dispensing: ${medicationName} - Patient: ${patient.firstName} ${patient.lastName}`
+            }),
+          });
+          
+          if (pharmacyNotificationResponse.ok) {
+            const pharmacyNotificationData = await pharmacyNotificationResponse.json();
+            console.log('✅ Pharmacy notification sent:', pharmacyNotificationData);
+          } else {
+            console.error('❌ Failed to send pharmacy notification:', await pharmacyNotificationResponse.text());
+          }
+        } catch (notifyError) {
+          console.error('❌ Error sending pharmacy notification:', notifyError);
+        }
+        
         // Update local state to show repeat was issued
         localStorage.setItem(`repeat_${prescriptionId}`, JSON.stringify({
           issued: true,
           date: new Date().toISOString(),
-          repeatId: repeatData.id || 'pending'
+          repeatId: repeatData.id || 'pending',
+          pharmacyNotified: true
         }));
         
         toast({
-          title: "Repeat Issued",
-          description: `New repeat prescription issued for ${medicationName} - ID: ${repeatData.id || 'pending'}`,
+          title: "Repeat Issued & Pharmacy Notified",
+          description: `New repeat prescription issued for ${medicationName} - Pharmacy has been notified`,
         });
       } else {
         throw new Error('Failed to issue repeat');
