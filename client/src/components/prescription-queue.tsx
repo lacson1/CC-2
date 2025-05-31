@@ -50,11 +50,6 @@ export function PrescriptionQueue() {
     queryKey: ["/api/prescriptions"],
   });
 
-  // Fetch patients for prescription details
-  const { data: patients = [] } = useQuery({
-    queryKey: ["/api/patients"],
-  });
-
   // Fetch medicines for medication names
   const { data: medicines = [] } = useQuery({
     queryKey: ["/api/medicines"],
@@ -88,13 +83,48 @@ export function PrescriptionQueue() {
     },
   });
 
+  // Fetch individual patient details when needed
+  const { data: patientDetails = {} } = useQuery({
+    queryKey: ["/api/patients", "details"],
+    queryFn: async () => {
+      const uniquePatientIds = [...new Set((prescriptions as any[]).map((p: any) => p.patientId))];
+      const patientPromises = uniquePatientIds.map(async (id: number) => {
+        try {
+          const response = await fetch(`/api/patients/${id}`);
+          if (response.ok) {
+            const patient = await response.json();
+            return { [id]: patient };
+          }
+        } catch (error) {
+          console.log(`Could not fetch patient ${id}:`, error);
+        }
+        return { [id]: null };
+      });
+      
+      const patientResults = await Promise.all(patientPromises);
+      return patientResults.reduce((acc, curr) => ({ ...acc, ...curr }), {});
+    },
+    enabled: (prescriptions as any[]).length > 0,
+  });
+
   const getPatientName = (patientId: number) => {
-    const patient = (patients as any[]).find((p: any) => p.id === patientId);
-    return patient ? `${patient.firstName} ${patient.lastName}` : `Patient #${patientId}`;
+    const patient = (patientDetails as any)[patientId];
+    if (patient) {
+      return `${patient.firstName} ${patient.lastName}`;
+    }
+    return `Patient #${patientId}`;
+  };
+
+  const getPatientDateOfBirth = (patientId: number) => {
+    const patient = (patientDetails as any)[patientId];
+    if (patient && patient.dateOfBirth) {
+      return new Date(patient.dateOfBirth).toLocaleDateString();
+    }
+    return "Unknown DOB";
   };
 
   const getPatientDetails = (patientId: number) => {
-    return (patients as any[]).find((p: any) => p.id === patientId);
+    return (patientDetails as any)[patientId];
   };
 
   const getMedicationName = (prescription: any) => {
@@ -185,22 +215,27 @@ export function PrescriptionQueue() {
                               {getStatusBadge(prescription.status)}
                             </div>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                            <div className="space-y-2 text-sm">
                               <div className="flex items-center gap-2">
                                 <User className="w-4 h-4 text-gray-400" />
-                                <span className="font-medium">{getPatientName(prescription.patientId)}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Stethoscope className="w-4 h-4 text-gray-400" />
-                                <span>Dr. {prescription.prescribedBy}</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <span>{new Date(prescription.startDate).toLocaleDateString()}</span>
+                                <div>
+                                  <span className="font-medium">{getPatientName(prescription.patientId)}</span>
+                                  <span className="text-gray-500 ml-2">DOB: {getPatientDateOfBirth(prescription.patientId)}</span>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <Pill className="w-4 h-4 text-gray-400" />
-                                <span className="font-medium">{getMedicationName(prescription)}</span>
+                                <span className="font-medium text-blue-600">{getMedicationName(prescription)}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="flex items-center gap-2">
+                                  <Stethoscope className="w-4 h-4 text-gray-400" />
+                                  <span>Dr. {prescription.prescribedBy}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="w-4 h-4 text-gray-400" />
+                                  <span>{new Date(prescription.startDate).toLocaleDateString()}</span>
+                                </div>
                               </div>
                             </div>
 
