@@ -88,9 +88,9 @@ export default function Profile() {
   const handleCancel = () => {
     if (user) {
       form.reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phone: user.phone || '',
+        firstName: '',  // User object doesn't contain firstName
+        lastName: '',   // User object doesn't contain lastName  
+        phone: '',      // User object doesn't contain phone
       });
     }
     setIsEditing(false);
@@ -138,12 +138,12 @@ export default function Profile() {
             <div className="flex justify-center mb-4">
               <Avatar className="h-20 w-20">
                 <AvatarFallback className="text-lg font-semibold bg-blue-100 text-blue-700">
-                  {getInitials(user?.firstName || '', user?.lastName || '')}
+                  {getInitials(user?.username || '', '')}
                 </AvatarFallback>
               </Avatar>
             </div>
             <CardTitle className="text-xl">
-              {user?.firstName || ''} {user?.lastName || ''}
+              {user?.username || 'User'}
             </CardTitle>
             <CardDescription>
               <Badge variant="secondary" className="capitalize">
@@ -155,28 +155,17 @@ export default function Profile() {
             <Separator />
             
             <div className="space-y-2">
-              {user?.email && (
+              <div className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4 text-gray-500" />
+                <span>Role: {user?.role || 'User'}</span>
+              </div>
+              {user?.organizationId && (
                 <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span>{user.email}</span>
-                </div>
-              )}
-              {user?.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span>{user.phone}</span>
+                  <Building className="h-4 w-4 text-gray-500" />
+                  <span>Organization ID: {user.organizationId}</span>
                 </div>
               )}
             </div>
-
-            {user?.createdAt && (
-              <div className="pt-4 border-t">
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Calendar className="h-4 w-4" />
-                  <span>Joined {formatDate(user.createdAt)}</span>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
 
