@@ -20,7 +20,8 @@ import {
   X, 
   Mail, 
   Phone, 
-  Calendar
+  Calendar,
+  Building
 } from 'lucide-react';
 
 const profileSchema = z.object({
