@@ -47,9 +47,36 @@ export class PrintService {
         @media print {
             @page {
                 size: A4;
-                margin: 0.5in;
+                margin: 1in 0.75in;
             }
-            body { margin: 0; background: #f0f8f0 !important; }
+            body { 
+                margin: 0; 
+                padding: 0;
+                background: white !important; 
+                font-size: 12pt;
+            }
+            .print-container {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+                border-radius: 0;
+                max-width: none;
+                min-height: auto;
+            }
+            .header {
+                margin-bottom: 0.4in;
+                padding: 20px 0;
+            }
+            .info-section {
+                margin: 0.25in 0;
+                padding: 15px;
+                page-break-inside: avoid;
+            }
+            .document-title {
+                margin: 0.3in 0;
+                padding: 12px;
+            }
             .no-print { display: none; }
         }
         
