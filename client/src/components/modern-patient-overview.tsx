@@ -497,7 +497,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         organizationId: user?.organizationId
       };
 
-      const response = await fetch('/api/prescriptions', {
+      const response = await fetch(`/api/patients/${prescription.patientId}/prescriptions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
