@@ -148,6 +148,17 @@ export default function ConsentManagement() {
     queryKey: ["/api/patients"],
   });
 
+  // Fetch current user's organization
+  const { data: userProfile } = useQuery({
+    queryKey: ["/api/profile"],
+  });
+
+  // Fetch organization details
+  const { data: organization } = useQuery({
+    queryKey: ["/api/organizations", userProfile?.organizationId],
+    enabled: !!userProfile?.organizationId,
+  });
+
   const form = useForm<ConsentFormData>({
     resolver: zodResolver(consentFormSchema),
     defaultValues: {
@@ -893,6 +904,10 @@ export default function ConsentManagement() {
                         <title>${viewingForm.title}</title>
                         <style>
                           body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                          .org-header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2D5A27; padding-bottom: 15px; }
+                          .org-name { color: #2D5A27; font-size: 24px; font-weight: bold; margin: 0; }
+                          .org-tagline { color: #666; font-size: 14px; margin: 5px 0; font-style: italic; }
+                          .org-contact { color: #666; font-size: 12px; margin: 0; }
                           .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
                           .section { margin-bottom: 25px; page-break-inside: avoid; }
                           .section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
@@ -906,6 +921,24 @@ export default function ConsentManagement() {
                         </style>
                       </head>
                       <body>
+                        ${organization ? `
+                          <div class="org-header">
+                            <h1 class="org-name">${organization.name.toUpperCase()}</h1>
+                            <p class="org-tagline">${organization.description || 'Excellence in Healthcare - Committed to Your Wellbeing'}</p>
+                            <p class="org-contact">
+                              ${organization.address ? `📍 ${organization.address}` : ''}
+                              ${organization.phone ? ` | 📞 ${organization.phone}` : ''}
+                              ${organization.email ? ` | 📧 ${organization.email}` : ''}
+                            </p>
+                          </div>
+                        ` : `
+                          <div class="org-header">
+                            <h1 class="org-name">LAGOS ISLAND HOSPITAL</h1>
+                            <p class="org-tagline">Excellence in Healthcare - Committed to Your Wellbeing</p>
+                            <p class="org-contact">📍 Lagos Island, Lagos State | 📞 +234-XXX-XXXX-XXX | 📧 info@lagosislandhospital.ng</p>
+                          </div>
+                        `}
+                        
                         <div class="header">
                           <h1>${viewingForm.title}</h1>
                           <p><strong>Category:</strong> ${viewingForm.category} | <strong>Type:</strong> ${viewingForm.consentType}</p>

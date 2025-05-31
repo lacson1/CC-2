@@ -990,7 +990,158 @@ If no complications occurred, state 'No intraoperative complications'"
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Report
               </Button>
-              <Button variant="outline">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Generate printable procedural report
+                  const printContent = `
+                    <html>
+                      <head>
+                        <title>Procedural Report - ${selectedReport.procedureName}</title>
+                        <style>
+                          body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                          .org-header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #2D5A27; padding-bottom: 15px; }
+                          .org-name { color: #2D5A27; font-size: 24px; font-weight: bold; margin: 0; }
+                          .org-tagline { color: #666; font-size: 14px; margin: 5px 0; font-style: italic; }
+                          .org-contact { color: #666; font-size: 12px; margin: 0; }
+                          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                          .section { margin-bottom: 25px; page-break-inside: avoid; }
+                          .section-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+                          .field { margin-bottom: 10px; }
+                          .label { font-weight: bold; margin-bottom: 5px; }
+                          .content { margin-bottom: 15px; }
+                          @media print { body { margin: 20px; } }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="org-header">
+                          <h1 class="org-name">LAGOS ISLAND HOSPITAL</h1>
+                          <p class="org-tagline">Excellence in Healthcare - Committed to Your Wellbeing</p>
+                          <p class="org-contact">📍 Lagos Island, Lagos State | 📞 +234-XXX-XXXX-XXX | 📧 info@lagosislandhospital.ng</p>
+                        </div>
+                        
+                        <div class="header">
+                          <h1>PROCEDURAL REPORT</h1>
+                          <h2>${selectedReport.procedureName}</h2>
+                          <p>Date: ${new Date(selectedReport.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        
+                        <div class="section">
+                          <div class="section-title">Patient Information</div>
+                          <div class="grid">
+                            <div class="field">
+                              <div class="label">Patient:</div>
+                              <div>${selectedReport.patientName || `Patient #${selectedReport.patientId}`}</div>
+                            </div>
+                            <div class="field">
+                              <div class="label">Procedure Type:</div>
+                              <div>${selectedReport.procedureType}</div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="section">
+                          <div class="section-title">Clinical Details</div>
+                          <div class="field">
+                            <div class="label">Indication:</div>
+                            <div class="content">${selectedReport.indication}</div>
+                          </div>
+                          ${selectedReport.preOpDiagnosis ? `
+                            <div class="field">
+                              <div class="label">Pre-operative Diagnosis:</div>
+                              <div class="content">${selectedReport.preOpDiagnosis}</div>
+                            </div>
+                          ` : ''}
+                          ${selectedReport.postOpDiagnosis ? `
+                            <div class="field">
+                              <div class="label">Post-operative Diagnosis:</div>
+                              <div class="content">${selectedReport.postOpDiagnosis}</div>
+                            </div>
+                          ` : ''}
+                        </div>
+                        
+                        <div class="section">
+                          <div class="section-title">Procedure Documentation</div>
+                          <div class="field">
+                            <div class="label">Procedure Details:</div>
+                            <div class="content">${selectedReport.procedureDetails.replace(/\n/g, '<br>')}</div>
+                          </div>
+                          ${selectedReport.findings ? `
+                            <div class="field">
+                              <div class="label">Operative Findings:</div>
+                              <div class="content">${selectedReport.findings.replace(/\n/g, '<br>')}</div>
+                            </div>
+                          ` : ''}
+                          <div class="grid">
+                            ${selectedReport.anesthesia ? `
+                              <div class="field">
+                                <div class="label">Anesthesia:</div>
+                                <div>${selectedReport.anesthesia}</div>
+                              </div>
+                            ` : ''}
+                            ${selectedReport.duration ? `
+                              <div class="field">
+                                <div class="label">Duration:</div>
+                                <div>${selectedReport.duration} minutes</div>
+                              </div>
+                            ` : ''}
+                            ${selectedReport.bloodLoss ? `
+                              <div class="field">
+                                <div class="label">Blood Loss:</div>
+                                <div>${selectedReport.bloodLoss} ml</div>
+                              </div>
+                            ` : ''}
+                          </div>
+                          ${selectedReport.complications ? `
+                            <div class="field">
+                              <div class="label">Complications:</div>
+                              <div class="content" style="color: red; font-weight: bold;">${selectedReport.complications}</div>
+                            </div>
+                          ` : ''}
+                          ${selectedReport.specimens ? `
+                            <div class="field">
+                              <div class="label">Specimens Collected:</div>
+                              <div class="content">${selectedReport.specimens.replace(/\n/g, '<br>')}</div>
+                            </div>
+                          ` : ''}
+                        </div>
+                        
+                        ${selectedReport.postOpInstructions ? `
+                          <div class="section">
+                            <div class="section-title">Post-operative Instructions</div>
+                            <div class="content">${selectedReport.postOpInstructions.replace(/\n/g, '<br>')}</div>
+                          </div>
+                        ` : ''}
+                        
+                        <div class="section">
+                          <div class="section-title">Healthcare Provider</div>
+                          <div class="field">
+                            <div class="label">Performed By:</div>
+                            <div>${selectedReport.performerName || `Staff #${selectedReport.performedBy}`}</div>
+                          </div>
+                          <div class="field">
+                            <div class="label">Signature:</div>
+                            <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 20px;"></div>
+                          </div>
+                          <div class="field">
+                            <div class="label">Date:</div>
+                            <div style="border-bottom: 1px solid #333; height: 40px; margin-top: 20px;"></div>
+                          </div>
+                        </div>
+                      </body>
+                    </html>
+                  `;
+                  
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => printWindow.print(), 500);
+                  }
+                }}
+              >
                 <Printer className="w-4 h-4 mr-2" />
                 Print Report
               </Button>

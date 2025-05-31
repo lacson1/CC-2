@@ -180,14 +180,14 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
     </head>
     <body>
       <div class="letterhead">
-        <div class="org-logo">HC</div>
+        <div class="org-logo">LI</div>
         <div class="org-info">
-          <div class="org-name">HealthCare Connect</div>
+          <div class="org-name">LAGOS ISLAND HOSPITAL</div>
           <div class="org-details">
-            Advanced Digital Health Solutions<br>
-            Lagos State Medical Complex, Ikeja<br>
-            Phone: +234-1-234-5678 | Fax: +234-1-234-5679<br>
-            Email: lab@healthcareconnect.ng | Emergency: +234-803-555-0123<br>
+            Excellence in Healthcare - Committed to Your Wellbeing<br>
+            Lagos Island, Lagos State<br>
+            Phone: +234-XXX-XXXX-XXX<br>
+            Email: info@lagosislandhospital.ng<br>
             Medical License: NG-MED-2024-001 | CAP Accredited Lab
           </div>
         </div>
