@@ -1,8 +1,10 @@
 import { Switch, Route } from "wouter";
+import { useState, useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { useOnboarding } from "@/hooks/use-onboarding";
 import OnboardingTour from "@/components/onboarding-tour";
@@ -10,6 +12,8 @@ import Sidebar from "@/components/sidebar";
 import TopBar from "@/components/top-bar";
 import TouchQuickActions from "@/components/touch-quick-actions";
 import OfflineStatusBar from "@/components/offline-status-bar";
+import { GlobalSearch } from "@/components/global-search";
+import { Search } from "lucide-react";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
 import PatientProfile from "@/pages/patient-profile-clean";
@@ -56,6 +60,7 @@ import ConsultationRecordDetails from "@/pages/consultation-record-details";
 
 function AuthenticatedApp() {
   const { user } = useAuth();
+  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
   const {
     showTour,
     isNewUser,
@@ -63,6 +68,19 @@ function AuthenticatedApp() {
     startTour,
     skipTour
   } = useOnboarding(user?.id || 0, user?.role || '');
+
+  // Global keyboard shortcut for search (Ctrl+K or Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowGlobalSearch(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
@@ -128,6 +146,21 @@ function AuthenticatedApp() {
 
       {/* Mobile Touch Actions */}
       <TouchQuickActions />
+
+      {/* Global Search Button - Floating */}
+      <Button
+        onClick={() => setShowGlobalSearch(true)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-200 group"
+        size="lg"
+      >
+        <Search className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+      </Button>
+
+      {/* Global Search Modal */}
+      <GlobalSearch 
+        isOpen={showGlobalSearch} 
+        onClose={() => setShowGlobalSearch(false)} 
+      />
 
       {/* Onboarding Tour */}
       <OnboardingTour
