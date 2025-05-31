@@ -229,7 +229,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
 
   // Fetch patient prescriptions from the API with proper error handling and caching
   const { data: patientPrescriptions = [], isLoading: prescriptionsLoading, error: prescriptionsError } = useQuery({
-    queryKey: ['/api/patients', patient.id, 'prescriptions'],
+    queryKey: ['prescriptions', patient.id],
     queryFn: async () => {
       console.log('Fetching prescriptions for patient:', patient.id);
       const response = await fetch(`/api/patients/${patient.id}/prescriptions`);
@@ -252,14 +252,17 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
 
   // Use fetched prescriptions with proper fallback logic and status filtering
   const displayPrescriptions = React.useMemo(() => {
-    if (prescriptionsLoading && !patientPrescriptions.length) {
-      return activePrescriptions;
+    // Always use API data when available, fallback to props only when API fails
+    if (patientPrescriptions && patientPrescriptions.length > 0) {
+      return patientPrescriptions;
     }
-    if (prescriptionsError && !patientPrescriptions.length) {
-      return activePrescriptions;
+    if (prescriptionsLoading) {
+      return [];
     }
-    // Always prefer API data when available and return all prescriptions
-    return patientPrescriptions;
+    if (prescriptionsError) {
+      return activePrescriptions || [];
+    }
+    return [];
   }, [patientPrescriptions, activePrescriptions, prescriptionsLoading, prescriptionsError]);
 
   // Filter prescriptions by status for better organization
@@ -563,7 +566,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
                           } catch (error) {
                             console.error('Manual fetch error:', error);
                           }
-                          queryClient.invalidateQueries(['/api/patients', patient.id, 'prescriptions']);
+                          queryClient.invalidateQueries(['prescriptions', patient.id]);
                         }}
                         variant="outline"
                         size="sm"
