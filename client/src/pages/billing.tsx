@@ -119,7 +119,10 @@ export default function BillingPage() {
   const invoiceForm = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: {
-      items: [{ description: "", serviceType: "", quantity: 1, unitPrice: 0 }]
+      patientId: 0,
+      dueDate: "",
+      notes: "",
+      items: [{ description: "", serviceType: "", serviceId: 0, quantity: 1, unitPrice: 0 }]
     }
   });
 
