@@ -130,6 +130,25 @@ export default function RevenueAnalytics() {
         </div>
       </div>
 
+      {/* Organization Header */}
+      {organization && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{organization.name}</h2>
+              <p className="text-gray-600 capitalize">{organization.type} Organization</p>
+              <p className="text-sm text-gray-500">
+                Period: {comprehensiveData?.period?.startDate} to {comprehensiveData?.period?.endDate}
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-blue-600">₦{revenue?.total?.toLocaleString() || '0'}</div>
+              <div className="text-sm text-gray-500">Total Revenue</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
@@ -138,15 +157,13 @@ export default function RevenueAnalytics() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-green-600">
-                  ₦{revenueData?.totalRevenue?.toLocaleString() || '0'}
+                  ₦{revenue?.total?.toLocaleString() || '0'}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
             <div className="flex items-center mt-2">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-500">+{revenueData?.growthRate || 0}%</span>
-              <span className="text-sm text-gray-500 ml-1">vs last period</span>
+              <span className="text-sm text-blue-600">{revenue?.paymentCount || 0} payments</span>
             </div>
           </CardContent>
         </Card>
@@ -156,16 +173,14 @@ export default function RevenueAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {revenueData?.totalPatients || 0}
-                </p>
+                <p className="text-2xl font-bold text-blue-600">{patients?.total || 0}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
             </div>
             <div className="flex items-center mt-2">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-500">+8.2%</span>
-              <span className="text-sm text-gray-500 ml-1">new patients</span>
+              <span className="text-sm text-gray-500">
+                ₦{patients?.averageRevenuePerPatient?.toLocaleString() || '0'} avg/patient
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -174,17 +189,15 @@ export default function RevenueAnalytics() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Revenue/Patient</p>
+                <p className="text-sm font-medium text-gray-600">Collection Rate</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  ₦{revenueData?.avgRevenuePerPatient?.toLocaleString() || '0'}
+                  {revenue?.collectionRate || 0}%
                 </p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
+              <Calendar className="h-8 w-8 text-purple-600" />
             </div>
             <div className="flex items-center mt-2">
-              <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-500">+4.1%</span>
-              <span className="text-sm text-gray-500 ml-1">improvement</span>
+              <span className="text-sm text-gray-500">Payment efficiency</span>
             </div>
           </CardContent>
         </Card>
@@ -194,14 +207,14 @@ export default function RevenueAnalytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Outstanding Bills</p>
-                <p className="text-2xl font-bold text-orange-600">₦24,500</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  ₦{revenue?.outstanding?.toLocaleString() || '0'}
+                </p>
               </div>
               <FileText className="h-8 w-8 text-orange-600" />
             </div>
             <div className="flex items-center mt-2">
-              <TrendingDown className="h-4 w-4 text-red-500 mr-1" />
-              <span className="text-sm text-red-500">-12.3%</span>
-              <span className="text-sm text-gray-500 ml-1">from last month</span>
+              <span className="text-sm text-gray-500">{revenue?.outstandingCount || 0} invoices</span>
             </div>
           </CardContent>
         </Card>
