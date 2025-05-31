@@ -359,52 +359,188 @@ export class PrintService {
     }
     
     return `
-    <div style="text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #2563eb;">
-        <div style="font-size: 28px; font-weight: bold; color: #1e40af; margin-bottom: 8px;">${orgName.toUpperCase()}</div>
-        <div style="font-size: 16px; color: #3730a3; margin-bottom: 8px;">${orgType.toUpperCase().replace('_', ' ')} FACILITY</div>
-        <div style="font-size: 14px; color: #4b5563; line-height: 1.4;">
+    <style>
+        @media print {
+            body { margin: 0; padding: 20px; font-family: Arial, sans-serif; }
+        }
+        .hospital-header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #1e40af;
+            padding-bottom: 20px;
+        }
+        .hospital-name {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+        .hospital-type {
+            font-size: 14px;
+            color: #3730a3;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .hospital-contact {
+            font-size: 12px;
+            color: #4b5563;
+            line-height: 1.4;
+        }
+        .prescription-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin: 30px 0;
+            color: #1e40af;
+            border: 2px solid #1e40af;
+            padding: 10px;
+            background: #f8faff;
+        }
+        .patient-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 5px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .info-item {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .medication-box {
+            border: 2px solid #1e40af;
+            padding: 25px;
+            background: white;
+            border-radius: 8px;
+            margin: 25px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .rx-header {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .med-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .med-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .med-label {
+            font-weight: bold;
+            color: #374151;
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+        .med-value {
+            color: #1f2937;
+            font-size: 15px;
+        }
+        .signature-area {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+        }
+        .sig-box {
+            text-align: center;
+        }
+        .sig-line {
+            border-bottom: 2px solid #000;
+            height: 40px;
+            margin-bottom: 8px;
+        }
+        .sig-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #374151;
+        }
+    </style>
+    
+    <div class="hospital-header">
+        <div class="hospital-name">${orgName.toUpperCase()}</div>
+        <div class="hospital-type">${orgType.replace('_', ' ')} Facility</div>
+        <div class="hospital-contact">
             ${orgAddress}<br>
             Tel: ${orgPhone} | Email: ${orgEmail}
         </div>
     </div>
     
-    <div style="font-size: 22px; font-weight: bold; text-align: center; margin: 25px 0; color: #1e40af; text-decoration: underline;">
-        PRESCRIPTION
-    </div>
+    <div class="prescription-title">PRESCRIPTION</div>
     
-    <div style="margin: 25px 0;">
-        <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #374151;">Patient Information</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Patient Name:</span> Abike Jane</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Patient ID:</span> HC000006</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Age:</span> 54 years</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Gender:</span> Female</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Phone:</span> 07838985885</div>
-        <div style="margin: 8px 0;"><span style="font-weight: bold;">Date of Prescription:</span> ${prescriptionDate}</div>
-    </div>
-    
-    <div style="margin: 30px 0;">
-        <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #374151;">Medication Details</div>
-        <div style="border: 2px solid #2563eb; padding: 20px; background: #f8faff; border-radius: 8px;">
-            <div style="font-size: 20px; font-weight: bold; color: #1e40af; margin-bottom: 15px;">
-                Rx: ${prescription.medicationName || prescription.name || 'Prescribed Medication'}
-            </div>
-            <div style="margin: 10px 0; font-size: 16px;"><strong>Dosage:</strong> ${prescription.dosage || 'As prescribed'}</div>
-            <div style="margin: 10px 0; font-size: 16px;"><strong>Frequency:</strong> ${prescription.frequency || 'As directed'}</div>
-            <div style="margin: 10px 0; font-size: 16px;"><strong>Duration:</strong> ${prescription.duration || 'As prescribed'}</div>
-            ${prescription.instructions ? `
-            <div style="margin: 15px 0; font-size: 16px;"><strong>Special Instructions:</strong> ${prescription.instructions}</div>
-            ` : ''}
-            <div style="margin: 15px 0; font-size: 16px;"><strong>Prescribed by:</strong> ${prescription.prescribedBy || 'admin'}</div>
+    <div class="patient-section">
+        <div class="section-title">Patient Information</div>
+        <div class="info-grid">
+            <div class="info-item"><span class="med-label">Patient Name:</span> Abike Jane</div>
+            <div class="info-item"><span class="med-label">Patient ID:</span> HC000006</div>
+            <div class="info-item"><span class="med-label">Age:</span> 54 years</div>
+            <div class="info-item"><span class="med-label">Gender:</span> Female</div>
+            <div class="info-item"><span class="med-label">Phone:</span> 07838985885</div>
+            <div class="info-item"><span class="med-label">Date:</span> ${prescriptionDate}</div>
         </div>
     </div>
     
-    <div style="margin-top: 40px;">
-        <div style="display: flex; justify-content: space-between;">
-            <div>
-                <div style="font-weight: bold; margin-bottom: 5px;">Doctor's Signature:</div>
-                <div style="border-bottom: 2px solid #000; width: 200px; height: 40px; margin-bottom: 5px;"></div>
-                <div>Date: ________________</div>
+    <div class="medication-box">
+        <div class="rx-header">
+            ℞ ${prescription.medicationName || prescription.name || 'Prescribed Medication'}
+        </div>
+        <div class="med-details">
+            <div class="med-item">
+                <span class="med-label">Dosage</span>
+                <span class="med-value">${prescription.dosage || 'As prescribed'}</span>
             </div>
+            <div class="med-item">
+                <span class="med-label">Frequency</span>
+                <span class="med-value">${prescription.frequency || 'As directed'}</span>
+            </div>
+            <div class="med-item">
+                <span class="med-label">Duration</span>
+                <span class="med-value">${prescription.duration || 'As prescribed'}</span>
+            </div>
+            <div class="med-item">
+                <span class="med-label">Prescribed by</span>
+                <span class="med-value">Dr. ${prescription.prescribedBy || 'admin'}</span>
+            </div>
+        </div>
+        ${prescription.instructions ? `
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+            <span class="med-label">Special Instructions:</span><br>
+            <span class="med-value">${prescription.instructions}</span>
+        </div>
+        ` : ''}
+    </div>
+    
+    <div class="signature-area">
+        <div class="sig-box">
+            <div class="sig-line"></div>
+            <div class="sig-label">Healthcare Provider Signature</div>
+        </div>
+        <div class="sig-box">
+            <div class="sig-line"></div>
+            <div class="sig-label">Date</div>
         </div>
     </div>
     `;
