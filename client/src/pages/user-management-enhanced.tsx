@@ -14,6 +14,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { UserPlus, Edit, Trash2, Shield, UserX, Settings, Search, Grid3X3, List, Filter, X, Stethoscope, Pill, Heart, Activity } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { StaffRegistrationModal } from "@/components/staff-registration-modal";
+import { OrganizationRegistrationModal } from "@/components/organization-registration-modal";
 
 const USER_ROLES = [
   { 
@@ -68,6 +69,8 @@ export default function UserManagementEnhanced() {
   const [filterSpecialty, setFilterSpecialty] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showStaffModal, setShowStaffModal] = useState(false);
+  const [showOrgModal, setShowOrgModal] = useState(false);
+  const [managementTab, setManagementTab] = useState<"users" | "organizations">("users");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
