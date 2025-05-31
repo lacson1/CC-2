@@ -921,6 +921,12 @@ Present this QR code for medication dispensing.`;
                                 variant="outline" 
                                 size="sm" 
                                 className="text-blue-600 hover:text-blue-800 border-blue-200"
+                                onClick={() => {
+                                  toast({
+                                    title: "Review Scheduled",
+                                    description: "Medication review has been scheduled for Lisinopril",
+                                  });
+                                }}
                               >
                                 <UserCheck className="w-3 h-3 mr-1" />
                                 Schedule Review
@@ -929,6 +935,12 @@ Present this QR code for medication dispensing.`;
                                 variant="outline" 
                                 size="sm" 
                                 className="text-green-600 hover:text-green-800 border-green-200"
+                                onClick={() => {
+                                  toast({
+                                    title: "Repeat Issued",
+                                    description: "New repeat prescription issued for Lisinopril",
+                                  });
+                                }}
                               >
                                 <RefreshCw className="w-3 h-3 mr-1" />
                                 Issue Repeat
@@ -940,16 +952,32 @@ Present this QR code for medication dispensing.`;
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-[180px]">
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    toast({
+                                      title: "Edit Repeat",
+                                      description: "Opening edit form for repeat prescription",
+                                    });
+                                  }}>
                                     <Edit className="w-3 h-3 mr-2" />
                                     Edit Repeat
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    toast({
+                                      title: "Print Started",
+                                      description: "Printing repeat prescription for Lisinopril",
+                                    });
+                                  }}>
                                     <Printer className="w-3 h-3 mr-2" />
                                     Print
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    toast({
+                                      title: "Repeat Stopped",
+                                      description: "Repeat prescription has been discontinued",
+                                      variant: "destructive",
+                                    });
+                                  }}>
                                     <XCircle className="w-3 h-3 mr-2 text-red-600" />
                                     Stop Repeat
                                   </DropdownMenuItem>
@@ -1079,11 +1107,29 @@ Present this QR code for medication dispensing.`;
                       ></textarea>
                     </div>
                     <div className="mt-4 flex gap-2">
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <Button 
+                        size="sm" 
+                        className="bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          toast({
+                            title: "Review Assigned",
+                            description: "Medication review has been assigned successfully",
+                          });
+                        }}
+                      >
                         <UserCheck className="w-4 h-4 mr-2" />
                         Assign Review
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          toast({
+                            title: "Follow-up Scheduled",
+                            description: "Follow-up appointment has been scheduled",
+                          });
+                        }}
+                      >
                         <Calendar className="w-4 h-4 mr-2" />
                         Schedule Follow-up
                       </Button>
