@@ -246,7 +246,7 @@ export default function RevenueAnalytics() {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={serviceRevenueData}>
+            <BarChart data={serviceRevenue || []}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="service" />
               <YAxis />
@@ -274,12 +274,12 @@ export default function RevenueAnalytics() {
                 </tr>
               </thead>
               <tbody>
-                {serviceRevenueData.map((service, index) => (
+                {(serviceRevenue || []).map((service: any, index: number) => (
                   <tr key={service.service} className="border-b hover:bg-gray-50">
                     <td className="p-4 font-medium">{service.service}</td>
-                    <td className="p-4 text-right">₦{service.revenue.toLocaleString()}</td>
+                    <td className="p-4 text-right">₦{service.revenue?.toLocaleString() || '0'}</td>
                     <td className="p-4 text-right">
-                      <Badge variant="outline">{service.percentage}%</Badge>
+                      <Badge variant="outline">{service.percentage || 0}%</Badge>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end">
