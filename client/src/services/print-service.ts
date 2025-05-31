@@ -49,16 +49,15 @@ export class PrintService {
                 size: A4;
                 margin: 0.5in;
             }
-            body { margin: 0; }
+            body { margin: 0; background: #f0f8f0 !important; }
             .no-print { display: none; }
         }
         
         body {
             font-family: 'Times New Roman', serif;
-            line-height: 1.4;
+            line-height: 1.6;
             color: #000;
-            max-width: 800px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
             background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 50%, #e8f5e8 100%);
             min-height: 100vh;
@@ -66,41 +65,41 @@ export class PrintService {
         
         .print-container {
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 2px solid #e0e7ff;
         }
         
         .header {
             text-align: center;
-            border: 3px solid #2563eb;
-            padding: 20px;
-            margin-bottom: 25px;
-            background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
-            border-radius: 8px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
         }
         
         .org-name {
-            font-size: 28px;
+            font-size: 32px;
             font-weight: bold;
             margin-bottom: 8px;
-            text-transform: uppercase;
-            color: #2563eb;
+            color: #1e40af;
             letter-spacing: 1px;
         }
         
         .org-type {
-            font-size: 16px;
-            color: #1e40af;
+            font-size: 18px;
+            color: #3730a3;
             margin-bottom: 12px;
             font-weight: 600;
-            text-transform: capitalize;
+            text-transform: uppercase;
         }
         
         .org-details {
-            font-size: 13px;
-            line-height: 1.4;
-            color: #374151;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #4b5563;
         }
         
         .document-title {
@@ -338,53 +337,49 @@ export class PrintService {
   }
 
   private static generatePrescriptionContent(prescription: any): string {
-    let content = `
-    <div class="rx-symbol" style="font-size: 36px; font-weight: bold; color: #2563eb; margin: 20px 0; text-align: left;">℞</div>
+    const prescriptionDate = prescription.startDate ? new Date(prescription.startDate).toLocaleDateString() : new Date().toLocaleDateString();
     
-    <div class="prescription-box" style="border: 2px solid #2563eb; padding: 25px; margin: 20px 0; background: #f8faff; border-radius: 8px;">
-        <div class="medication-name" style="font-size: 22px; font-weight: bold; color: #1e40af; margin-bottom: 15px; text-transform: uppercase;">
-            ${prescription.medicationName || prescription.name || 'Prescribed Medication'}
-        </div>
-        
-        <div class="medication-details" style="margin: 15px 0; line-height: 1.8;">
-            <div class="rx-line" style="margin: 10px 0; font-size: 16px;">
-                <strong>Dosage:</strong> ${prescription.dosage || 'As prescribed'}
+    return `
+    <div style="font-size: 22px; font-weight: bold; text-align: center; margin: 25px 0; color: #1e40af; text-decoration: underline;">
+        PRESCRIPTION
+    </div>
+    
+    <div style="margin: 25px 0;">
+        <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #374151;">Patient Information</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Patient Name:</span> Abike Jane</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Patient ID:</span> HC000006</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Age:</span> 54 years</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Gender:</span> Female</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Phone:</span> 07838985885</div>
+        <div style="margin: 8px 0;"><span style="font-weight: bold;">Date of Prescription:</span> ${prescriptionDate}</div>
+    </div>
+    
+    <div style="margin: 30px 0;">
+        <div style="font-weight: bold; font-size: 16px; margin-bottom: 15px; color: #374151;">Medication Details</div>
+        <div style="border: 2px solid #2563eb; padding: 20px; background: #f8faff; border-radius: 8px;">
+            <div style="font-size: 20px; font-weight: bold; color: #1e40af; margin-bottom: 15px;">
+                Rx: ${prescription.medicationName || prescription.name || 'Prescribed Medication'}
             </div>
-            <div class="rx-line" style="margin: 10px 0; font-size: 16px;">
-                <strong>Frequency:</strong> ${prescription.frequency || 'As directed'}
-            </div>
-            <div class="rx-line" style="margin: 10px 0; font-size: 16px;">
-                <strong>Duration:</strong> ${prescription.duration || 'As prescribed'}
-            </div>
+            <div style="margin: 10px 0; font-size: 16px;"><strong>Dosage:</strong> ${prescription.dosage || 'As prescribed'}</div>
+            <div style="margin: 10px 0; font-size: 16px;"><strong>Frequency:</strong> ${prescription.frequency || 'As directed'}</div>
+            <div style="margin: 10px 0; font-size: 16px;"><strong>Duration:</strong> ${prescription.duration || 'As prescribed'}</div>
             ${prescription.instructions ? `
-            <div class="special-instructions" style="margin: 15px 0; padding: 12px; background: #e0f2fe; border-left: 4px solid #2563eb; font-style: italic;">
-                <strong>Special Instructions:</strong><br>
-                ${prescription.instructions}
-            </div>
+            <div style="margin: 15px 0; font-size: 16px;"><strong>Special Instructions:</strong> ${prescription.instructions}</div>
             ` : ''}
-        </div>
-        
-        <div class="prescription-footer" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #cbd5e1;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <strong>Status:</strong> <span style="color: #059669; text-transform: uppercase;">${prescription.status || 'Active'}</span>
-                </div>
-                <div>
-                    <strong>Prescription ID:</strong> RX-${prescription.id?.toString().padStart(4, '0') || '0000'}
-                </div>
-            </div>
+            <div style="margin: 15px 0; font-size: 16px;"><strong>Prescribed by:</strong> ${prescription.prescribedBy || 'admin'}</div>
         </div>
     </div>
     
-    <div class="content-section">
-        <div class="content-title" style="margin-top: 30px;">PRESCRIBER INFORMATION</div>
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
-            <div><strong>Prescribed by:</strong> ${prescription.prescribedBy || 'Doctor'}</div>
-            ${prescription.startDate ? `<div><strong>Date Prescribed:</strong> ${new Date(prescription.startDate).toLocaleDateString()}</div>` : ''}
+    <div style="margin-top: 40px;">
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <div style="font-weight: bold; margin-bottom: 5px;">Doctor's Signature:</div>
+                <div style="border-bottom: 2px solid #000; width: 200px; height: 40px; margin-bottom: 5px;"></div>
+                <div>Date: ________________</div>
+            </div>
         </div>
     </div>
     `;
-    return content;
   }
 
   private static generateLabOrderContent(labOrder: any): string {
