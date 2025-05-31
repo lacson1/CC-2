@@ -18,8 +18,8 @@ import { checkPermission, getUserPermissions } from "./middleware/permissions";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
 import { AuditLogger, AuditActions } from "./audit";
 import { format } from 'date-fns';
-import { setupTenantRoutes } from "./tenant-routes";
 import { setupOrganizationStaffRoutes } from "./organization-staff";
+import { setupTenantRoutes } from "./tenant-routes";
 
 // Helper function to generate lab order HTML for printing
 function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
