@@ -337,7 +337,7 @@ export default function LabOrdersPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <TestTube className="h-4 w-4 text-green-600" />
-                        <span>Ordered by: {order.orderedBy}</span>
+                        <span>Ordered by: {order.orderedBy}{order.orderedByRole ? ` (${order.orderedByRole})` : ''}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-orange-600" />
