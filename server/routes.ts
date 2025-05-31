@@ -22,6 +22,210 @@ import { setupOrganizationStaffRoutes } from "./organization-staff";
 import { setupTenantRoutes } from "./tenant-routes";
 import { setupSuperAdminRoutes } from "./super-admin-routes";
 
+// Helper function to generate prescription HTML for printing
+function generatePrescriptionHTML(prescriptionResult: any): string {
+  const formatDate = (date: string | Date) => {
+    return format(new Date(date), 'PPP');
+  };
+
+  const formatDateTime = (date: string | Date) => {
+    return format(new Date(date), 'PPP p');
+  };
+
+  // Use organization data from the prescribing staff member
+  const orgName = prescriptionResult.organizationName || 'Medical Facility';
+  const orgType = prescriptionResult.organizationType || 'clinic';
+  const orgPhone = prescriptionResult.organizationPhone || 'Contact facility directly';
+  const orgEmail = prescriptionResult.organizationEmail || 'Contact facility directly';
+  const orgAddress = prescriptionResult.organizationAddress || 'Address on file';
+  const orgTheme = prescriptionResult.organizationTheme || '#2563eb';
+  
+  // Generate organization logo initials
+  const orgInitials = orgName.split(' ').map((word: any) => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Prescription - RX${prescriptionResult.prescriptionId}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        .letterhead { border-bottom: 3px solid ${orgTheme}; padding-bottom: 20px; margin-bottom: 30px; }
+        .org-logo { float: left; width: 80px; height: 80px; background: ${orgTheme}; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+        .org-info { margin-left: 100px; }
+        .org-name { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
+        .org-details { color: #64748b; line-height: 1.4; }
+        .document-title { text-align: center; font-size: 20px; font-weight: bold; color: #1e40af; margin: 30px 0; padding: 10px; border: 2px solid #e2e8f0; background: #f8fafc; }
+        .section { margin: 25px 0; }
+        .section-title { font-weight: bold; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .info-item { margin-bottom: 8px; }
+        .label { font-weight: bold; color: #4b5563; }
+        .value { color: #1f2937; }
+        .medication-box { border: 2px solid #059669; border-radius: 8px; padding: 20px; margin: 20px 0; background: #f0fdf4; }
+        .medication-name { font-size: 18px; font-weight: bold; color: #059669; margin-bottom: 15px; text-transform: uppercase; }
+        .prescription-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .prescription-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #d1fae5; }
+        .instructions-box { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; }
+        .instructions-title { font-weight: bold; color: #92400e; margin-bottom: 8px; }
+        .signature-area { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .signature-box { border-top: 1px solid #9ca3af; padding-top: 10px; text-align: center; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
+        .rx-symbol { font-size: 24px; font-weight: bold; color: ${orgTheme}; }
+        @media print {
+            body { print-color-adjust: exact; }
+            .letterhead { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="letterhead">
+        <div class="org-logo">${orgInitials}</div>
+        <div class="org-info">
+            <div class="org-name">${orgName}</div>
+            <div class="org-details">
+                ${orgType.charAt(0).toUpperCase() + orgType.slice(1)} Healthcare Services<br>
+                ${orgAddress}<br>
+                Phone: ${orgPhone}<br>
+                Email: ${orgEmail}<br>
+                Pharmacy & Medical Services
+            </div>
+        </div>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="document-title">
+        <span class="rx-symbol">℞</span> PRESCRIPTION
+    </div>
+
+    <div class="section">
+        <div class="section-title">PATIENT INFORMATION</div>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <span class="label">Patient Name:</span> 
+                    <span class="value">${prescriptionResult.patientFirstName} ${prescriptionResult.patientLastName}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Date of Birth:</span> 
+                    <span class="value">${prescriptionResult.patientDateOfBirth ? formatDate(prescriptionResult.patientDateOfBirth) : 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Gender:</span> 
+                    <span class="value">${prescriptionResult.patientGender || 'Not specified'}</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="label">Patient ID:</span> 
+                    <span class="value">P${String(prescriptionResult.patientId).padStart(6, '0')}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Phone:</span> 
+                    <span class="value">${prescriptionResult.patientPhone || 'Not provided'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Address:</span> 
+                    <span class="value">${prescriptionResult.patientAddress || 'On file'}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">PRESCRIBING PHYSICIAN</div>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <span class="label">Doctor:</span> 
+                    <span class="value">Dr. ${prescriptionResult.doctorFirstName || prescriptionResult.doctorUsername} ${prescriptionResult.doctorLastName || ''}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Role:</span> 
+                    <span class="value">${prescriptionResult.doctorRole ? prescriptionResult.doctorRole.charAt(0).toUpperCase() + prescriptionResult.doctorRole.slice(1) : 'Medical Staff'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Prescription Date:</span> 
+                    <span class="value">${formatDate(prescriptionResult.startDate)}</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="label">Prescribing Organization:</span> 
+                    <span class="value">${prescriptionResult.organizationName || 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Organization Type:</span> 
+                    <span class="value">${prescriptionResult.organizationType ? prescriptionResult.organizationType.charAt(0).toUpperCase() + prescriptionResult.organizationType.slice(1) : 'Healthcare Facility'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Prescription ID:</span> 
+                    <span class="value">RX-${String(prescriptionResult.prescriptionId).padStart(4, '0')}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="medication-box">
+        <div class="medication-name">${prescriptionResult.medicationName || 'Medication Name'}</div>
+        <div class="prescription-details">
+            <div class="prescription-item">
+                <div class="label">Dosage</div>
+                <div class="value">${prescriptionResult.dosage || 'As prescribed'}</div>
+            </div>
+            <div class="prescription-item">
+                <div class="label">Frequency</div>
+                <div class="value">${prescriptionResult.frequency || 'As directed'}</div>
+            </div>
+            <div class="prescription-item">
+                <div class="label">Duration</div>
+                <div class="value">${prescriptionResult.duration || 'As prescribed'}</div>
+            </div>
+            <div class="prescription-item">
+                <div class="label">Status</div>
+                <div class="value">${prescriptionResult.status ? prescriptionResult.status.charAt(0).toUpperCase() + prescriptionResult.status.slice(1) : 'Active'}</div>
+            </div>
+        </div>
+        ${prescriptionResult.endDate ? `
+        <div style="margin-top: 15px;">
+            <div class="label">Treatment Period:</div>
+            <div class="value">${formatDate(prescriptionResult.startDate)} to ${formatDate(prescriptionResult.endDate)}</div>
+        </div>
+        ` : ''}
+    </div>
+
+    ${prescriptionResult.instructions ? `
+    <div class="instructions-box">
+        <div class="instructions-title">SPECIAL INSTRUCTIONS</div>
+        <div>${prescriptionResult.instructions}</div>
+    </div>
+    ` : ''}
+
+    <div class="signature-area">
+        <div class="signature-box">
+            <strong>Prescribing Physician</strong><br>
+            Dr. ${prescriptionResult.doctorFirstName || prescriptionResult.doctorUsername} ${prescriptionResult.doctorLastName || ''}<br>
+            ${prescriptionResult.organizationName}<br>
+            Date: ${formatDate(prescriptionResult.startDate)}
+        </div>
+        <div class="signature-box">
+            <strong>Pharmacist Use Only</strong><br>
+            Dispensed By: ________________<br>
+            Date: _______________________<br>
+            Pharmacy Seal: _______________
+        </div>
+    </div>
+
+    <div class="footer">
+        <strong>Prescription ID:</strong> RX-${String(prescriptionResult.prescriptionId).padStart(4, '0')} | 
+        <strong>Generated:</strong> ${formatDateTime(new Date())} | 
+        <strong>Prescribed by:</strong> ${prescriptionResult.organizationName}<br>
+        <em>This prescription is valid for dispensing medication as per the prescribed dosage and duration. Original prescription required for controlled substances.</em>
+    </div>
+</body>
+</html>`;
+}
+
 // Helper function to generate lab order HTML for printing
 function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
   const formatDate = (date: string | Date) => {
@@ -32,6 +236,17 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
     return format(new Date(date), 'PPP p');
   };
 
+  // Use organization data from the requesting staff member
+  const orgName = orderResult.organizationName || 'Medical Facility';
+  const orgType = orderResult.organizationType || 'clinic';
+  const orgPhone = orderResult.organizationPhone || 'Contact facility directly';
+  const orgEmail = orderResult.organizationEmail || 'Contact facility directly';
+  const orgAddress = orderResult.organizationAddress || 'Address on file';
+  const orgTheme = orderResult.organizationTheme || '#2563eb';
+  
+  // Generate organization logo initials
+  const orgInitials = orgName.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+
   return `
 <!DOCTYPE html>
 <html>
@@ -39,8 +254,8 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
     <title>Lab Order - ${orderResult.orderId}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .letterhead { border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .org-logo { float: left; width: 80px; height: 80px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 24px; }
+        .letterhead { border-bottom: 3px solid ${orgTheme}; padding-bottom: 20px; margin-bottom: 30px; }
+        .org-logo { float: left; width: 80px; height: 80px; background: ${orgTheme}; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
         .org-info { margin-left: 100px; }
         .org-name { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
         .org-details { color: #64748b; line-height: 1.4; }
@@ -59,6 +274,8 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
         .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
         .signature-area { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
         .signature-box { border-top: 1px solid #9ca3af; padding-top: 10px; text-align: center; }
+        .requesting-org { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        .requesting-org-title { font-weight: bold; color: #0369a1; margin-bottom: 8px; }
         @media print {
             body { print-color-adjust: exact; }
             .letterhead { page-break-inside: avoid; }
@@ -67,15 +284,15 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
 </head>
 <body>
     <div class="letterhead">
-        <div class="org-logo">HC</div>
+        <div class="org-logo">${orgInitials}</div>
         <div class="org-info">
-            <div class="org-name">HealthCare Connect</div>
+            <div class="org-name">${orgName}</div>
             <div class="org-details">
-                Advanced Digital Health Solutions<br>
-                Lagos State Medical Complex, Ikeja<br>
-                Phone: +234-1-234-5678 | Fax: +234-1-234-5679<br>
-                Email: lab@healthcareconnect.ng | Emergency: +234-803-555-0123<br>
-                Medical License: NG-MED-2024-001 | CAP Accredited Lab
+                ${orgType.charAt(0).toUpperCase() + orgType.slice(1)} Healthcare Services<br>
+                ${orgAddress}<br>
+                Phone: ${orgPhone}<br>
+                Email: ${orgEmail}<br>
+                Laboratory Services Division
             </div>
         </div>
         <div style="clear: both;"></div>
@@ -119,19 +336,65 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
 
     <div class="section">
         <div class="section-title">ORDERING PHYSICIAN</div>
-        <div class="info-item">
-            <span class="label">Doctor:</span> 
-            <span class="value">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}</span>
-        </div>
-        <div class="info-item">
-            <span class="label">Department:</span> 
-            <span class="value">General Medicine</span>
-        </div>
-        <div class="info-item">
-            <span class="label">Order ID:</span> 
-            <span class="value">LAB-${String(orderResult.orderId).padStart(3, '0')}</span>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <span class="label">Doctor:</span> 
+                    <span class="value">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Role:</span> 
+                    <span class="value">${orderResult.doctorRole ? orderResult.doctorRole.charAt(0).toUpperCase() + orderResult.doctorRole.slice(1) : 'Medical Staff'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Order ID:</span> 
+                    <span class="value">LAB-${String(orderResult.orderId).padStart(3, '0')}</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="label">Requesting Organization:</span> 
+                    <span class="value">${orderResult.organizationName || 'Not specified'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Organization Type:</span> 
+                    <span class="value">${orderResult.organizationType ? orderResult.organizationType.charAt(0).toUpperCase() + orderResult.organizationType.slice(1) : 'Healthcare Facility'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Contact:</span> 
+                    <span class="value">${orderResult.organizationPhone || 'See organization details'}</span>
+                </div>
+            </div>
         </div>
     </div>
+
+    ${orderResult.organizationName ? `
+    <div class="requesting-org">
+        <div class="requesting-org-title">REQUESTING ORGANIZATION DETAILS</div>
+        <div class="info-grid">
+            <div>
+                <div class="info-item">
+                    <span class="label">Organization:</span> 
+                    <span class="value">${orderResult.organizationName}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Address:</span> 
+                    <span class="value">${orderResult.organizationAddress || 'Address on file'}</span>
+                </div>
+            </div>
+            <div>
+                <div class="info-item">
+                    <span class="label">Phone:</span> 
+                    <span class="value">${orderResult.organizationPhone || 'Contact directly'}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Email:</span> 
+                    <span class="value">${orderResult.organizationEmail || 'Contact directly'}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    ` : ''}
 
     <div class="section">
         <div class="section-title">LABORATORY TESTS REQUESTED</div>
@@ -969,6 +1232,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Print prescription with organization details
+  app.get('/api/prescriptions/:id/print', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const prescriptionId = parseInt(req.params.id);
+      
+      // Get prescription details with patient info and prescribing staff organization
+      const [prescriptionResult] = await db.select({
+        prescriptionId: schema.prescriptions.id,
+        patientId: schema.prescriptions.patientId,
+        medicationId: schema.prescriptions.medicationId,
+        medicationName: schema.prescriptions.medicationName,
+        dosage: schema.prescriptions.dosage,
+        frequency: schema.prescriptions.frequency,
+        duration: schema.prescriptions.duration,
+        instructions: schema.prescriptions.instructions,
+        startDate: schema.prescriptions.startDate,
+        endDate: schema.prescriptions.endDate,
+        status: schema.prescriptions.status,
+        prescribedBy: schema.prescriptions.prescribedBy,
+        createdAt: schema.prescriptions.createdAt,
+        patientFirstName: patients.firstName,
+        patientLastName: patients.lastName,
+        patientDateOfBirth: patients.dateOfBirth,
+        patientGender: patients.gender,
+        patientPhone: patients.phone,
+        patientAddress: patients.address,
+        doctorUsername: users.username,
+        doctorFirstName: users.firstName,
+        doctorLastName: users.lastName,
+        doctorRole: users.role,
+        organizationId: users.organizationId,
+        organizationName: organizations.name,
+        organizationType: organizations.type,
+        organizationAddress: organizations.address,
+        organizationPhone: organizations.phone,
+        organizationEmail: organizations.email,
+        organizationWebsite: organizations.website,
+        organizationLogo: organizations.logoUrl,
+        organizationTheme: organizations.themeColor
+      })
+      .from(schema.prescriptions)
+      .leftJoin(patients, eq(schema.prescriptions.patientId, patients.id))
+      .leftJoin(users, eq(schema.prescriptions.prescribedBy, users.username))
+      .leftJoin(organizations, eq(users.organizationId, organizations.id))
+      .where(eq(schema.prescriptions.id, prescriptionId));
+
+      if (!prescriptionResult) {
+        return res.status(404).json({ message: "Prescription not found" });
+      }
+
+      // Generate HTML for printing
+      const html = generatePrescriptionHTML(prescriptionResult);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Print prescription error:', error);
+      res.status(500).json({ message: "Failed to generate prescription print" });
+    }
+  });
+
   app.get("/api/patients/:id/prescriptions", async (req, res) => {
     try {
       const patientId = parseInt(req.params.id);
@@ -1503,7 +1827,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const labOrderId = parseInt(req.params.id);
       
-      // Get lab order details with patient info
+      // Get lab order details with patient info and organization
       const [orderResult] = await db.select({
         orderId: labOrders.id,
         patientId: labOrders.patientId,
@@ -1517,11 +1841,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         patientPhone: patients.phone,
         doctorUsername: users.username,
         doctorFirstName: users.firstName,
-        doctorLastName: users.lastName
+        doctorLastName: users.lastName,
+        doctorRole: users.role,
+        organizationId: users.organizationId,
+        organizationName: organizations.name,
+        organizationType: organizations.type,
+        organizationAddress: organizations.address,
+        organizationPhone: organizations.phone,
+        organizationEmail: organizations.email,
+        organizationWebsite: organizations.website,
+        organizationLogo: organizations.logoUrl,
+        organizationTheme: organizations.themeColor
       })
       .from(labOrders)
       .leftJoin(patients, eq(labOrders.patientId, patients.id))
       .leftJoin(users, eq(labOrders.orderedBy, users.id))
+      .leftJoin(organizations, eq(users.organizationId, organizations.id))
       .where(eq(labOrders.id, labOrderId));
 
       if (!orderResult) {
