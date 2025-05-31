@@ -324,22 +324,33 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         queryClient.invalidateQueries(['/api/patients', patient.id, 'prescriptions']);
         
         // Notify relevant staff about the review assignment
-        await fetch('/api/notifications/staff', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            type: 'medication_review_assigned',
-            patientId: patient.id,
-            patientName: `${patient.firstName} ${patient.lastName}`,
-            medicationName: medicationName,
-            reviewId: reviewData.id,
-            priority: 'normal',
-            assignedTo: ['doctor', 'pharmacist'], // Roles that should be notified
-            message: `Medication review required for ${medicationName} - Patient: ${patient.firstName} ${patient.lastName}`
-          }),
-        });
+        try {
+          const notificationResponse = await fetch('/api/notifications/staff', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'medication_review_assigned',
+              patientId: patient.id,
+              patientName: `${patient.firstName} ${patient.lastName}`,
+              medicationName: medicationName,
+              reviewId: reviewData.id,
+              priority: 'normal',
+              assignedTo: ['doctor', 'pharmacist'], // Roles that should be notified
+              message: `Medication review required for ${medicationName} - Patient: ${patient.firstName} ${patient.lastName}`
+            }),
+          });
+          
+          if (notificationResponse.ok) {
+            const notificationData = await notificationResponse.json();
+            console.log('✅ Staff notification sent:', notificationData);
+          } else {
+            console.error('❌ Failed to send staff notification:', await notificationResponse.text());
+          }
+        } catch (notifyError) {
+          console.error('❌ Error sending staff notification:', notifyError);
+        }
         
         // Update local state to show review was scheduled
         localStorage.setItem(`review_${prescriptionId}`, JSON.stringify({
