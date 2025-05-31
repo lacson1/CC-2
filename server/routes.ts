@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { fileStorage } from "./storage-service";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices } from "@shared/schema";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
@@ -5255,6 +5255,428 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error updating settings:', error);
       res.status(500).json({ error: 'Failed to update settings' });
+    }
+  });
+
+  // ===== BILLING AND INVOICING ENDPOINTS =====
+
+  // Get all invoices for organization
+  app.get("/api/invoices", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      
+      const invoicesList = await db.select({
+        id: invoices.id,
+        invoiceNumber: invoices.invoiceNumber,
+        patientId: invoices.patientId,
+        patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`.as('patientName'),
+        issueDate: invoices.issueDate,
+        dueDate: invoices.dueDate,
+        status: invoices.status,
+        totalAmount: invoices.totalAmount,
+        paidAmount: invoices.paidAmount,
+        balanceAmount: invoices.balanceAmount,
+        currency: invoices.currency,
+        createdAt: invoices.createdAt
+      })
+      .from(invoices)
+      .innerJoin(patients, eq(invoices.patientId, patients.id))
+      .where(eq(invoices.organizationId, orgId))
+      .orderBy(desc(invoices.createdAt));
+
+      res.json(invoicesList);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      res.status(500).json({ error: 'Failed to fetch invoices' });
+    }
+  });
+
+  // Create new invoice
+  app.post("/api/invoices", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const userId = req.user!.id;
+      
+      const { patientId, items, notes, dueDate } = req.body;
+      
+      // Generate invoice number
+      const invoiceCount = await db.select({ count: sql<number>`count(*)`.as('count') })
+        .from(invoices)
+        .where(eq(invoices.organizationId, orgId));
+      
+      const invoiceNumber = `INV-${orgId}-${String(invoiceCount[0].count + 1).padStart(4, '0')}`;
+      
+      // Calculate totals
+      const subtotal = items.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
+      const taxAmount = subtotal * 0.075; // 7.5% VAT
+      const totalAmount = subtotal + taxAmount;
+      
+      // Create invoice
+      const [newInvoice] = await db.insert(invoices).values({
+        patientId,
+        organizationId: orgId,
+        invoiceNumber,
+        issueDate: new Date().toISOString().split('T')[0],
+        dueDate,
+        status: 'draft',
+        subtotal: subtotal.toFixed(2),
+        taxAmount: taxAmount.toFixed(2),
+        discountAmount: '0.00',
+        totalAmount: totalAmount.toFixed(2),
+        paidAmount: '0.00',
+        balanceAmount: totalAmount.toFixed(2),
+        currency: 'NGN',
+        notes,
+        createdBy: userId
+      }).returning();
+
+      // Create invoice items
+      for (const item of items) {
+        await db.insert(invoiceItems).values({
+          invoiceId: newInvoice.id,
+          description: item.description,
+          serviceType: item.serviceType,
+          serviceId: item.serviceId,
+          quantity: item.quantity.toString(),
+          unitPrice: item.unitPrice.toFixed(2),
+          totalPrice: (item.quantity * item.unitPrice).toFixed(2)
+        });
+      }
+
+      res.json({ message: 'Invoice created successfully', invoiceId: newInvoice.id });
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      res.status(500).json({ error: 'Failed to create invoice' });
+    }
+  });
+
+  // Get invoice details with items
+  app.get("/api/invoices/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const invoiceId = parseInt(req.params.id);
+      
+      // Get invoice details
+      const [invoiceDetails] = await db.select({
+        id: invoices.id,
+        invoiceNumber: invoices.invoiceNumber,
+        patientId: invoices.patientId,
+        patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`.as('patientName'),
+        patientPhone: patients.phone,
+        patientEmail: patients.email,
+        issueDate: invoices.issueDate,
+        dueDate: invoices.dueDate,
+        status: invoices.status,
+        subtotal: invoices.subtotal,
+        taxAmount: invoices.taxAmount,
+        discountAmount: invoices.discountAmount,
+        totalAmount: invoices.totalAmount,
+        paidAmount: invoices.paidAmount,
+        balanceAmount: invoices.balanceAmount,
+        currency: invoices.currency,
+        notes: invoices.notes,
+        createdAt: invoices.createdAt
+      })
+      .from(invoices)
+      .innerJoin(patients, eq(invoices.patientId, patients.id))
+      .where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)));
+
+      if (!invoiceDetails) {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+
+      // Get invoice items
+      const items = await db.select()
+        .from(invoiceItems)
+        .where(eq(invoiceItems.invoiceId, invoiceId));
+
+      // Get payments
+      const paymentsList = await db.select({
+        id: payments.id,
+        amount: payments.amount,
+        paymentMethod: payments.paymentMethod,
+        paymentDate: payments.paymentDate,
+        transactionId: payments.transactionId,
+        status: payments.status,
+        notes: payments.notes,
+        processedBy: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('processedBy')
+      })
+      .from(payments)
+      .leftJoin(users, eq(payments.processedBy, users.id))
+      .where(eq(payments.invoiceId, invoiceId));
+
+      res.json({
+        ...invoiceDetails,
+        items,
+        payments: paymentsList
+      });
+    } catch (error) {
+      console.error('Error fetching invoice details:', error);
+      res.status(500).json({ error: 'Failed to fetch invoice details' });
+    }
+  });
+
+  // Record payment
+  app.post("/api/payments", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const userId = req.user!.id;
+      
+      const { invoiceId, amount, paymentMethod, transactionId, notes } = req.body;
+      
+      // Get current invoice
+      const [currentInvoice] = await db.select()
+        .from(invoices)
+        .where(and(eq(invoices.id, invoiceId), eq(invoices.organizationId, orgId)));
+
+      if (!currentInvoice) {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+
+      // Create payment record
+      await db.insert(payments).values({
+        invoiceId,
+        patientId: currentInvoice.patientId,
+        organizationId: orgId,
+        paymentMethod,
+        amount: amount.toFixed(2),
+        currency: 'NGN',
+        transactionId,
+        paymentDate: new Date(),
+        status: 'completed',
+        notes,
+        processedBy: userId
+      });
+
+      // Update invoice amounts
+      const newPaidAmount = parseFloat(currentInvoice.paidAmount) + amount;
+      const newBalanceAmount = parseFloat(currentInvoice.totalAmount) - newPaidAmount;
+      const newStatus = newBalanceAmount <= 0 ? 'paid' : 'partial';
+
+      await db.update(invoices)
+        .set({
+          paidAmount: newPaidAmount.toFixed(2),
+          balanceAmount: newBalanceAmount.toFixed(2),
+          status: newStatus
+        })
+        .where(eq(invoices.id, invoiceId));
+
+      res.json({ message: 'Payment recorded successfully' });
+    } catch (error) {
+      console.error('Error recording payment:', error);
+      res.status(500).json({ error: 'Failed to record payment' });
+    }
+  });
+
+  // Get revenue analytics
+  app.get("/api/revenue-analytics", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      
+      // Total revenue for current month
+      const currentMonth = new Date();
+      const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+      const lastDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+      
+      const [totalRevenue] = await db.select({
+        total: sql<number>`COALESCE(SUM(CAST(${payments.amount} AS DECIMAL)), 0)`.as('total')
+      })
+      .from(payments)
+      .where(and(
+        eq(payments.organizationId, orgId),
+        gte(payments.paymentDate, firstDayOfMonth),
+        lte(payments.paymentDate, lastDayOfMonth),
+        eq(payments.status, 'completed')
+      ));
+
+      // Total patients billed this month
+      const [totalPatients] = await db.select({
+        count: sql<number>`COUNT(DISTINCT ${invoices.patientId})`.as('count')
+      })
+      .from(invoices)
+      .where(and(
+        eq(invoices.organizationId, orgId),
+        gte(invoices.createdAt, firstDayOfMonth),
+        lte(invoices.createdAt, lastDayOfMonth)
+      ));
+
+      // Average revenue per patient
+      const avgRevenuePerPatient = totalPatients.count > 0 ? 
+        (totalRevenue.total / totalPatients.count) : 0;
+
+      // Previous month for growth calculation
+      const prevFirstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
+      const prevLastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 0);
+      
+      const [prevRevenue] = await db.select({
+        total: sql<number>`COALESCE(SUM(CAST(${payments.amount} AS DECIMAL)), 0)`.as('total')
+      })
+      .from(payments)
+      .where(and(
+        eq(payments.organizationId, orgId),
+        gte(payments.paymentDate, prevFirstDay),
+        lte(payments.paymentDate, prevLastDay),
+        eq(payments.status, 'completed')
+      ));
+
+      const growthRate = prevRevenue.total > 0 ? 
+        ((totalRevenue.total - prevRevenue.total) / prevRevenue.total) * 100 : 0;
+
+      // Daily revenue for charts (last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const dailyRevenue = await db.select({
+        date: sql<string>`DATE(${payments.paymentDate})`.as('date'),
+        revenue: sql<number>`COALESCE(SUM(CAST(${payments.amount} AS DECIMAL)), 0)`.as('revenue')
+      })
+      .from(payments)
+      .where(and(
+        eq(payments.organizationId, orgId),
+        gte(payments.paymentDate, thirtyDaysAgo),
+        eq(payments.status, 'completed')
+      ))
+      .groupBy(sql`DATE(${payments.paymentDate})`)
+      .orderBy(sql`DATE(${payments.paymentDate})`);
+
+      // Service revenue breakdown
+      const serviceRevenue = await db.select({
+        service: invoiceItems.serviceType,
+        revenue: sql<number>`COALESCE(SUM(CAST(${invoiceItems.totalPrice} AS DECIMAL)), 0)`.as('revenue'),
+        percentage: sql<number>`ROUND(
+          (COALESCE(SUM(CAST(${invoiceItems.totalPrice} AS DECIMAL)), 0) * 100.0) / 
+          NULLIF((SELECT SUM(CAST(total_price AS DECIMAL)) FROM invoice_items ij 
+                  INNER JOIN invoices i ON ij.invoice_id = i.id 
+                  WHERE i.organization_id = ${orgId}), 0), 2
+        )`.as('percentage')
+      })
+      .from(invoiceItems)
+      .innerJoin(invoices, eq(invoiceItems.invoiceId, invoices.id))
+      .where(eq(invoices.organizationId, orgId))
+      .groupBy(invoiceItems.serviceType)
+      .orderBy(desc(sql`COALESCE(SUM(CAST(${invoiceItems.totalPrice} AS DECIMAL)), 0)`));
+
+      res.json({
+        totalRevenue: totalRevenue.total,
+        totalPatients: totalPatients.count,
+        avgRevenuePerPatient,
+        growthRate,
+        dailyRevenue,
+        serviceRevenue
+      });
+    } catch (error) {
+      console.error('Error fetching revenue analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch revenue analytics' });
+    }
+  });
+
+  // Get service prices
+  app.get("/api/service-prices", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      
+      const prices = await db.select()
+        .from(servicePrices)
+        .where(and(eq(servicePrices.organizationId, orgId), eq(servicePrices.isActive, true)))
+        .orderBy(servicePrices.serviceType, servicePrices.serviceName);
+
+      res.json(prices);
+    } catch (error) {
+      console.error('Error fetching service prices:', error);
+      res.status(500).json({ error: 'Failed to fetch service prices' });
+    }
+  });
+
+  // Create/update service price
+  app.post("/api/service-prices", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const userId = req.user!.id;
+      
+      const { serviceType, serviceName, serviceCode, basePrice, effectiveDate, expiryDate } = req.body;
+      
+      await db.insert(servicePrices).values({
+        organizationId: orgId,
+        serviceType,
+        serviceName,
+        serviceCode,
+        basePrice: basePrice.toFixed(2),
+        currency: 'NGN',
+        isActive: true,
+        effectiveDate,
+        expiryDate,
+        createdBy: userId
+      });
+
+      res.json({ message: 'Service price created successfully' });
+    } catch (error) {
+      console.error('Error creating service price:', error);
+      res.status(500).json({ error: 'Failed to create service price' });
+    }
+  });
+
+  // Get insurance claims
+  app.get("/api/insurance-claims", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      
+      const claims = await db.select({
+        id: insuranceClaims.id,
+        claimNumber: insuranceClaims.claimNumber,
+        patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`.as('patientName'),
+        insuranceProvider: insuranceClaims.insuranceProvider,
+        policyNumber: insuranceClaims.policyNumber,
+        claimAmount: insuranceClaims.claimAmount,
+        approvedAmount: insuranceClaims.approvedAmount,
+        status: insuranceClaims.status,
+        submissionDate: insuranceClaims.submissionDate,
+        approvalDate: insuranceClaims.approvalDate
+      })
+      .from(insuranceClaims)
+      .innerJoin(patients, eq(insuranceClaims.patientId, patients.id))
+      .where(eq(insuranceClaims.organizationId, orgId))
+      .orderBy(desc(insuranceClaims.submissionDate));
+
+      res.json(claims);
+    } catch (error) {
+      console.error('Error fetching insurance claims:', error);
+      res.status(500).json({ error: 'Failed to fetch insurance claims' });
+    }
+  });
+
+  // Submit insurance claim
+  app.post("/api/insurance-claims", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = req.user!.organizationId;
+      const userId = req.user!.id;
+      
+      const { patientId, invoiceId, insuranceProvider, policyNumber, claimAmount, notes } = req.body;
+      
+      // Generate claim number
+      const claimCount = await db.select({ count: sql<number>`count(*)`.as('count') })
+        .from(insuranceClaims)
+        .where(eq(insuranceClaims.organizationId, orgId));
+      
+      const claimNumber = `CLM-${orgId}-${String(claimCount[0].count + 1).padStart(4, '0')}`;
+      
+      await db.insert(insuranceClaims).values({
+        patientId,
+        organizationId: orgId,
+        invoiceId,
+        claimNumber,
+        insuranceProvider,
+        policyNumber,
+        claimAmount: claimAmount.toFixed(2),
+        status: 'submitted',
+        submissionDate: new Date(),
+        notes,
+        createdBy: userId
+      });
+
+      res.json({ message: 'Insurance claim submitted successfully' });
+    } catch (error) {
+      console.error('Error submitting insurance claim:', error);
+      res.status(500).json({ error: 'Failed to submit insurance claim' });
     }
   });
 

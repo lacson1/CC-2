@@ -899,6 +899,167 @@ export const insertSafetyAlertSchema = createInsertSchema(safetyAlerts).omit({
 export type SafetyAlert = typeof safetyAlerts.$inferSelect;
 export type InsertSafetyAlert = z.infer<typeof insertSafetyAlertSchema>;
 
+// Billing and Invoicing System
+export const invoices = pgTable('invoices', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  invoiceNumber: varchar('invoice_number', { length: 50 }).notNull().unique(),
+  issueDate: date('issue_date').notNull(),
+  dueDate: date('due_date').notNull(),
+  status: varchar('status', { length: 20 }).default('draft'), // draft, sent, paid, overdue, cancelled
+  subtotal: decimal('subtotal', { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal('tax_amount', { precision: 10, scale: 2 }).default('0.00'),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).default('0.00'),
+  totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
+  paidAmount: decimal('paid_amount', { precision: 10, scale: 2 }).default('0.00'),
+  balanceAmount: decimal('balance_amount', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('NGN'),
+  notes: text('notes'),
+  createdBy: integer('created_by').references(() => users.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const invoiceItems = pgTable('invoice_items', {
+  id: serial('id').primaryKey(),
+  invoiceId: integer('invoice_id').references(() => invoices.id).notNull(),
+  description: varchar('description', { length: 255 }).notNull(),
+  serviceType: varchar('service_type', { length: 50 }).notNull(), // consultation, lab, procedure, medication, etc.
+  serviceId: integer('service_id'), // Reference to specific service (visit, lab order, etc.)
+  quantity: decimal('quantity', { precision: 8, scale: 2 }).default('1.00'),
+  unitPrice: decimal('unit_price', { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+export const payments = pgTable('payments', {
+  id: serial('id').primaryKey(),
+  invoiceId: integer('invoice_id').references(() => invoices.id).notNull(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  paymentMethod: varchar('payment_method', { length: 50 }).notNull(), // cash, card, transfer, insurance, mobile_money
+  amount: decimal('amount', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('NGN'),
+  transactionId: varchar('transaction_id', { length: 100 }),
+  paymentDate: timestamp('payment_date').defaultNow(),
+  status: varchar('status', { length: 20 }).default('completed'), // pending, completed, failed, refunded
+  notes: text('notes'),
+  processedBy: integer('processed_by').references(() => users.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+export const insuranceClaims = pgTable('insurance_claims', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  invoiceId: integer('invoice_id').references(() => invoices.id),
+  claimNumber: varchar('claim_number', { length: 50 }).notNull().unique(),
+  insuranceProvider: varchar('insurance_provider', { length: 100 }).notNull(),
+  policyNumber: varchar('policy_number', { length: 100 }).notNull(),
+  claimAmount: decimal('claim_amount', { precision: 10, scale: 2 }).notNull(),
+  approvedAmount: decimal('approved_amount', { precision: 10, scale: 2 }),
+  status: varchar('status', { length: 20 }).default('submitted'), // submitted, processing, approved, rejected, paid
+  submissionDate: timestamp('submission_date').defaultNow(),
+  approvalDate: timestamp('approval_date'),
+  paymentDate: timestamp('payment_date'),
+  rejectionReason: text('rejection_reason'),
+  notes: text('notes'),
+  createdBy: integer('created_by').references(() => users.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const servicePrices = pgTable('service_prices', {
+  id: serial('id').primaryKey(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  serviceType: varchar('service_type', { length: 50 }).notNull(), // consultation, lab_test, procedure, medication
+  serviceName: varchar('service_name', { length: 255 }).notNull(),
+  serviceCode: varchar('service_code', { length: 50 }),
+  basePrice: decimal('base_price', { precision: 10, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 3 }).default('NGN'),
+  isActive: boolean('is_active').default(true),
+  effectiveDate: date('effective_date').notNull(),
+  expiryDate: date('expiry_date'),
+  createdBy: integer('created_by').references(() => users.id).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// Relations for billing tables
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
+  patient: one(patients, { fields: [invoices.patientId], references: [patients.id] }),
+  organization: one(organizations, { fields: [invoices.organizationId], references: [organizations.id] }),
+  creator: one(users, { fields: [invoices.createdBy], references: [users.id] }),
+  items: many(invoiceItems),
+  payments: many(payments),
+  insuranceClaims: many(insuranceClaims)
+}));
+
+export const invoiceItemsRelations = relations(invoiceItems, ({ one }) => ({
+  invoice: one(invoices, { fields: [invoiceItems.invoiceId], references: [invoices.id] })
+}));
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  invoice: one(invoices, { fields: [payments.invoiceId], references: [invoices.id] }),
+  patient: one(patients, { fields: [payments.patientId], references: [patients.id] }),
+  organization: one(organizations, { fields: [payments.organizationId], references: [organizations.id] }),
+  processor: one(users, { fields: [payments.processedBy], references: [users.id] })
+}));
+
+export const insuranceClaimsRelations = relations(insuranceClaims, ({ one }) => ({
+  patient: one(patients, { fields: [insuranceClaims.patientId], references: [patients.id] }),
+  organization: one(organizations, { fields: [insuranceClaims.organizationId], references: [organizations.id] }),
+  invoice: one(invoices, { fields: [insuranceClaims.invoiceId], references: [invoices.id] }),
+  creator: one(users, { fields: [insuranceClaims.createdBy], references: [users.id] })
+}));
+
+export const servicePricesRelations = relations(servicePrices, ({ one }) => ({
+  organization: one(organizations, { fields: [servicePrices.organizationId], references: [organizations.id] }),
+  creator: one(users, { fields: [servicePrices.createdBy], references: [users.id] })
+}));
+
+// Insert schemas for billing
+export const insertInvoiceSchema = createInsertSchema(invoices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertInvoiceItemSchema = createInsertSchema(invoiceItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertInsuranceClaimSchema = createInsertSchema(insuranceClaims).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertServicePriceSchema = createInsertSchema(servicePrices).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for billing
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type InvoiceItem = typeof invoiceItems.$inferSelect;
+export type InsertInvoiceItem = z.infer<typeof insertInvoiceItemSchema>;
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type InsuranceClaim = typeof insuranceClaims.$inferSelect;
+export type InsertInsuranceClaim = z.infer<typeof insertInsuranceClaimSchema>;
+export type ServicePrice = typeof servicePrices.$inferSelect;
+export type InsertServicePrice = z.infer<typeof insertServicePriceSchema>;
+
 // Appointment Reminders
 export const appointmentReminders = pgTable('appointment_reminders', {
   id: serial('id').primaryKey(),
