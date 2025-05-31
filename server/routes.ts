@@ -1346,7 +1346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const prescriptionId = parseInt(req.params.id);
       
-      // Get prescription details with patient info and prescribing staff organization
+      // Get prescription details with patient info
       const [prescriptionResult] = await db.select({
         prescriptionId: prescriptions.id,
         patientId: prescriptions.patientId,
@@ -1366,7 +1366,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         patientDateOfBirth: patients.dateOfBirth,
         patientGender: patients.gender,
         patientPhone: patients.phone,
-        patientAddress: patients.address,
+        patientAddress: patients.address
+      })
+      .from(prescriptions)
+      .leftJoin(patients, eq(prescriptions.patientId, patients.id))
+      .where(eq(prescriptions.id, prescriptionId));
+
+      if (!prescriptionResult) {
+        return res.status(404).json({ message: "Prescription not found" });
+      }
+
+      // Get current user's organization details for the letterhead
+      const [currentUserOrg] = await db.select({
         doctorUsername: users.username,
         doctorFirstName: users.firstName,
         doctorLastName: users.lastName,
@@ -1381,18 +1392,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         organizationLogo: organizations.logoUrl,
         organizationTheme: organizations.themeColor
       })
-      .from(prescriptions)
-      .leftJoin(patients, eq(prescriptions.patientId, patients.id))
-      .leftJoin(users, sql`LOWER(${prescriptions.prescribedBy}) = LOWER(${users.username})`)
+      .from(users)
       .leftJoin(organizations, eq(users.organizationId, organizations.id))
-      .where(eq(prescriptions.id, prescriptionId));
+      .where(eq(users.id, req.user!.id));
 
-      if (!prescriptionResult) {
-        return res.status(404).json({ message: "Prescription not found" });
-      }
+      // Combine prescription data with current user's organization
+      const combinedResult = {
+        ...prescriptionResult,
+        ...currentUserOrg
+      };
 
       // Generate HTML for printing
-      const html = generatePrescriptionHTML(prescriptionResult);
+      const html = generatePrescriptionHTML(combinedResult);
       
       res.setHeader('Content-Type', 'text/html');
       res.send(html);
