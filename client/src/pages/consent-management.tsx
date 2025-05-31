@@ -140,6 +140,10 @@ export default function ConsentManagement() {
   const form = useForm<ConsentFormData>({
     resolver: zodResolver(consentFormSchema),
     defaultValues: {
+      title: "",
+      description: "",
+      category: "",
+      consentType: "",
       template: { sections: [] },
       riskFactors: [],
       benefits: [],
