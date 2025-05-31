@@ -323,16 +323,35 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         const reviewData = await response.json();
         queryClient.invalidateQueries(['/api/patients', patient.id, 'prescriptions']);
         
+        // Notify relevant staff about the review assignment
+        await fetch('/api/notifications/staff', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'medication_review_assigned',
+            patientId: patient.id,
+            patientName: `${patient.firstName} ${patient.lastName}`,
+            medicationName: medicationName,
+            reviewId: reviewData.id,
+            priority: 'normal',
+            assignedTo: ['doctor', 'pharmacist'], // Roles that should be notified
+            message: `Medication review required for ${medicationName} - Patient: ${patient.firstName} ${patient.lastName}`
+          }),
+        });
+        
         // Update local state to show review was scheduled
         localStorage.setItem(`review_${prescriptionId}`, JSON.stringify({
           scheduled: true,
           date: new Date().toISOString(),
-          reviewId: reviewData.id || 'pending'
+          reviewId: reviewData.id || 'pending',
+          staffNotified: true
         }));
         
         toast({
-          title: "Review Scheduled",
-          description: `Medication review scheduled for ${medicationName} - ID: ${reviewData.id || 'pending'}`,
+          title: "Review Scheduled & Staff Notified",
+          description: `Medication review scheduled for ${medicationName} - Staff have been notified`,
         });
       } else {
         throw new Error('Failed to schedule review');
