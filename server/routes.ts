@@ -8,7 +8,7 @@ import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
 import { eq, desc, or, ilike, gte, and, isNotNull, inArray, sql } from "drizzle-orm";
-import { authenticateToken, requireRole, requireAnyRole, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
+import { authenticateToken, requireRole, requireAnyRole, requireSuperOrOrgAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 
 // Extend AuthRequest interface to include patient authentication
 interface PatientAuthRequest extends AuthRequest {
@@ -1033,14 +1033,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return org;
       };
       
-      // Simple hardcoded login for immediate access
-      if (username === 'admin' && password === 'admin123') {
-        const org = await getOrganizationDetails(1);
-        const token = generateToken({ id: 1, username: 'admin', role: 'admin', organizationId: 1 });
+      // Super Admin - Global access across all organizations
+      if (username === 'superadmin' && password === 'super123') {
+        const token = generateToken({ id: 1, username: 'superadmin', role: 'superadmin', organizationId: null });
         return res.json({
           token,
           user: {
             id: 1,
+            username: 'superadmin',
+            role: 'superadmin',
+            organizationId: null,
+            organization: {
+              id: 0,
+              name: 'System Administration',
+              type: 'system',
+              themeColor: '#DC2626'
+            }
+          }
+        });
+      }
+
+      // Organization Admin - Limited to specific organization
+      if (username === 'admin' && password === 'admin123') {
+        const org = await getOrganizationDetails(1);
+        const token = generateToken({ id: 2, username: 'admin', role: 'admin', organizationId: 1 });
+        return res.json({
+          token,
+          user: {
+            id: 2,
             username: 'admin',
             role: 'admin',
             organizationId: 1,
@@ -2407,7 +2427,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   // Organization Management endpoints
-  app.get('/api/organizations', authenticateToken, requireRole('admin'), async (req: AuthRequest, res) => {
+  // Super Admin - Global system analytics
+  app.get("/api/superadmin/analytics", authenticateToken, requireRole('superadmin'), async (req: AuthRequest, res) => {
+    try {
+      // Global statistics across all organizations
+      const totalOrganizations = await db.select({ count: sql`count(*)` }).from(organizations);
+      const activeOrganizations = await db.select({ count: sql`count(*)` }).from(organizations).where(eq(organizations.isActive, true));
+      const totalUsers = await db.select({ count: sql`count(*)` }).from(users);
+      const totalPatients = await db.select({ count: sql`count(*)` }).from(patients);
+      
+      // Organization breakdown
+      const orgBreakdown = await db.select({
+        id: organizations.id,
+        name: organizations.name,
+        type: organizations.type,
+        isActive: organizations.isActive,
+        patientCount: sql`(SELECT COUNT(*) FROM patients WHERE organization_id = ${organizations.id})`,
+        userCount: sql`(SELECT COUNT(*) FROM users WHERE organization_id = ${organizations.id})`,
+        createdAt: organizations.createdAt
+      }).from(organizations).orderBy(desc(organizations.createdAt));
+
+      res.json({
+        totalOrganizations: totalOrganizations[0]?.count || 0,
+        activeOrganizations: activeOrganizations[0]?.count || 0,
+        totalUsers: totalUsers[0]?.count || 0,
+        totalPatients: totalPatients[0]?.count || 0,
+        organizations: orgBreakdown
+      });
+    } catch (error) {
+      console.error('Error fetching super admin analytics:', error);
+      res.status(500).json({ error: 'Failed to fetch system analytics' });
+    }
+  });
+
+  app.get('/api/organizations', authenticateToken, requireSuperOrOrgAdmin(), async (req: AuthRequest, res) => {
     try {
       const organizationsList = await db
         .select({

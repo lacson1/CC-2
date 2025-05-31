@@ -25,6 +25,10 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
 
 export const requireRole = (role: string) => (req: AuthRequest, res: Response, next: NextFunction) => {
   const user = req.user; // decoded from JWT
+  // Super admin has access to everything
+  if (user?.role === 'superadmin') {
+    return next();
+  }
   if (!user || user.role !== role) {
     return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
   }
@@ -33,8 +37,21 @@ export const requireRole = (role: string) => (req: AuthRequest, res: Response, n
 
 export const requireAnyRole = (roles: string[]) => (req: AuthRequest, res: Response, next: NextFunction) => {
   const user = req.user;
+  // Super admin has access to everything
+  if (user?.role === 'superadmin') {
+    return next();
+  }
   if (!user || !roles.includes(user.role)) {
     return res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
+  }
+  next();
+};
+
+// Super admin or organization admin check
+export const requireSuperOrOrgAdmin = () => (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user = req.user;
+  if (!user || (!['superadmin', 'admin'].includes(user.role))) {
+    return res.status(403).json({ message: 'Forbidden: Admin privileges required' });
   }
   next();
 };
