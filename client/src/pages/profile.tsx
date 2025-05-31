@@ -46,6 +46,13 @@ export default function Profile() {
     enabled: !!user
   });
 
+  // Fetch organization data if user has an organizationId
+  const { data: organizationData } = useQuery({
+    queryKey: ['/api/organizations', user?.organizationId],
+    queryFn: () => fetch(`/api/organizations/${user?.organizationId}`).then(res => res.json()),
+    enabled: !!user?.organizationId
+  });
+
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -181,7 +188,7 @@ export default function Profile() {
               {user?.organizationId && (
                 <div className="flex items-center gap-2 text-sm">
                   <Building className="h-4 w-4 text-gray-500" />
-                  <span>Organization ID: {user.organizationId}</span>
+                  <span>Organization: {organizationData?.name || `ID: ${user.organizationId}`}</span>
                 </div>
               )}
             </div>
