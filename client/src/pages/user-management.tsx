@@ -290,13 +290,21 @@ export default function UserManagement() {
 
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.username.toLowerCase().includes(searchLower) ||
-        (user.firstName && user.firstName.toLowerCase().includes(searchLower)) ||
-        (user.lastName && user.lastName.toLowerCase().includes(searchLower)) ||
-        (user.email && user.email.toLowerCase().includes(searchLower)) ||
-        user.role.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter(user => {
+        const username = user.username?.toLowerCase() || '';
+        const firstName = user.firstName?.toLowerCase() || '';
+        const lastName = user.lastName?.toLowerCase() || '';
+        const email = user.email?.toLowerCase() || '';
+        const role = user.role?.toLowerCase() || '';
+        const fullName = `${firstName} ${lastName}`.trim();
+        
+        return username.includes(searchLower) ||
+               firstName.includes(searchLower) ||
+               lastName.includes(searchLower) ||
+               fullName.includes(searchLower) ||
+               email.includes(searchLower) ||
+               role.includes(searchLower);
+      });
     }
 
     if (filterSpecialty) {
