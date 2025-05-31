@@ -231,6 +231,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   const { data: patientPrescriptions = [], isLoading: prescriptionsLoading, error: prescriptionsError } = useQuery({
     queryKey: ['/api/patients', patient.id, 'prescriptions'],
     queryFn: async () => {
+      console.log('Fetching prescriptions for patient:', patient.id);
       const token = localStorage.getItem('token');
       const response = await fetch(`/api/patients/${patient.id}/prescriptions`, {
         headers: {
@@ -238,10 +239,15 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
           'Content-Type': 'application/json'
         }
       });
+      console.log('Prescription response status:', response.status);
       if (!response.ok) {
-        throw new Error('Failed to fetch prescriptions');
+        const errorText = await response.text();
+        console.error('Prescription fetch error:', errorText);
+        throw new Error(`Failed to fetch prescriptions: ${errorText}`);
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Prescription data:', data);
+      return data;
     },
     staleTime: 5 * 60 * 1000, // Keep data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Cache for 10 minutes (updated from cacheTime)
