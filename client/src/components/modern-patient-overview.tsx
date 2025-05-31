@@ -542,58 +542,14 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-slate-800">Current Medications</h3>
-                    <div className="flex gap-2">
-                      <Button 
-                        onClick={async () => {
-                          console.log('Manual refresh triggered for patient:', patient.id);
-                          try {
-                            const token = localStorage.getItem('token');
-                            console.log('Token exists:', !!token);
-                            const response = await fetch(`/api/patients/${patient.id}/prescriptions`, {
-                              headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json'
-                              }
-                            });
-                            console.log('Direct API call response:', response.status);
-                            if (response.ok) {
-                              const data = await response.json();
-                              console.log('Direct API call data:', data);
-                            } else {
-                              const errorText = await response.text();
-                              console.error('Direct API call error:', errorText);
-                            }
-                          } catch (error) {
-                            console.error('Manual fetch error:', error);
-                          }
-                          queryClient.invalidateQueries(['prescriptions', patient.id]);
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        Load Meds
-                      </Button>
-                      <Button 
-                        onClick={onAddPrescription} 
-                        size="sm" 
-                        className="bg-purple-600 hover:bg-purple-700"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Medication
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Debug Info */}
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg text-sm">
-                    <div>Patient ID: {patient.id}</div>
-                    <div>Loading: {prescriptionsLoading ? 'Yes' : 'No'}</div>
-                    <div>Error: {prescriptionsError ? (prescriptionsError as any).message || 'Unknown error' : 'None'}</div>
-                    <div>Prescriptions count: {patientPrescriptions.length}</div>
-                    <div>Active medications: {activeMedications.length}</div>
-                    <div>First prescription: {JSON.stringify(patientPrescriptions[0])}</div>
-                    <div>First active med: {JSON.stringify(activeMedications[0])}</div>
+                    <Button 
+                      onClick={onAddPrescription} 
+                      size="sm" 
+                      className="bg-purple-600 hover:bg-purple-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Medication
+                    </Button>
                   </div>
                   
                   {prescriptionsLoading ? (
