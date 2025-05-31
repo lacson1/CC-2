@@ -5130,6 +5130,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user profile
+  app.get("/api/profile", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      
+      const [userProfile] = await db.select({
+        id: users.id,
+        username: users.username,
+        title: users.title,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        phone: users.phone,
+        email: users.email,
+        role: users.role,
+        organizationId: users.organizationId
+      })
+      .from(users)
+      .where(eq(users.id, userId));
+
+      if (!userProfile) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      res.json(userProfile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+  });
+
   // Update user profile
   app.put("/api/profile", authenticateToken, async (req: AuthRequest, res) => {
     try {
@@ -5137,12 +5167,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = req.body;
       
       // Validate the data - only update fields that exist in the schema
-      const allowedFields = ['firstName', 'lastName', 'phone'];
+      const allowedFields = ['title', 'firstName', 'lastName', 'phone'];
       const filteredData: any = {};
       
       for (const field of allowedFields) {
         if (updateData[field] !== undefined) {
-          filteredData[field] = updateData[field];
+          // Convert "none" to null for title field
+          filteredData[field] = field === 'title' && updateData[field] === 'none' ? null : updateData[field];
         }
       }
 
