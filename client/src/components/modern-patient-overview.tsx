@@ -1092,7 +1092,7 @@ Present this QR code for medication dispensing.`;
                                 className="text-blue-600 hover:text-blue-800 border-blue-200"
                                 onClick={() => {
                                   // Use the first active prescription for demo
-                                  const activePrescription = prescriptionsData?.find(p => p.status === 'active');
+                                  const activePrescription = patientPrescriptions?.find(p => p.status === 'active');
                                   if (activePrescription) {
                                     handleScheduleReview(activePrescription.id, activePrescription.medicationName);
                                   } else {
@@ -1113,7 +1113,7 @@ Present this QR code for medication dispensing.`;
                                 className="text-green-600 hover:text-green-800 border-green-200"
                                 onClick={() => {
                                   // Use the first active prescription for demo
-                                  const activePrescription = prescriptionsData?.find(p => p.status === 'active');
+                                  const activePrescription = patientPrescriptions?.find(p => p.status === 'active');
                                   if (activePrescription) {
                                     handleIssueRepeat(activePrescription.id, activePrescription.medicationName);
                                   } else {
