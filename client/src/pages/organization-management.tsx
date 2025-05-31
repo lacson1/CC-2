@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,11 @@ import {
   Globe,
   Calendar,
   CheckCircle,
-  XCircle
+  XCircle,
+  Search,
+  Filter,
+  SortAsc,
+  SortDesc
 } from "lucide-react";
 
 const organizationSchema = z.object({
@@ -62,6 +66,9 @@ interface Organization {
 export default function OrganizationManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [nameCheckTimeout, setNameCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  const [checkingName, setCheckingName] = useState(false);
   const { toast } = useToast();
 
   const { data: organizations = [], isLoading, refetch } = useQuery<Organization[]>({
@@ -92,8 +99,22 @@ export default function OrganizationManagement() {
     },
     onError: (error: any) => {
       console.error("Organization creation error:", error);
-      const errorMessage = error?.message || "Failed to create organization";
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+      
+      // Handle specific error cases
+      let errorMessage = "Failed to create organization";
+      if (error?.message?.includes("organization with this name already exists")) {
+        errorMessage = "An organization with this name already exists. Please choose a different name.";
+      } else if (error?.message?.includes("email already exists")) {
+        errorMessage = "This email address is already in use by another organization.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({ 
+        title: "Cannot Create Organization", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
     }
   });
 
@@ -155,6 +176,44 @@ export default function OrganizationManagement() {
     toggleStatusMutation.mutate({ id, isActive: !currentStatus });
   };
 
+  // Real-time name availability checking
+  const checkNameAvailability = (name: string) => {
+    if (!name || name.length < 2) {
+      setNameAvailable(null);
+      return;
+    }
+
+    // Skip check if editing and name hasn't changed
+    if (editingOrg && editingOrg.name.toLowerCase() === name.toLowerCase()) {
+      setNameAvailable(true);
+      return;
+    }
+
+    const existingOrg = organizations.find(
+      org => org.name.toLowerCase() === name.toLowerCase() && org.id !== editingOrg?.id
+    );
+    
+    setNameAvailable(!existingOrg);
+  };
+
+  // Handle name input changes with debouncing
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    form.setValue("name", name);
+    
+    setCheckingName(true);
+    if (nameCheckTimeout) {
+      clearTimeout(nameCheckTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      checkNameAvailability(name);
+      setCheckingName(false);
+    }, 500);
+    
+    setNameCheckTimeout(timeout);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'hospital': return '🏥';
@@ -191,6 +250,13 @@ export default function OrganizationManagement() {
             setIsCreateModalOpen(false);
             setEditingOrg(null);
             form.reset();
+            // Reset validation state
+            setNameAvailable(null);
+            setCheckingName(false);
+            if (nameCheckTimeout) {
+              clearTimeout(nameCheckTimeout);
+              setNameCheckTimeout(null);
+            }
           }
         }}>
           <DialogTrigger asChild>
@@ -217,13 +283,37 @@ export default function OrganizationManagement() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Organization Name *</Label>
-                  <Input
-                    id="name"
-                    {...form.register("name")}
-                    placeholder="e.g., St. Mary's Clinic"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      {...form.register("name")}
+                      onChange={handleNameChange}
+                      placeholder="e.g., St. Mary's Clinic"
+                      className={`${
+                        nameAvailable === false ? 'border-red-500 focus:border-red-500' : 
+                        nameAvailable === true ? 'border-green-500 focus:border-green-500' : ''
+                      }`}
+                    />
+                    {checkingName && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin h-4 w-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                      </div>
+                    )}
+                    {!checkingName && nameAvailable === true && (
+                      <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-green-600" />
+                    )}
+                    {!checkingName && nameAvailable === false && (
+                      <XCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-600" />
+                    )}
+                  </div>
                   {form.formState.errors.name && (
                     <p className="text-sm text-red-600">{form.formState.errors.name.message}</p>
+                  )}
+                  {!checkingName && nameAvailable === false && (
+                    <p className="text-sm text-red-600">This organization name is already taken. Please choose a different name.</p>
+                  )}
+                  {!checkingName && nameAvailable === true && form.watch("name") && (
+                    <p className="text-sm text-green-600">This organization name is available!</p>
                   )}
                 </div>
 
@@ -323,7 +413,12 @@ export default function OrganizationManagement() {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || 
+                    updateMutation.isPending || 
+                    (!editingOrg && nameAvailable === false) ||
+                    checkingName
+                  }
                 >
                   {editingOrg ? "Update" : "Create"} Organization
                 </Button>
