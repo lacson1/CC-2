@@ -45,16 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  // Set up periodic session refresh
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      refreshUser();
-    }, 30000); // Refresh every 30 seconds
-
-    return () => clearInterval(interval);
-  }, [user]);
+  // Disabled periodic session refresh to prevent stability issues
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const interval = setInterval(() => {
+  //     refreshUser();
+  //   }, 30000);
+  //   return () => clearInterval(interval);
+  // }, [user]);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);

@@ -52,9 +52,9 @@ export default function Profile() {
   useEffect(() => {
     if (user) {
       form.reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        phone: user.phone || '',
+        firstName: '',  // User object doesn't contain firstName
+        lastName: '',   // User object doesn't contain lastName
+        phone: '',      // User object doesn't contain phone
       });
     }
   }, [user, form]);
