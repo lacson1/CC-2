@@ -20,6 +20,7 @@ import {
   ScrollText, Thermometer
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { getDisplayName, getInitials } from "@/utils/name-utils";
 import type { Patient } from "@shared/schema";
 import PatientRegistrationModal from "./patient-registration-modal";
 

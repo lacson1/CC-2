@@ -61,19 +61,24 @@ export function getFormalName(profile: UserProfile): string {
 export function getInitials(profile: UserProfile): string {
   const { firstName, lastName, username } = profile;
   
-  if (firstName || lastName) {
-    const firstInitial = firstName?.charAt(0)?.toUpperCase() || '';
-    const lastInitial = lastName?.charAt(0)?.toUpperCase() || '';
-    return `${firstInitial}${lastInitial}`;
+  // Ensure we're working with strings
+  const firstStr = typeof firstName === 'string' ? firstName.trim() : '';
+  const lastStr = typeof lastName === 'string' ? lastName.trim() : '';
+  const userStr = typeof username === 'string' ? username.trim() : '';
+  
+  if (firstStr || lastStr) {
+    const firstInitial = firstStr ? firstStr.charAt(0).toUpperCase() : '';
+    const lastInitial = lastStr ? lastStr.charAt(0).toUpperCase() : '';
+    return `${firstInitial}${lastInitial}` || 'U';
   }
   
   // Fallback to username initials
-  if (username) {
-    const parts = username.split(' ');
+  if (userStr) {
+    const parts = userStr.split(' ');
     if (parts.length >= 2) {
       return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
     }
-    return username.substring(0, 2).toUpperCase();
+    return userStr.substring(0, 2).toUpperCase();
   }
   
   return 'U';
