@@ -204,17 +204,34 @@ export default function PatientPortal() {
     }
   };
 
-  const handleDownloadReport = (visit: any) => {
-    const reportContent = generateMedicalReport(visit, patientSession);
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(reportContent);
-      printWindow.document.close();
-      printWindow.print();
+  const handleDownloadReport = async (visit: any) => {
+    try {
+      // Fetch current organization data for letterhead
+      const orgResponse = await fetch('/api/organizations');
+      const organizations = await orgResponse.json();
+      const currentOrg = organizations[0]; // Use first organization
+      
+      const reportContent = generateMedicalReport(visit, patientSession, currentOrg);
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(reportContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      // Fallback to report without org data
+      const reportContent = generateMedicalReport(visit, patientSession, null);
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(reportContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
     }
   };
 
-  const generateMedicalReport = (visit: any, patient: PatientSession | null): string => {
+  const generateMedicalReport = (visit: any, patient: PatientSession | null, organization: any = null): string => {
     const formatDate = (date: string | Date) => {
       return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -254,15 +271,15 @@ export default function PatientPortal() {
     </head>
     <body>
       <div class="letterhead">
-        <div class="org-logo">HC</div>
+        <div class="org-logo">${organization?.name?.charAt(0) || 'H'}${organization?.name?.split(' ')[1]?.charAt(0) || 'C'}</div>
         <div class="org-info">
-          <div class="org-name">HealthCare Connect</div>
+          <div class="org-name">${organization?.name || 'HealthCare Connect'}</div>
           <div class="org-details">
-            Advanced Digital Health Solutions<br>
-            Lagos State Medical Complex, Ikeja<br>
-            Phone: +234-1-234-5678 | Fax: +234-1-234-5679<br>
-            Email: info@healthcareconnect.ng | Emergency: +234-803-555-0123<br>
-            Medical License: NG-MED-2024-001 | CAP Accredited
+            ${organization?.description || 'Advanced Digital Health Solutions'}<br>
+            ${organization?.address || 'Lagos State Medical Complex, Ikeja'}<br>
+            Phone: ${organization?.phone || '+234-1-234-5678'} | Fax: ${organization?.fax || '+234-1-234-5679'}<br>
+            Email: ${organization?.email || 'info@healthcareconnect.ng'} | Emergency: ${organization?.emergencyContact || '+234-803-555-0123'}<br>
+            Medical License: ${organization?.licenseNumber || 'NG-MED-2024-001'} | ${organization?.accreditation || 'CAP Accredited'}
           </div>
         </div>
         <div style="clear: both;"></div>
@@ -356,14 +373,14 @@ export default function PatientPortal() {
       <div class="signature-area">
         <p><strong>Generated for Patient Portal Access</strong></p>
         <p>Report Generated: ${formatDate(new Date())}</p>
-        <p>This is an official medical document from HealthCare Connect</p>
+        <p>This is an official medical document from ${organization?.name || 'HealthCare Connect'}</p>
       </div>
 
       <div class="footer">
         <strong>Visit ID:</strong> VIS-${String(visit.id).padStart(3, '0')} | 
         <strong>Patient ID:</strong> P${String(patient?.id).padStart(6, '0')} | 
         <strong>Generated:</strong> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}<br>
-        <em>HealthCare Connect - Advanced Digital Health Solutions | www.healthcareconnect.ng</em>
+        <em>${organization?.name || 'HealthCare Connect'} - ${organization?.description || 'Advanced Digital Health Solutions'} | ${organization?.website || 'www.healthcareconnect.ng'}</em>
       </div>
     </body>
     </html>`;
