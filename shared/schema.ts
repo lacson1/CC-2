@@ -181,6 +181,26 @@ export const auditLogs = pgTable('audit_logs', {
   timestamp: timestamp('timestamp').defaultNow().notNull()
 });
 
+// Patient-Staff Secure Messages
+export const messages = pgTable('messages', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  staffId: integer('staff_id').references(() => users.id),
+  subject: varchar('subject', { length: 255 }).notNull(),
+  message: text('message').notNull(),
+  messageType: varchar('message_type', { length: 50 }).default('general').notNull(), // general, medical, appointment, lab_result
+  priority: varchar('priority', { length: 20 }).default('normal').notNull(), // low, normal, high, urgent
+  status: varchar('status', { length: 20 }).default('sent').notNull(), // sent, read, replied, archived
+  sentAt: timestamp('sent_at').defaultNow().notNull(),
+  readAt: timestamp('read_at'),
+  repliedAt: timestamp('replied_at'),
+  recipientType: varchar('recipient_type', { length: 50 }).default('Healthcare Team').notNull(),
+  recipientRole: varchar('recipient_role', { length: 50 }),
+  assignedTo: integer('assigned_to').references(() => users.id),
+  routingReason: text('routing_reason'),
+  organizationId: integer('organization_id').references(() => organizations.id),
+});
+
 export const labTests = pgTable('lab_tests', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
@@ -696,8 +716,17 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   timestamp: true,
 });
 
+export const insertMessageSchema = createInsertSchema(messages).omit({
+  id: true,
+  sentAt: true,
+  readAt: true,
+  repliedAt: true,
+});
+
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 // Procedural Reports
 export const proceduralReports = pgTable('procedural_reports', {
