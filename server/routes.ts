@@ -801,7 +801,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Patients routes - Medical staff only
   app.post("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
-      const patientData = insertPatientSchema.parse(req.body);
+      // Add the staff member's organization ID to ensure proper attribution
+      const patientData = insertPatientSchema.parse({
+        ...req.body,
+        organizationId: req.user?.organizationId
+      });
       const patient = await storage.createPatient(patientData);
       res.json(patient);
     } catch (error) {
@@ -977,7 +981,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Cleaned data:', JSON.stringify(cleanedData, null, 2));
       
-      const visitData = insertVisitSchema.parse({ ...cleanedData, patientId });
+      // Add the staff member's organization ID to ensure proper letterhead attribution
+      const visitData = insertVisitSchema.parse({ 
+        ...cleanedData, 
+        patientId,
+        doctorId: req.user?.id,
+        organizationId: req.user?.organizationId
+      });
       console.log('Parsed visit data:', JSON.stringify(visitData, null, 2));
       
       const visit = await storage.createVisit(visitData);
