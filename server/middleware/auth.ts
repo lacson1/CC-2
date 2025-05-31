@@ -29,18 +29,30 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
       return next();
     }
 
-    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+    jwt.verify(token, JWT_SECRET, async (err: any, user: any) => {
       if (err) {
         // Fallback for immediate access mode
         req.user = {
           id: 1,
           username: 'admin',
-          role: 'admin'
+          role: 'admin',
+          organizationId: 1
         };
         return next();
       }
       
-      req.user = user;
+      try {
+        // Fetch user's organization assignment from database
+        const userWithOrg = await storage.getUserWithOrganization(user.id);
+        req.user = {
+          ...user,
+          organizationId: userWithOrg?.organizationId || null
+        };
+      } catch (error) {
+        console.error('Failed to fetch user organization:', error);
+        req.user = user;
+      }
+      
       next();
     });
   } catch (error) {

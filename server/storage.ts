@@ -80,6 +80,7 @@ export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserWithOrganization(id: number): Promise<{ organizationId: number | null } | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Referrals
@@ -359,6 +360,13 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserWithOrganization(id: number): Promise<{ organizationId: number | null } | undefined> {
+    const [user] = await db.select({
+      organizationId: users.organizationId
+    }).from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
