@@ -1138,6 +1138,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update medicine quantity specifically for inventory management
+  app.patch("/api/medicines/:id/quantity", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const medicineId = parseInt(req.params.id);
+      const { quantity } = req.body;
+
+      if (!quantity || quantity < 0) {
+        return res.status(400).json({ error: "Valid quantity is required" });
+      }
+
+      const updatedMedicine = await storage.updateMedicineQuantity(medicineId, quantity);
+      
+      // Log the inventory update for audit purposes
+      if (req.auditLogger) {
+        await req.auditLogger.logMedicineAction('quantity_updated', medicineId, {
+          newQuantity: quantity,
+          updatedBy: req.user?.username
+        });
+      }
+
+      res.json(updatedMedicine);
+    } catch (error) {
+      console.error('Error updating medicine quantity:', error);
+      res.status(500).json({ error: "Failed to update medicine quantity" });
+    }
+  });
+
+  // Medicine reorder request
+  app.post("/api/medicines/reorder", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { medicineId, quantity, priority, notes } = req.body;
+
+      if (!medicineId || !quantity || !priority) {
+        return res.status(400).json({ error: "Medicine ID, quantity, and priority are required" });
+      }
+
+      // Get medicine details
+      const medicine = await db.select().from(medicines).where(eq(medicines.id, medicineId)).limit(1);
+      if (!medicine.length) {
+        return res.status(404).json({ error: "Medicine not found" });
+      }
+
+      // Create reorder request
+      const reorderRequest = {
+        medicineId,
+        medicineName: medicine[0].name,
+        quantity,
+        priority,
+        notes: notes || '',
+        requestedBy: req.user?.username || 'Unknown',
+        requestedAt: new Date(),
+        status: 'pending'
+      };
+
+      // Log the reorder request
+      if (req.auditLogger) {
+        await req.auditLogger.logMedicineAction('reorder_requested', medicineId, {
+          quantity,
+          priority,
+          notes,
+          requestedBy: req.user?.username
+        });
+      }
+
+      res.json({ 
+        message: "Reorder request submitted successfully",
+        reorderRequest 
+      });
+    } catch (error) {
+      console.error('Error creating reorder request:', error);
+      res.status(500).json({ error: "Failed to create reorder request" });
+    }
+  });
+
   // Dashboard stats
   app.get("/api/dashboard/stats", async (req, res) => {
     try {

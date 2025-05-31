@@ -17,6 +17,7 @@ import Visits from "@/pages/visits";
 import LabResults from "@/pages/lab-results";
 import Pharmacy from "@/pages/pharmacy";
 import EnhancedPharmacy from "@/pages/pharmacy-enhanced";
+import InventoryPage from "@/pages/inventory";
 import Referrals from "@/pages/referrals";
 import ProfilePage from "@/pages/profile";
 import UserManagementEnhanced from "@/pages/user-management-enhanced";
@@ -87,6 +88,7 @@ function AuthenticatedApp() {
                   <Route path="/lab-results" component={LabResults} />
                   <Route path="/pharmacy" component={Pharmacy} />
                   <Route path="/pharmacy-enhanced" component={EnhancedPharmacy} />
+                  <Route path="/inventory" component={InventoryPage} />
                   <Route path="/referrals" component={Referrals} />
                   <Route path="/appointments" component={AppointmentsPage} />
                   <Route path="/lab-orders" component={LabOrdersPage} />

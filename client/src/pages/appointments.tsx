@@ -441,10 +441,7 @@ export default function AppointmentsPage() {
         </Card>
       )}
 
-      {/* Enhanced Calendar View */}
-      <div className="mb-6">
-        <StableCalendar />
-      </div>
+      {/* Enhanced Calendar View - Temporarily disabled for stability */}
 
       {/* Appointments Display */}
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'list' | 'calendar')}>
