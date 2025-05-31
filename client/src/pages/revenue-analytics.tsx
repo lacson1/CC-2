@@ -54,48 +54,20 @@ export default function RevenueAnalytics() {
     enabled: true
   });
 
-  // Mock data structure for demonstration
-  const mockRevenueData = {
-    totalRevenue: 245000,
-    totalPatients: 156,
-    avgRevenuePerPatient: 1570,
-    growthRate: 12.5,
-    dailyRevenue: [
-      { date: '2024-01-01', revenue: 8500, patients: 12 },
-      { date: '2024-01-02', revenue: 9200, patients: 14 },
-      { date: '2024-01-03', revenue: 7800, patients: 11 },
-      { date: '2024-01-04', revenue: 10500, patients: 16 },
-      { date: '2024-01-05', revenue: 9800, patients: 15 },
-    ]
-  };
-
-  const paymentMethodData = [
-    { name: 'Cash', value: 45, amount: 110250 },
-    { name: 'Insurance', value: 35, amount: 85750 },
-    { name: 'Card', value: 15, amount: 36750 },
-    { name: 'Bank Transfer', value: 5, amount: 12250 }
-  ];
-
-  const serviceRevenueData = [
-    { service: 'Consultation', revenue: 98000, percentage: 40 },
-    { service: 'Laboratory', revenue: 61250, percentage: 25 },
-    { service: 'Pharmacy', revenue: 49000, percentage: 20 },
-    { service: 'Procedures', revenue: 24500, percentage: 10 },
-    { service: 'Imaging', revenue: 12250, percentage: 5 }
-  ];
-
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
   const exportReport = () => {
+    if (!revenueData || !serviceRevenue) return;
+    
     // Create CSV content
     const csvContent = `Revenue Analytics Report (${timeRange} days)\n\n` +
-      `Total Revenue,${mockRevenueData.totalRevenue}\n` +
-      `Total Patients,${mockRevenueData.totalPatients}\n` +
-      `Average Revenue per Patient,${mockRevenueData.avgRevenuePerPatient}\n` +
-      `Growth Rate,${mockRevenueData.growthRate}%\n\n` +
+      `Total Revenue,${revenueData.totalRevenue || 0}\n` +
+      `Total Patients,${revenueData.totalPatients || 0}\n` +
+      `Average Revenue per Patient,${revenueData.avgRevenuePerPatient || 0}\n` +
+      `Growth Rate,${revenueData.growthRate || 0}%\n\n` +
       `Service Revenue Breakdown\n` +
       `Service,Revenue,Percentage\n` +
-      serviceRevenueData.map(item => `${item.service},${item.revenue},${item.percentage}%`).join('\n');
+      (serviceRevenue || []).map((item: any) => `${item.service},${item.revenue},${item.percentage}%`).join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -151,14 +123,14 @@ export default function RevenueAnalytics() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Revenue</p>
                 <p className="text-2xl font-bold text-green-600">
-                  ₦{mockRevenueData.totalRevenue.toLocaleString()}
+                  ₦{revenueData?.totalRevenue?.toLocaleString() || '0'}
                 </p>
               </div>
               <DollarSign className="h-8 w-8 text-green-600" />
             </div>
             <div className="flex items-center mt-2">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-sm text-green-500">+{mockRevenueData.growthRate}%</span>
+              <span className="text-sm text-green-500">+{revenueData?.growthRate || 0}%</span>
               <span className="text-sm text-gray-500 ml-1">vs last period</span>
             </div>
           </CardContent>
@@ -189,7 +161,7 @@ export default function RevenueAnalytics() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Revenue/Patient</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  ₦{mockRevenueData.avgRevenuePerPatient.toLocaleString()}
+                  ₦{revenueData?.avgRevenuePerPatient?.toLocaleString() || '0'}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />

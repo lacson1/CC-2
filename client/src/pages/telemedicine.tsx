@@ -156,36 +156,7 @@ export default function TelemedicinePage() {
     });
   };
 
-  // Mock data for demonstration
-  const mockSessions: TeleconsultationSession[] = [
-    {
-      id: 1,
-      patientId: 5,
-      patientName: "Fatimah Ade",
-      doctorId: 2,
-      doctorName: "Dr. Robert",
-      scheduledTime: "2024-01-15T14:00:00",
-      status: "scheduled",
-      type: "video"
-    },
-    {
-      id: 2,
-      patientId: 3,
-      patientName: "Ade Bola",
-      doctorId: 2,
-      doctorName: "Dr. Robert",
-      scheduledTime: "2024-01-15T15:30:00",
-      status: "active",
-      type: "video",
-      sessionUrl: "https://meet.example.com/room123"
-    }
-  ];
 
-  const mockPatients = [
-    { id: 5, firstName: "Fatimah", lastName: "Ade" },
-    { id: 3, firstName: "Ade", lastName: "Bola" },
-    { id: 6, firstName: "Abike", lastName: "Jare" }
-  ];
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -382,7 +353,7 @@ export default function TelemedicinePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockSessions.map((session) => (
+            {sessions && sessions.map((session: any) => (
               <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
