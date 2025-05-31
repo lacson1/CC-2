@@ -70,10 +70,12 @@ export default function BillingPage() {
 
   // Create invoice mutation
   const createInvoiceMutation = useMutation({
-    mutationFn: (data: InvoiceFormData) => apiRequest('/api/invoices', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+    mutationFn: (data: InvoiceFormData) => 
+      fetch('/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/invoices'] });
       setShowCreateInvoice(false);
