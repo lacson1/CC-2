@@ -138,6 +138,7 @@ export const prescriptions = pgTable("prescriptions", {
   status: text("status").notNull().default("active"),
   startDate: timestamp("start_date").defaultNow().notNull(),
   endDate: timestamp("end_date"),
+  pharmacyId: integer("pharmacy_id").references(() => pharmacies.id), // Reference to selected pharmacy
   organizationId: integer('organization_id').references(() => organizations.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -348,6 +349,24 @@ export const pharmacyActivities = pgTable('pharmacy_activities', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+// Pharmacies table for prescription routing
+export const pharmacies = pgTable('pharmacies', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  address: text('address').notNull(),
+  phone: varchar('phone', { length: 20 }).notNull(),
+  email: varchar('email', { length: 100 }),
+  licenseNumber: varchar('license_number', { length: 50 }).notNull().unique(),
+  pharmacistInCharge: varchar('pharmacist_in_charge', { length: 100 }).notNull(),
+  operatingHours: varchar('operating_hours', { length: 100 }), // e.g., "Mon-Fri: 8AM-8PM, Sat: 9AM-5PM"
+  isActive: boolean('is_active').default(true).notNull(),
+  isPartner: boolean('is_partner').default(false).notNull(), // Partner pharmacy with direct integration
+  deliveryAvailable: boolean('delivery_available').default(false).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
 // Enhanced Medication Reviews
 export const medicationReviews = pgTable('medication_reviews', {
   id: serial('id').primaryKey(),
@@ -387,12 +406,15 @@ export const medicationReviews = pgTable('medication_reviews', {
 });
 
 // Type definitions for new tables
+export type Pharmacy = typeof pharmacies.$inferSelect;
+export type InsertPharmacy = typeof pharmacies.$inferInsert;
 export type PharmacyActivity = typeof pharmacyActivities.$inferSelect;
 export type InsertPharmacyActivity = typeof pharmacyActivities.$inferInsert;
 export type MedicationReview = typeof medicationReviews.$inferSelect;
 export type InsertMedicationReview = typeof medicationReviews.$inferInsert;
 
 // Insert schemas for forms
+export const insertPharmacySchema = createInsertSchema(pharmacies);
 export const insertPharmacyActivitySchema = createInsertSchema(pharmacyActivities);
 export const insertMedicationReviewSchema = createInsertSchema(medicationReviews);
 
