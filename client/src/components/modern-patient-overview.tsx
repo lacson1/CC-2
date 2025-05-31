@@ -363,6 +363,8 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
     }
   };
 
+
+
   const handleGenerateQRCode = async (prescription: any) => {
     try {
       // Create a human-readable prescription summary that displays properly when scanned
