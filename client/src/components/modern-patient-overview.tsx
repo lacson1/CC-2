@@ -547,8 +547,28 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
                     <h3 className="text-lg font-semibold text-slate-800">Current Medications</h3>
                     <div className="flex gap-2">
                       <Button 
-                        onClick={() => {
+                        onClick={async () => {
                           console.log('Manual refresh triggered for patient:', patient.id);
+                          try {
+                            const token = localStorage.getItem('token');
+                            console.log('Token exists:', !!token);
+                            const response = await fetch(`/api/patients/${patient.id}/prescriptions`, {
+                              headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                              }
+                            });
+                            console.log('Direct API call response:', response.status);
+                            if (response.ok) {
+                              const data = await response.json();
+                              console.log('Direct API call data:', data);
+                            } else {
+                              const errorText = await response.text();
+                              console.error('Direct API call error:', errorText);
+                            }
+                          } catch (error) {
+                            console.error('Manual fetch error:', error);
+                          }
                           queryClient.invalidateQueries(['/api/patients', patient.id, 'prescriptions']);
                         }}
                         variant="outline"
