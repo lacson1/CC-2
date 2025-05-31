@@ -647,8 +647,8 @@ Present this QR code for medication dispensing.`;
     queryFn: () => fetch(`/api/patients/${patient.id}/activity-trail`).then(res => res.json())
   });
 
-  // Filter activity trail based on selected filters
-  const filteredActivityTrail = activityTrail.filter((event: any) => {
+  // Filter activity trail based on selected filters - ensure activityTrail is an array
+  const filteredActivityTrail = Array.isArray(activityTrail) ? activityTrail.filter((event: any) => {
     switch (event.type) {
       case 'visit':
         return timelineFilters.visits;
@@ -662,7 +662,7 @@ Present this QR code for medication dispensing.`;
       default:
         return true;
     }
-  });
+  }) : [];
 
   return (
     <div className="space-y-4 min-h-screen w-full">
