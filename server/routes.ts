@@ -1224,10 +1224,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(prescription);
     } catch (error) {
       console.error('Prescription creation error:', error);
+      console.error('Request body:', req.body);
+      console.error('Processed data:', requestData);
       if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors);
         res.status(400).json({ message: "Invalid prescription data", errors: error.errors });
       } else {
-        res.status(500).json({ message: "Failed to create prescription" });
+        res.status(500).json({ message: "Failed to create prescription", error: error.message });
       }
     }
   });
