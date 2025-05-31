@@ -16,6 +16,7 @@ import { CalendarIcon, Clock, Plus, Search, User, Stethoscope, Filter, Grid3X3, 
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, addWeeks, subWeeks, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
+import { EnhancedAppointmentCalendar } from '@/components/enhanced-appointment-calendar';
 
 interface Patient {
   id: number;

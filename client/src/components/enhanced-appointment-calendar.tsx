@@ -62,25 +62,40 @@ export function EnhancedAppointmentCalendar() {
   // Fetch appointments for selected date
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['/api/appointments', selectedDate, selectedDoctor],
-    queryFn: () => apiRequest(`/api/appointments?date=${selectedDate}${selectedDoctor ? `&doctorId=${selectedDoctor}` : ''}`),
+    queryFn: async () => {
+      const url = `/api/appointments?date=${selectedDate}${selectedDoctor ? `&doctorId=${selectedDoctor}` : ''}`;
+      const response = await apiRequest(url);
+      return Array.isArray(response) ? response : [];
+    },
     refetchInterval: 30000
   });
 
   // Fetch doctors
   const { data: doctors = [] } = useQuery({
     queryKey: ['/api/users/doctors'],
-    queryFn: () => apiRequest('/api/users?role=doctor')
+    queryFn: async () => {
+      const response = await apiRequest('/api/users/doctors');
+      return Array.isArray(response) ? response : [];
+    }
   });
 
   // Fetch patients
   const { data: patients = [] } = useQuery({
     queryKey: ['/api/patients'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/patients');
+      return Array.isArray(response) ? response : [];
+    }
   });
 
   // Fetch availability slots
   const { data: availabilitySlots = [] } = useQuery({
     queryKey: ['/api/availability-slots', selectedDoctor],
-    queryFn: () => apiRequest(`/api/availability-slots${selectedDoctor ? `?doctorId=${selectedDoctor}` : ''}`),
+    queryFn: async () => {
+      const url = `/api/availability-slots${selectedDoctor ? `?doctorId=${selectedDoctor}` : ''}`;
+      const response = await apiRequest(url);
+      return Array.isArray(response) ? response : [];
+    },
     enabled: !!selectedDoctor
   });
 
