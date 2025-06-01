@@ -4661,28 +4661,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/files/medical", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const organizationId = req.user?.organizationId || 1;
+      console.log('Fetching medical documents for organization:', organizationId);
       
-      const result = await db
-        .select({
-          id: sql`${medicalDocuments.id}`.as('id'),
-          fileName: sql`${medicalDocuments.fileName}`.as('fileName'),
-          originalName: sql`${medicalDocuments.originalName}`.as('originalName'),
-          category: sql`${medicalDocuments.category}`.as('category'),
-          patientId: sql`${medicalDocuments.patientId}`.as('patientId'),
-          uploadedBy: sql`${medicalDocuments.uploadedBy}`.as('uploadedBy'),
-          uploadedAt: sql`${medicalDocuments.uploadedAt}`.as('uploadedAt'),
-          size: sql`${medicalDocuments.size}`.as('size'),
-          patient: {
-            firstName: sql`${patients.firstName}`.as('firstName'),
-            lastName: sql`${patients.lastName}`.as('lastName')
-          }
-        })
+      const documents = await db
+        .select()
         .from(medicalDocuments)
-        .leftJoin(patients, eq(medicalDocuments.patientId, patients.id))
         .where(eq(medicalDocuments.organizationId, organizationId))
         .orderBy(desc(medicalDocuments.uploadedAt));
 
-      res.json(result);
+      console.log('Found documents:', documents.length);
+
+      // Get patient info for documents that have patientId
+      const documentsWithPatients = await Promise.all(
+        documents.map(async (doc) => {
+          if (doc.patientId) {
+            const [patient] = await db
+              .select({ firstName: patients.firstName, lastName: patients.lastName })
+              .from(patients)
+              .where(eq(patients.id, doc.patientId));
+            
+            return {
+              ...doc,
+              patient: patient || null
+            };
+          }
+          return { ...doc, patient: null };
+        })
+      );
+
+      res.json(documentsWithPatients);
     } catch (error) {
       console.error('Error fetching medical documents:', error);
       res.status(500).json({ message: "Failed to fetch medical documents" });
