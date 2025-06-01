@@ -156,22 +156,22 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="p-0">
-            <div className="relative max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <div className="relative max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 border-t border-gray-200">
               {/* Timeline line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
               
-              <div className="space-y-4 p-4">
+              <div className="space-y-3 p-3">
                 {(consultationHistory as any[]).map((consultation: any, index: number) => (
                   <div key={consultation.id} className="relative flex items-start" data-testid="consultation-record">
-                    {/* Timeline dot */}
-                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                      <FileText className="w-5 h-5 text-white" />
+                    {/* Timeline dot - smaller */}
+                    <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow">
+                      <FileText className="w-4 h-4 text-white" />
                     </div>
                     
-                    {/* Consultation content - Compact version */}
-                    <div className="ml-4 flex-1">
+                    {/* Consultation content - Very compact version */}
+                    <div className="ml-3 flex-1">
                       <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-                        <CardContent className="p-3">
+                        <CardContent className="p-2">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex flex-col gap-1">
                               <h4 className="font-semibold text-base text-gray-900">
