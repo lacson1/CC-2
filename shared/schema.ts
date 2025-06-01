@@ -728,6 +728,28 @@ export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
+// Medical Documents Table
+export const medicalDocuments = pgTable('medical_documents', {
+  id: serial('id').primaryKey(),
+  fileName: varchar('file_name', { length: 255 }).notNull().unique(),
+  originalName: varchar('original_name', { length: 255 }).notNull(),
+  category: varchar('category', { length: 50 }).notNull(), // lab-results, prescriptions, medical-records, etc.
+  patientId: integer('patient_id').references(() => patients.id),
+  uploadedBy: integer('uploaded_by').references(() => users.id).notNull(),
+  uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
+  size: integer('size').notNull(),
+  mimeType: varchar('mime_type', { length: 100 }).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+});
+
+export const insertMedicalDocumentSchema = createInsertSchema(medicalDocuments).omit({
+  id: true,
+  uploadedAt: true,
+});
+
+export type MedicalDocument = typeof medicalDocuments.$inferSelect;
+export type InsertMedicalDocument = z.infer<typeof insertMedicalDocumentSchema>;
+
 // Procedural Reports
 export const proceduralReports = pgTable('procedural_reports', {
   id: serial('id').primaryKey(),

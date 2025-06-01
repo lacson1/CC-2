@@ -3,12 +3,13 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { fileStorage } from "./storage-service";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices, medicalDocuments } from "@shared/schema";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
 import { eq, desc, or, ilike, gte, lte, and, isNotNull, isNull, inArray, sql, notExists } from "drizzle-orm";
 import { authenticateToken, requireRole, requireAnyRole, requireSuperOrOrgAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
+import { tenantMiddleware, type TenantRequest } from "./middleware/tenant";
 
 // Extend AuthRequest interface to include patient authentication
 interface PatientAuthRequest extends AuthRequest {
@@ -4595,6 +4596,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error sending staff notifications:', error);
       res.status(500).json({ message: "Failed to send staff notifications" });
+    }
+  });
+
+  // Medical Documents API Endpoints
+  
+  // Get all medical documents for organization
+  app.get("/api/files/medical", authenticateToken, tenantMiddleware, async (req: TenantRequest, res) => {
+    try {
+      const result = await db
+        .select({
+          id: medicalDocuments.id,
+          fileName: medicalDocuments.fileName,
+          originalName: medicalDocuments.originalName,
+          category: medicalDocuments.category,
+          patientId: medicalDocuments.patientId,
+          uploadedBy: medicalDocuments.uploadedBy,
+          uploadedAt: medicalDocuments.uploadedAt,
+          size: medicalDocuments.size,
+          patient: {
+            firstName: patients.firstName,
+            lastName: patients.lastName
+          }
+        })
+        .from(medicalDocuments)
+        .leftJoin(patients, eq(medicalDocuments.patientId, patients.id))
+        .where(eq(medicalDocuments.organizationId, req.organizationId))
+        .orderBy(desc(medicalDocuments.uploadedAt));
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching medical documents:', error);
+      res.status(500).json({ message: "Failed to fetch medical documents" });
+    }
+  });
+
+  // Upload medical document
+  app.post("/api/upload/medical", authenticateToken, tenantMiddleware, upload.single('file'), async (req: TenantRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { category, patientId } = req.body;
+      if (!category) {
+        return res.status(400).json({ message: "Category is required" });
+      }
+
+      // Generate unique filename
+      const timestamp = Date.now();
+      const originalExtension = req.file.originalname.split('.').pop();
+      const fileName = `medical_${timestamp}_${Math.random().toString(36).substring(7)}.${originalExtension}`;
+
+      // Store file in uploads directory
+      const fs = require('fs');
+      const path = require('path');
+      const uploadsDir = path.join(process.cwd(), 'uploads', 'medical');
+      
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadsDir, fileName);
+      fs.writeFileSync(filePath, req.file.buffer);
+
+      // Save to database
+      const [document] = await db
+        .insert(medicalDocuments)
+        .values({
+          fileName,
+          originalName: req.file.originalname,
+          category,
+          patientId: patientId ? parseInt(patientId) : null,
+          uploadedBy: req.user!.id,
+          size: req.file.size,
+          mimeType: req.file.mimetype,
+          organizationId: req.organizationId
+        })
+        .returning();
+
+      res.json({
+        id: document.id,
+        fileName: document.fileName,
+        originalName: document.originalName,
+        category: document.category,
+        size: document.size,
+        uploadedAt: document.uploadedAt
+      });
+    } catch (error) {
+      console.error('Error uploading medical document:', error);
+      res.status(500).json({ message: "Failed to upload document" });
+    }
+  });
+
+  // Serve medical document files
+  app.get("/api/files/medical/:fileName", authenticateToken, tenantMiddleware, async (req: TenantRequest, res) => {
+    try {
+      const { fileName } = req.params;
+
+      // Verify document belongs to user's organization
+      const [document] = await db
+        .select()
+        .from(medicalDocuments)
+        .where(and(
+          eq(medicalDocuments.fileName, fileName),
+          eq(medicalDocuments.organizationId, req.organizationId)
+        ));
+
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'uploads', 'medical', fileName);
+
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Set appropriate headers
+      res.setHeader('Content-Type', document.mimeType);
+      res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
+      
+      const fileStream = fs.createReadStream(filePath);
+      fileStream.pipe(res);
+    } catch (error) {
+      console.error('Error serving medical document:', error);
+      res.status(500).json({ message: "Failed to serve document" });
+    }
+  });
+
+  // Delete medical document
+  app.delete("/api/files/medical/:fileName", authenticateToken, tenantMiddleware, async (req: TenantRequest, res) => {
+    try {
+      const { fileName } = req.params;
+
+      // Verify document belongs to user's organization
+      const [document] = await db
+        .select()
+        .from(medicalDocuments)
+        .where(and(
+          eq(medicalDocuments.fileName, fileName),
+          eq(medicalDocuments.organizationId, req.organizationId)
+        ));
+
+      if (!document) {
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      // Delete from database
+      await db
+        .delete(medicalDocuments)
+        .where(eq(medicalDocuments.fileName, fileName));
+
+      // Delete physical file
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'uploads', 'medical', fileName);
+      
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res.json({ message: "Document deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting medical document:', error);
+      res.status(500).json({ message: "Failed to delete document" });
     }
   });
 
