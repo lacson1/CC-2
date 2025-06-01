@@ -4949,13 +4949,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Patient authentication required' });
       }
 
-      const { subject, message, messageType = 'general', priority = 'normal' } = req.body;
+      const { subject, message, messageType = 'general', priority = 'normal', targetOrganizationId } = req.body;
       
       if (!subject || !message) {
         return res.status(400).json({ error: 'Subject and message are required' });
       }
 
-      // Get patient's organization for proper routing
+      // Get patient details
       const [patient] = await db.select()
         .from(patients)
         .where(eq(patients.id, patientId));
@@ -4964,10 +4964,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: 'Patient not found' });
       }
 
-      // Smart message routing logic
-      const routingInfo = await routeMessageToProvider(messageType, priority, patientId);
+      // Determine target organization - use specified target or default to Lagos Island Hospital
+      const targetOrgId = targetOrganizationId || 2; // Default to Lagos Island Hospital (ID: 2)
 
-      // Save message to database
+      // Smart message routing logic for the target organization
+      const routingInfo = await routeMessageToProvider(messageType, priority, patientId, targetOrgId);
+
+      // Save message to database with correct target organization
       const [savedMessage] = await db.insert(messages).values({
         patientId,
         staffId: routingInfo.assignedTo,
@@ -4980,7 +4983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientRole: routingInfo.recipientRole,
         assignedTo: routingInfo.assignedTo,
         routingReason: routingInfo.reason,
-        organizationId: patient.organizationId
+        organizationId: targetOrgId // Use target organization instead of patient's organization
       }).returning();
 
       res.status(201).json(savedMessage);
@@ -4991,16 +4994,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Smart message routing function
-  async function routeMessageToProvider(messageType: string, priority: string, patientId: number) {
+  async function routeMessageToProvider(messageType: string, priority: string, patientId: number, targetOrganizationId?: number) {
     try {
-      // Get available healthcare staff
+      // Get available healthcare staff from the target organization
+      const staffFilter = targetOrganizationId 
+        ? and(
+            inArray(users.role, ['doctor', 'nurse', 'pharmacist', 'physiotherapist', 'admin']),
+            eq(users.organizationId, targetOrganizationId)
+          )
+        : inArray(users.role, ['doctor', 'nurse', 'pharmacist', 'physiotherapist', 'admin']);
+
       const availableStaff = await db.select({
         id: users.id,
         username: users.username,
-        role: users.role
+        role: users.role,
+        organizationId: users.organizationId
       })
       .from(users)
-      .where(inArray(users.role, ['doctor', 'nurse', 'pharmacist', 'physiotherapist', 'admin']));
+      .where(staffFilter);
 
       // Smart routing based on message type
       let preferredRoles: string[] = [];
