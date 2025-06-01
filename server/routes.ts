@@ -3278,6 +3278,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle medical documents separately
       if (category === 'medical') {
+        console.log('=== MEDICAL DOCUMENT UPLOAD ===');
+        console.log('User info:', { id: req.user?.id, organizationId: req.user?.organizationId });
         console.log('Processing medical document upload...');
         const { category: docCategory, patientId } = req.body;
         
@@ -4661,6 +4663,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/files/medical", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const organizationId = req.user?.organizationId || 1;
+      console.log('=== FETCH MEDICAL DOCUMENTS ===');
+      console.log('User info:', { id: req.user?.id, organizationId: req.user?.organizationId });
       console.log('Fetching medical documents for organization:', organizationId);
       
       const documents = await db
