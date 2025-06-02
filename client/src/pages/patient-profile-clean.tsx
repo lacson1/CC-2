@@ -529,56 +529,80 @@ export default function PatientProfile() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto px-4 py-6 max-w-full">
         <div className="w-full max-w-none">
-          {/* Tabs for different sections */}
+          {/* Professional Tabs Navigation */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="bg-blue-50 rounded-xl p-2 mb-6">
-              <TabsList className="grid w-full grid-cols-8 bg-transparent gap-1">
+            <div className="bg-gradient-to-r from-white to-slate-50 border border-slate-200 rounded-xl p-3 mb-6 shadow-sm">
+              <TabsList className="grid w-full grid-cols-8 bg-transparent gap-2 h-auto p-0">
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <User className="w-4 h-4" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="vitals"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <Activity className="w-4 h-4" />
                   Vitals
                 </TabsTrigger>
                 <TabsTrigger 
                   value="visits"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <Calendar className="w-4 h-4" />
                   Visits
                 </TabsTrigger>
                 <TabsTrigger 
                   value="specialty"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
-                  Specialty Assessment
+                  <Stethoscope className="w-4 h-4" />
+                  Assessment
                 </TabsTrigger>
                 <TabsTrigger 
                   value="labs"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <FlaskRound className="w-4 h-4" />
                   Lab Results
                 </TabsTrigger>
                 <TabsTrigger 
                   value="medications"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <Pill className="w-4 h-4" />
                   Medications
                 </TabsTrigger>
                 <TabsTrigger 
                   value="documents"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <FileText className="w-4 h-4" />
                   Documents
                 </TabsTrigger>
                 <TabsTrigger 
                   value="chat"
-                  className="data-[state=active]:bg-blue-500 data-[state=active]:text-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 text-blue-700 hover:bg-blue-100"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
                 >
+                  <MessageCircle className="w-4 h-4" />
                   Chat
                 </TabsTrigger>
               </TabsList>
