@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { QRCodeSVG } from 'qrcode.react';
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   User, 
   Calendar, 
@@ -27,18 +29,36 @@ import {
   Edit,
   Brain,
   MessageCircle,
+  CheckCircle,
   Eye,
+  Thermometer,
   Ear,
   Search,
   X,
-  Printer
+  Printer,
+  ChevronDown,
+  BarChart3,
+  Settings,
+  MoreHorizontal,
+  QrCode,
+  RefreshCw,
+  Send,
+  Ban,
+  StopCircle,
+  RotateCcw,
+  TrendingUp,
+  AlertTriangle,
+  Droplets,
+  Wind,
+  Gauge
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
+import { VisitRecordingModal } from "@/components/visit-recording-modal";
 import LabResultModal from "@/components/lab-result-modal";
 import PrescriptionModal from "@/components/prescription-modal";
 import { EditPatientModal } from "@/components/edit-patient-modal";
 import PatientQRCard from "@/components/patient-qr-card";
+import ConsultationHistoryDisplay from "@/components/consultation-history-display";
 import PatientChat from "@/components/patient-chat";
 import LabOrderForm from "@/components/lab-order-form";
 import LabOrdersList from "@/components/lab-orders-list";
@@ -49,9 +69,18 @@ import AllergyManagement from "@/components/allergy-management";
 import MedicalHistoryManagement from "@/components/medical-history-management";
 
 import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
-import { ModernPatientOverview } from "@/components/modern-patient-overview";
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
+import PatientDocuments from "@/components/patient-documents";
+import PatientLabResults from "@/components/patient-lab-results";
+import PatientLabOrdersSummary from "@/components/patient-lab-orders-summary";
+import MedicationManagementTabs from "@/components/MedicationManagementTabs";
+import StandaloneVitalSignsRecorder from "@/components/standalone-vital-signs-recorder";
+import VitalSignsTrends from "@/components/vital-signs-trends";
+import VitalSignsAlerts from "@/components/vital-signs-alerts";
+import PatientTimeline from "@/components/patient-timeline";
+import DocumentActionButtons from "@/components/DocumentActionButtons";
+import PrescriptionPrintModal from "@/components/PrescriptionPrintModal";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
 interface Organization {
@@ -77,6 +106,32 @@ export default function PatientProfile() {
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
   const [preSelectedFormId, setPreSelectedFormId] = useState<number | null>(null);
   const [assessmentSearchTerm, setAssessmentSearchTerm] = useState('');
+  const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [showVisitDetails, setShowVisitDetails] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
+  const [showStandaloneVitals, setShowStandaloneVitals] = useState(false);
+  const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [showVitalsAlerts, setShowVitalsAlerts] = useState(false);
+  const [vitalsTimeRange, setVitalsTimeRange] = useState('30'); // Days to show
+  const [showPrescriptionPrintModal, setShowPrescriptionPrintModal] = useState(false);
+  const [selectedPrescriptionForPrint, setSelectedPrescriptionForPrint] = useState(null);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeData, setQRCodeData] = useState('');
+
+  // Handle lab orders navigation events
+  useEffect(() => {
+    const handleLabOrdersNavigation = () => {
+      setActiveTab("lab-orders");
+    };
+
+    window.addEventListener('switchToLabOrdersTab', handleLabOrdersNavigation);
+    window.addEventListener('switchToLabsTab', handleLabOrdersNavigation);
+
+    return () => {
+      window.removeEventListener('switchToLabOrdersTab', handleLabOrdersNavigation);
+      window.removeEventListener('switchToLabsTab', handleLabOrdersNavigation);
+    };
+  }, []);
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -88,15 +143,118 @@ export default function PatientProfile() {
     enabled: !!patientId,
   });
 
-  const { data: labResults, isLoading: labsLoading } = useQuery<LabResult[]>({
-    queryKey: ["/api/patients", patientId, "labs"],
+  const { data: labOrders, isLoading: labOrdersLoading } = useQuery({
+    queryKey: [`/api/patients/${patientId}/lab-orders`],
     enabled: !!patientId,
   });
 
   const { data: prescriptions, isLoading: prescriptionsLoading } = useQuery<Prescription[]>({
-    queryKey: ["/api/patients", patientId, "prescriptions"],
+    queryKey: [`/api/patients/${patientId}/prescriptions`],
     enabled: !!patientId,
   });
+
+  // Fetch standalone vital signs data
+  const { data: vitalSigns = [], isLoading: vitalsLoading } = useQuery({
+    queryKey: [`/api/patients/${patientId}/vitals`],
+    enabled: !!patientId,
+  });
+
+  // Filter visits based on selected time range
+  const filterVisitsByTimeRange = (visits: any[], days: string) => {
+    if (!visits) return [];
+    if (days === 'all') return visits;
+    
+    const daysToShow = parseInt(days);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToShow);
+    
+    return visits.filter(visit => {
+      const visitDate = new Date(visit.visitDate);
+      return visitDate >= cutoffDate;
+    });
+  };
+
+  const filteredVisits = filterVisitsByTimeRange(visits, vitalsTimeRange);
+  
+  // Helper function to determine vital sign status and color
+  const getVitalStatus = (type: string, value: any) => {
+    if (!value || value === 'N/A') return { status: 'No Data', color: 'text-gray-500', bgColor: 'from-gray-50 to-gray-100', borderColor: 'border-gray-500' };
+    
+    switch (type) {
+      case 'bloodPressure':
+        if (typeof value === 'string' && value.includes('/')) {
+          const [systolic, diastolic] = value.split('/').map(Number);
+          // European Heart Association guidelines
+          if (systolic >= 180 || diastolic >= 110) {
+            return { status: 'Grade 3 Hypertension', color: 'text-red-800', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-500' };
+          } else if (systolic >= 160 || diastolic >= 100) {
+            return { status: 'Grade 2 Hypertension', color: 'text-red-700', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-400' };
+          } else if (systolic >= 140 || diastolic >= 90) {
+            return { status: 'Grade 1 Hypertension', color: 'text-orange-800', bgColor: 'from-orange-50 to-orange-100', borderColor: 'border-orange-500' };
+          } else if (systolic >= 130 || diastolic >= 85) {
+            return { status: 'High Normal', color: 'text-yellow-800', bgColor: 'from-yellow-50 to-yellow-100', borderColor: 'border-yellow-500' };
+          } else if (systolic < 90 || diastolic < 60) {
+            return { status: 'Low', color: 'text-blue-800', bgColor: 'from-blue-50 to-blue-100', borderColor: 'border-blue-500' };
+          }
+        }
+        return { status: 'Optimal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
+      
+      case 'heartRate':
+        const hr = typeof value === 'string' ? parseInt(value) : value;
+        if (hr < 60) {
+          return { status: 'Low', color: 'text-orange-800', bgColor: 'from-orange-50 to-orange-100', borderColor: 'border-orange-500' };
+        } else if (hr > 100) {
+          return { status: 'High', color: 'text-red-800', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-500' };
+        }
+        return { status: 'Normal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
+      
+      case 'temperature':
+        const temp = typeof value === 'string' ? parseFloat(value) : value;
+        if (temp < 36.1) {
+          return { status: 'Low', color: 'text-blue-800', bgColor: 'from-blue-50 to-blue-100', borderColor: 'border-blue-500' };
+        } else if (temp > 37.2) {
+          return { status: 'High', color: 'text-red-800', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-500' };
+        }
+        return { status: 'Normal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
+      
+      default:
+        return { status: 'Normal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
+    }
+  };
+
+  // Calculate summary statistics for filtered data
+  const calculateVitalStats = (visits: any[]) => {
+    const visitsWithVitals = visits?.filter(v => v.bloodPressure || v.heartRate || v.temperature) || [];
+    if (visitsWithVitals.length === 0) return null;
+    
+    const bpValues = visitsWithVitals.filter(v => v.bloodPressure).map(v => v.bloodPressure);
+    const hrValues = visitsWithVitals.filter(v => v.heartRate).map(v => parseInt(v.heartRate));
+    const tempValues = visitsWithVitals.filter(v => v.temperature).map(v => parseFloat(v.temperature));
+    
+    const avgBp = bpValues.length > 0 ? bpValues[0] : 'N/A';
+    const avgHr = hrValues.length > 0 ? Math.round(hrValues.reduce((a, b) => a + b, 0) / hrValues.length) : 'N/A';
+    const avgTemp = tempValues.length > 0 ? (tempValues.reduce((a, b) => a + b, 0) / tempValues.length).toFixed(1) : 'N/A';
+    
+    return {
+      bloodPressure: {
+        trend: getVitalStatus('bloodPressure', avgBp).status,
+        average: avgBp,
+        ...getVitalStatus('bloodPressure', avgBp)
+      },
+      heartRate: {
+        trend: getVitalStatus('heartRate', avgHr).status,
+        average: avgHr,
+        ...getVitalStatus('heartRate', avgHr)
+      },
+      temperature: {
+        trend: getVitalStatus('temperature', avgTemp).status,
+        average: avgTemp,
+        ...getVitalStatus('temperature', avgTemp)
+      }
+    };
+  };
+
+  const vitalStats = calculateVitalStats(filteredVisits);
 
   // Fetch organization data for branding
   const { data: organizations = [] } = useQuery<Organization[]>({
@@ -107,6 +265,83 @@ export default function PatientProfile() {
   const currentOrganization = Array.isArray(organizations) 
     ? organizations.find(org => org.id === (user as any)?.organizationId)
     : undefined;
+
+  // Functional handlers for action buttons
+  const handleViewVisit = (visit: any) => {
+    setSelectedVisit(visit);
+    setShowVisitDetails(true);
+  };
+
+  const handlePrintVisit = (visit: any) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Visit Record - ${patient?.firstName} ${patient?.lastName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .section { margin-bottom: 20px; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>Visit Record</h2>
+              <p>Patient: ${patient?.firstName} ${patient?.lastName}</p>
+              <p>Date: ${new Date(visit.visitDate).toLocaleDateString()}</p>
+            </div>
+            <div class="section">
+              <div class="label">Visit Type:</div>
+              <p>${visit.visitType}</p>
+            </div>
+            <div class="section">
+              <div class="label">Chief Complaint:</div>
+              <p>${visit.complaint || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Diagnosis:</div>
+              <p>${visit.diagnosis || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Treatment:</div>
+              <p>${visit.treatment || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Vital Signs:</div>
+              <p>Blood Pressure: ${visit.bloodPressure || 'N/A'}</p>
+              <p>Heart Rate: ${visit.heartRate || 'N/A'}</p>
+              <p>Temperature: ${visit.temperature || 'N/A'}</p>
+              <p>Weight: ${visit.weight || 'N/A'}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleCompletePrescription = async (prescription: any) => {
+    try {
+      const response = await fetch(`/api/prescriptions/${prescription.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      if (response.ok) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to complete prescription:', error);
+    }
+  };
+
+  const handlePrintPrescription = (prescription: any) => {
+    setSelectedPrescriptionForPrint(prescription);
+    setShowPrescriptionPrintModal(true);
+  };
 
   // Fetch consultation forms for specialty assessments
   const { data: consultationForms = [] } = useQuery({
@@ -243,36 +478,91 @@ export default function PatientProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Comprehensive Patient Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-6">
-        <div className="space-y-4">
-          {/* Patient Identity & Basic Info */}
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-4">
-              <Avatar className="w-16 h-16">
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl font-semibold">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-white">
+      {/* Premium Compact Header */}
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          {/* Patient Identity & Actions Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-12 h-12 ring-2 ring-blue-100 ring-offset-2">
+                <AvatarFallback className="bg-gradient-to-br from-blue-600 to-blue-700 text-white text-lg font-semibold">
                   {patient.firstName?.[0]?.toUpperCase()}{patient.lastName?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold text-gray-900">
-                  {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
-                </h1>
-                <div className="flex items-center gap-6 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <User className="w-4 h-4" />
-                    Patient ID: HC{patient.id?.toString().padStart(6, "0")}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} years • {patient.gender}
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-slate-900">
+                    {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
+                  </h1>
+                  <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                    HC{patient.id?.toString().padStart(6, "0")}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-slate-600">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {new Date(patient.dateOfBirth).toLocaleDateString()}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <User className="w-3.5 h-3.5" />
+                    {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} years
+                  </span>
+                  <Badge variant="outline" className="text-xs capitalize">
+                    {patient.gender}
                   </Badge>
                 </div>
               </div>
+            </div>
+            
+            {/* Quick Action Buttons */}
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="bg-white/50">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-64">
+                  <DropdownMenuItem onClick={() => setActiveTab("overview")}>
+                    <User className="w-4 h-4 mr-2" />
+                    Patient Overview
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("vitals")}>
+                    <Thermometer className="w-4 h-4 mr-2" />
+                    Vital Signs
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("visits")}>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Visits History
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("specialty")}>
+                    <Brain className="w-4 h-4 mr-2" />
+                    Specialty Assessment
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("labs")}>
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Lab Results
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("medications")}>
+                    <Pill className="w-4 h-4 mr-2" />
+                    Medications
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("documents")}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Documents
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab("chat")}>
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Patient Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Patient Settings
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -318,7 +608,7 @@ export default function PatientProfile() {
               <div className="flex items-center gap-2">
                 <FlaskRound className="w-4 h-4 text-green-500" />
                 <span className="font-medium">Lab Results:</span>
-                <Badge variant="outline">{labResults?.length || 0}</Badge>
+                <Badge variant="outline">{labOrders?.length || 0}</Badge>
               </div>
               <div className="flex items-center gap-2">
                 <Pill className="w-4 h-4 text-purple-500" />
@@ -339,47 +629,160 @@ export default function PatientProfile() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto px-4 py-6 max-w-full">
-        <div className="w-full max-w-none">
-          {/* Tabs for different sections */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="visits">Visits</TabsTrigger>
-              <TabsTrigger value="specialty">Specialty Assessment</TabsTrigger>
-              <TabsTrigger value="labs">Lab Results</TabsTrigger>
-              <TabsTrigger value="medications">Medications</TabsTrigger>
-              <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
+      <main className="flex-1 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 py-6 h-full">
+          {/* Professional Compact Navigation */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+            <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl px-4 py-3 mb-6 shadow-sm">
+              <TabsList className="grid w-full grid-cols-8 bg-slate-50/50 gap-1 h-11 p-1 rounded-lg">
+                <TabsTrigger 
+                  value="overview" 
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm 
+                           rounded-md transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-white/50
+                           font-medium py-2 px-3 text-sm flex items-center justify-center gap-2 h-9"
+                >
+                  <User className="w-4 h-4" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="timeline"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <Clock className="w-4 h-4" />
+                  Timeline
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="vitals"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <Activity className="w-4 h-4" />
+                  Vitals
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="visits"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Visits
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="specialty"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  Assessment
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="labs"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <FlaskRound className="w-4 h-4" />
+                  Lab Results
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="medications"
+                  className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:border-blue-600 
+                           rounded-lg transition-all duration-300 ease-in-out text-slate-700 hover:bg-blue-50 hover:text-blue-700 border border-transparent
+                           font-medium py-3 px-4 text-sm flex items-center justify-center gap-2 min-h-[44px]"
+                >
+                  <Pill className="w-4 h-4" />
+                  Medications
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="documents"
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm 
+                           rounded-md transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-white/50
+                           font-medium py-2 px-3 text-sm flex items-center justify-center gap-2 h-9"
+                >
+                  <FileText className="w-4 h-4" />
+                  Documents
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="chat"
+                  className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm 
+                           rounded-md transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-white/50
+                           font-medium py-2 px-3 text-sm flex items-center justify-center gap-2 h-9"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat
+                </TabsTrigger>
+              </TabsList>
+            </div>
             
-            <TabsContent value="overview" className="space-y-6">
-              {/* Patient Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Recent Activity */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Clock className="w-5 h-5" />
-                      Recent Activity
+            <TabsContent value="overview" className="flex-1 space-y-6 overflow-y-auto">
+              {/* Compact Overview Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {/* Timeline Summary */}
+                <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200/50 hover:shadow-md transition-all duration-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      Timeline Summary
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {visits?.slice(0, 3).map((visit: any) => (
-                        <div key={visit.id} className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{visit.reason}</p>
-                            <p className="text-sm text-gray-500">{new Date(visit.visitDate).toLocaleDateString()}</p>
-                          </div>
-                          <Badge variant="outline">{visit.status}</Badge>
-                        </div>
-                      ))}
+                  <CardContent className="pt-0 space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-slate-600">
+                        <Stethoscope className="w-3.5 h-3.5 text-blue-600" />
+                        Visits
+                      </span>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">
+                        {visits?.length || 0}
+                      </Badge>
                     </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-slate-600">
+                        <FlaskRound className="w-3.5 h-3.5 text-green-600" />
+                        Lab Orders
+                      </span>
+                      <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                        {labOrders?.length || 0}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-slate-600">
+                        <Pill className="w-3.5 h-3.5 text-purple-600" />
+                        Prescriptions
+                      </span>
+                      <Badge variant="secondary" className="bg-purple-100 text-purple-700 text-xs">
+                        {prescriptions?.length || 0}
+                      </Badge>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full mt-3 text-blue-600 hover:bg-blue-50 h-8"
+                      onClick={() => setActiveTab("timeline")}
+                    >
+                      View Timeline
+                    </Button>
                   </CardContent>
                 </Card>
 
-                {/* Vital Signs */}
+                {/* Lab Orders Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FlaskRound className="w-5 h-5 text-green-500" />
+                      Lab Orders
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PatientLabOrdersSummary patientId={patient.id} />
+                  </CardContent>
+                </Card>
+
+                {/* Vital Signs Dashboard */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -388,46 +791,37 @@ export default function PatientProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {visits && visits.length > 0 && (visits[0].bloodPressure || visits[0].heartRate || visits[0].temperature || visits[0].weight) ? (
-                      <div className="space-y-3">
-                        {visits[0].bloodPressure && (
-                          <div className="flex justify-between items-center p-2 bg-red-50 rounded">
-                            <span className="text-red-700 font-medium">Blood Pressure:</span>
-                            <span className="font-semibold text-red-900">{visits[0].bloodPressure}</span>
+                    {vitalSigns && vitalSigns.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {vitalSigns[0].bloodPressureSystolic && vitalSigns[0].bloodPressureDiastolic && (
+                          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-center">
+                            <div className="text-red-600 text-xs font-medium">BP</div>
+                            <div className="text-lg font-bold text-red-800">{vitalSigns[0].bloodPressureSystolic}/{vitalSigns[0].bloodPressureDiastolic}</div>
                           </div>
                         )}
-                        {visits[0].heartRate && (
-                          <div className="flex justify-between items-center p-2 bg-pink-50 rounded">
-                            <span className="text-pink-700 font-medium">Heart Rate:</span>
-                            <span className="font-semibold text-pink-900">{visits[0].heartRate} bpm</span>
+                        {vitalSigns[0].heartRate && (
+                          <div className="p-3 bg-pink-50 border border-pink-200 rounded-lg text-center">
+                            <div className="text-pink-600 text-xs font-medium">HR</div>
+                            <div className="text-lg font-bold text-pink-800">{vitalSigns[0].heartRate}</div>
                           </div>
                         )}
-                        {visits[0].temperature && (
-                          <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
-                            <span className="text-orange-700 font-medium">Temperature:</span>
-                            <span className="font-semibold text-orange-900">{visits[0].temperature}°C</span>
+                        {vitalSigns[0].temperature && (
+                          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                            <div className="text-orange-600 text-xs font-medium">Temp</div>
+                            <div className="text-lg font-bold text-orange-800">{vitalSigns[0].temperature}°C</div>
                           </div>
                         )}
-                        {visits[0].weight && (
-                          <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
-                            <span className="text-blue-700 font-medium">Weight:</span>
-                            <span className="font-semibold text-blue-900">{visits[0].weight} kg</span>
+                        {vitalSigns[0].weight && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                            <div className="text-blue-600 text-xs font-medium">Weight</div>
+                            <div className="text-lg font-bold text-blue-800">{vitalSigns[0].weight}kg</div>
                           </div>
                         )}
-                        {visits[0].height && (
-                          <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                            <span className="text-green-700 font-medium">Height:</span>
-                            <span className="font-semibold text-green-900">{visits[0].height} cm</span>
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-2 text-center">
-                          Last recorded: {new Date(visits[0].visitDate).toLocaleDateString()}
-                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-4">
                         <Heart className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">No vital signs recorded</p>
+                        <p className="text-sm text-gray-500">No vitals recorded</p>
                       </div>
                     )}
                   </CardContent>
@@ -442,23 +836,23 @@ export default function PatientProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="grid grid-cols-1 gap-3">
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => setShowVisitModal(true)}
-                        className="justify-start"
+                        className="justify-start btn-outline hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-4 h-4 mr-2 icon-professional text-blue-600" />
                         Record Visit
                       </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setShowLabModal(true)}
-                        className="justify-start"
+                        onClick={() => setActiveTab("lab-orders")}
+                        className="justify-start btn-outline hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-200"
                       >
-                        <FlaskRound className="w-4 h-4 mr-2" />
+                        <FlaskRound className="w-4 h-4 mr-2 icon-professional text-emerald-600" />
                         Order Lab Test
                       </Button>
                       {(user?.role === 'doctor' || user?.role === 'admin') && (
@@ -466,197 +860,156 @@ export default function PatientProfile() {
                           variant="outline" 
                           size="sm" 
                           onClick={() => setShowPrescriptionModal(true)}
-                          className="justify-start"
+                          className="justify-start btn-outline hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
                         >
-                          <Pill className="w-4 h-4 mr-2" />
+                          <Pill className="w-4 h-4 mr-2 icon-professional text-purple-600" />
                           Prescribe Medication
                         </Button>
                       )}
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setShowChatModal(true)}
-                        className="justify-start"
+                        onClick={() => setActiveTab('chat')}
+                        className="justify-start btn-outline hover:bg-indigo-50 hover:border-indigo-300 transition-all duration-200"
                       >
-                        <MessageCircle className="w-4 h-4 mr-2" />
+                        <MessageCircle className="w-4 h-4 mr-2 icon-professional text-indigo-600" />
                         Send Message
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Enhanced Vitals Tracking Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-green-500" />
-                    Vital Signs History
-                  </CardTitle>
-                  <CardDescription>Track patient vitals over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {visits && visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length > 0 ? (
-                    <div className="space-y-4">
-                      {visits
-                        .filter(v => v.bloodPressure || v.heartRate || v.temperature)
-                        .slice(0, 5)
-                        .map((visit: any) => (
-                          <div key={visit.id} className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-green-50">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="text-sm font-medium text-gray-600">
-                                {new Date(visit.visitDate).toLocaleDateString()}
-                              </div>
-                              <Badge variant="outline">{visit.status}</Badge>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              {visit.bloodPressure && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">BP</div>
-                                  <div className="font-semibold text-red-600">{visit.bloodPressure}</div>
-                                </div>
-                              )}
-                              {visit.heartRate && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">HR</div>
-                                  <div className="font-semibold text-pink-600">{visit.heartRate} bpm</div>
-                                </div>
-                              )}
-                              {visit.temperature && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">Temp</div>
-                                  <div className="font-semibold text-orange-600">{visit.temperature}°C</div>
-                                </div>
-                              )}
-                              {visit.weight && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">Weight</div>
-                                  <div className="font-semibold text-blue-600">{visit.weight} kg</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Activity className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No vitals history</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Vital signs will appear here when recorded during visits.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="visits" className="space-y-6">
-              <ConsultationFormSelector 
-                patientId={patient.id} 
-                patient={patient}
-                preSelectedFormId={preSelectedFormId}
-              />
-              
-              {/* Chat Integration */}
+              {/* Nursing Quick Actions Panel */}
+              {(user?.role === 'nurse' || user?.role === 'admin') && (
+                <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="w-5 h-5 text-green-600" />
+                      Nursing Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Quick access to common nursing tasks and patient care activities.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setShowStandaloneVitals(true)}
+                        className="justify-start btn-outline hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+                      >
+                        <Activity className="w-4 h-4 mr-2 text-green-600" />
+                        Record Vitals
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setActiveTab('prescriptions')}
+                        className="justify-start btn-outline hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                      >
+                        <Pill className="w-4 h-4 mr-2 text-blue-600" />
+                        Check Medications
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setActiveTab('lab')}
+                        className="justify-start btn-outline hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                      >
+                        <FlaskRound className="w-4 h-4 mr-2 text-purple-600" />
+                        Lab Preparation
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setActiveTab('chat')}
+                        className="justify-start btn-outline hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
+                      >
+                        <MessageCircle className="w-4 h-4 mr-2 text-orange-600" />
+                        Patient Notes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Visit Recording Interface */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-blue-500" />
-                    Patient Communication
+                    <Stethoscope className="w-5 h-5 text-blue-500" />
+                    Record Patient Visit
                   </CardTitle>
-                  <CardDescription>Send messages and view communication history</CardDescription>
+                  <CardDescription>
+                    Record comprehensive visit details including vital signs, symptoms, diagnosis, and treatment plans.
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PatientChat patientId={patient.id} />
+                  <Button 
+                    onClick={() => setShowVisitModal(true)}
+                    className="btn-primary shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Plus className="mr-2 h-4 w-4 icon-professional" />
+                    Start New Visit Recording
+                  </Button>
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            <TabsContent value="labs" className="space-y-6">
-              {/* Lab Results Section */}
+              {/* Recent Visits & Consultations */}
               <Card>
                 <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FlaskRound className="w-5 h-5 text-green-500" />
-                        Laboratory Results
-                      </CardTitle>
-                      <CardDescription>View and manage lab test results</CardDescription>
-                    </div>
-                    <Button 
-                      onClick={() => setShowLabModal(true)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Order Lab Test
-                    </Button>
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5 text-gray-500" />
+                    Recent Visits & Consultations
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {labResults && labResults.length > 0 ? (
+                  {visits && visits.length > 0 ? (
                     <div className="space-y-4">
-                      {labResults.map((result: any) => (
-                        <div key={result.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      {visits.map((visit: any) => (
+                        <div key={visit.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold text-lg">{result.testName}</h4>
-                                <Badge variant={result.status === 'completed' ? 'default' : 'secondary'}>
-                                  {result.status}
+                                <Badge variant="outline" className="text-blue-600">
+                                  consultation
                                 </Badge>
-                                {result.status === 'completed' && result.result && (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    Results Available
-                                  </Badge>
-                                )}
+                                <span className="text-sm text-gray-500">{visit.visitDate}</span>
                               </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Test Date</span>
-                                  <p className="text-gray-900">{new Date(result.testDate).toLocaleDateString()}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Category</span>
-                                  <p className="text-gray-900">{result.category || 'General'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Ordered By</span>
-                                  <p className="text-gray-900">Dr. {result.doctorName || 'Unknown'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Priority</span>
-                                  <p className="text-gray-900">{result.priority || 'Normal'}</p>
-                                </div>
-                              </div>
-                              
-                              {result.result && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                  <span className="font-medium text-blue-800 block mb-1">Results:</span>
-                                  <p className="text-blue-900 text-sm">{result.result}</p>
-                                  {result.normalRange && (
-                                    <p className="text-blue-700 text-xs mt-1">Normal Range: {result.normalRange}</p>
-                                  )}
-                                </div>
+                              <h4 className="font-semibold text-lg mb-1">{visit.reasonForVisit}</h4>
+                              {visit.diagnosis && (
+                                <p className="text-sm text-gray-600 mb-2">
+                                  <strong>Diagnosis:</strong> {visit.diagnosis}
+                                </p>
                               )}
-                              
-                              {result.notes && (
-                                <div className="mt-2 text-sm text-gray-600">
-                                  <span className="font-medium">Notes:</span> {result.notes}
+                              {visit.vitalSigns && (
+                                <div className="text-sm text-gray-600">
+                                  <strong>Vitals:</strong> BP: {visit.vitalSigns.bloodPressure || 'N/A'} | HR: {visit.vitalSigns.heartRate || 'N/A'}
                                 </div>
                               )}
                             </div>
-                            
-                            <div className="flex flex-col gap-2 ml-4">
-                              <Button variant="ghost" size="sm" onClick={() => console.log('View lab result:', result.id)}>
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewVisit(visit)}
+                                title="View Visit Details"
+                                className="btn-icon-secondary hover:bg-blue-50 hover:border-blue-300"
+                              >
+                                <Eye className="w-4 h-4 icon-professional text-blue-600" />
                               </Button>
-                              <Button variant="ghost" size="sm" onClick={() => console.log('Print lab result:', result.id)}>
-                                <Printer className="w-4 h-4 mr-1" />
-                                Print
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handlePrintVisit(visit)}
+                                title="Print Visit Record"
+                                className="btn-icon-secondary hover:bg-green-50 hover:border-green-300"
+                              >
+                                <FileText className="w-4 h-4 icon-professional text-green-600" />
                               </Button>
                             </div>
                           </div>
@@ -664,26 +1017,72 @@ export default function PatientProfile() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8">
-                      <FlaskRound className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No lab results yet</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Lab test results will appear here when available. Click "Order Lab Test" to request new tests.
-                      </p>
-                      <Button 
-                        onClick={() => setShowLabModal(true)}
-                        className="mt-4 bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Order First Lab Test
-                      </Button>
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No visits recorded yet</p>
+                      <p className="text-sm">Start by recording a new visit</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
             </TabsContent>
 
+            <TabsContent value="labs" className="space-y-6">
+              <PatientLabResults patientId={patient.id} />
+            </TabsContent>
+
             <TabsContent value="medications">
+              {/* Pharmacist Quick Actions Panel */}
+              {(user?.role === 'pharmacist' || user?.role === 'admin') && (
+                <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200 mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Pill className="w-5 h-5 text-purple-600" />
+                      Pharmacy Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Quick access to pharmacy verification, dispensing, and patient counseling tools.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                      >
+                        <CheckSquare className="w-4 h-4 mr-2 text-purple-600" />
+                        Verify Prescriptions
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+                      >
+                        <Package className="w-4 h-4 mr-2 text-green-600" />
+                        Mark Dispensed
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
+                      >
+                        <AlertTriangle className="w-4 h-4 mr-2 text-orange-600" />
+                        Check Interactions
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
+                        Patient Counseling
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -692,799 +1091,39 @@ export default function PatientProfile() {
                     </CardTitle>
                   </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="current" className="w-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-                        <TabsTrigger value="current" className="flex items-center gap-2">
-                          <Pill className="w-4 h-4" />
-                          Current ({prescriptions?.filter(p => p.status === 'active')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="past" className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Past ({prescriptions?.filter(p => p.status === 'completed')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="repeat" className="flex items-center gap-2">
-                          <Activity className="w-4 h-4" />
-                          Repeat ({prescriptions?.filter(p => p.duration?.includes('Ongoing'))?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="summary" className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          Summary
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      {(user?.role === 'doctor' || user?.role === 'admin') && (
-                        <Button 
-                          onClick={() => setShowPrescriptionModal(true)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Prescribe Medication
-                        </Button>
-                      )}
-                    </div>
-
-                    <TabsContent value="current" className="space-y-4">
-                      {prescriptions?.filter(p => p.status === 'active').length > 0 ? (
-                        <div className="grid gap-4">
-                          {prescriptions
-                            .filter((prescription: any) => prescription.status === 'active')
-                            .map((prescription: any) => (
-                              <div key={prescription.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <h4 className="font-semibold text-slate-800 text-lg">
-                                        {prescription.medicationName}
-                                      </h4>
-                                      <Badge className="bg-green-100 text-green-800 border-green-200">
-                                        Active
-                                      </Badge>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Dosage</span>
-                                        <p className="text-slate-900">{prescription.dosage}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Frequency</span>
-                                        <p className="text-slate-900">{prescription.frequency}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Duration</span>
-                                        <p className="text-slate-900">{prescription.duration}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Start Date</span>
-                                        <p className="text-slate-900">{prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : 'N/A'}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    {prescription.instructions && (
-                                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                                        <span className="font-medium text-blue-800 block mb-1">Instructions:</span>
-                                        <p className="text-blue-900 text-sm">{prescription.instructions}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex flex-col gap-2 ml-4">
-                                    {(user?.role === 'doctor' || user?.role === 'admin') && (
-                                      <>
-                                        <Button variant="outline" size="sm" onClick={() => console.log('Complete medication:', prescription.id)}>
-                                          Complete
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => console.log('Print prescription:', prescription.id)}>
-                                          <Printer className="w-4 h-4 mr-1" />
-                                          Print
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Pill className="mx-auto h-12 w-12 text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No active medications</h3>
-                          <p className="mt-2 text-sm text-gray-500">This patient currently has no active medications.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="past" className="space-y-4">
-                      {prescriptions?.filter(p => p.status === 'completed').length > 0 ? (
-                        <div className="grid gap-4">
-                          {prescriptions
-                            .filter((prescription: any) => prescription.status === 'completed')
-                            .map((prescription: any) => (
-                              <div key={prescription.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <h4 className="font-semibold text-gray-700">{prescription.medicationName}</h4>
-                                      <Badge variant="secondary">Completed</Badge>
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      <p>Dosage: {prescription.dosage} • Frequency: {prescription.frequency}</p>
-                                      <p>Duration: {prescription.duration}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Clock className="mx-auto h-12 w-12 text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No past medications</h3>
-                          <p className="mt-2 text-sm text-gray-500">No completed medications found.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="repeat" className="space-y-4">
-                      <div className="text-center py-8">
-                        <Activity className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">No repeat medications</h3>
-                        <p className="mt-2 text-sm text-gray-500">No repeat prescriptions available.</p>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="summary" className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-green-600">{prescriptions?.filter(p => p.status === 'active')?.length || 0}</div>
-                            <div className="text-sm text-gray-600">Active Medications</div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-blue-600">{prescriptions?.length || 0}</div>
-                            <div className="text-sm text-gray-600">Total Prescriptions</div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-orange-600">{patient.allergies ? 1 : 0}</div>
-                            <div className="text-sm text-gray-600">Allergies Noted</div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      
-                      {patient.allergies && (
-                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="flex items-center gap-2 mb-2">
-                            <AlertCircle className="w-5 h-5 text-red-600" />
-                            <h4 className="font-semibold text-red-800">Allergies</h4>
-                          </div>
-                          <p className="text-red-700">{patient.allergies}</p>
-                        </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
+                  <MedicationManagementTabs 
+                    patient={{ id: patient.id, firstName: patient.firstName, lastName: patient.lastName }}
+                    prescriptions={prescriptions || []}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="visits" className="space-y-6">
-              <ConsultationFormSelector 
-                patientId={patient.id} 
-                patient={patient}
-                preSelectedFormId={preSelectedFormId}
-              />
-              <ConsultationHistory patientId={patient.id} />
+            <TabsContent value="vitals" className="space-y-6">
+              <StandaloneVitalSignsRecorder patientId={patient.id} />
+              <VitalSignsTrends patientId={patient.id} />
+              <VitalSignsAlerts patientId={patient.id} />
             </TabsContent>
 
-            <TabsContent value="specialty">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Specialty Assessment Forms</CardTitle>
-                      <CardDescription>Select and complete specialized medical assessment forms</CardDescription>
-                    </div>
-                    <Button 
-                      onClick={() => window.location.href = '/form-builder'}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Form
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Search Input */}
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <Input
-                      placeholder="Search assessments (e.g., heart, brain, eye, pediatric...)"
-                      value={assessmentSearchTerm}
-                      onChange={(e) => setAssessmentSearchTerm(e.target.value)}
-                      className="pl-10 pr-10"
-                    />
-                    {assessmentSearchTerm && (
-                      <button
-                        onClick={() => setAssessmentSearchTerm('')}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Results Summary */}
-                  {assessmentSearchTerm && (
-                    <div className="mb-4 text-sm text-gray-600">
-                      Found {filteredAssessments.length} assessment{filteredAssessments.length !== 1 ? 's' : ''} matching "{assessmentSearchTerm}"
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    
-                    {/* Display forms from form builder */}
-                    {consultationForms.map((form: any) => (
-                      <Card 
-                        key={form.id}
-                        className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-blue-200 hover:border-blue-400 hover:scale-105"
-                        onClick={() => handleAssessmentFormSelect(form.templateName || form.name)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
-                              <FileText className="w-6 h-6 text-blue-600" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-900">{form.templateName || form.name}</h3>
-                              <p className="text-sm text-gray-600">Custom assessment form</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    
-                    {/* Dynamic Specialty Assessment Cards - Filtered */}
-                    {filteredAssessments.map((assessment) => {
-                      // Define color schemes for each assessment type
-                      const colorSchemes: Record<string, {border: string, bg: string, icon: string}> = {
-                        'antenatal': {border: 'border-pink-200 hover:border-pink-400', bg: 'from-pink-100 to-pink-200', icon: 'text-pink-600'},
-                        'pediatric': {border: 'border-blue-200 hover:border-blue-400', bg: 'from-blue-100 to-blue-200', icon: 'text-blue-600'},
-                        'cardiac': {border: 'border-red-200 hover:border-red-400', bg: 'from-red-100 to-red-200', icon: 'text-red-600'},
-                        'respiratory': {border: 'border-green-200 hover:border-green-400', bg: 'from-green-100 to-green-200', icon: 'text-green-600'},
-                        'neurological': {border: 'border-purple-200 hover:border-purple-400', bg: 'from-purple-100 to-purple-200', icon: 'text-purple-600'},
-                        'mental-health': {border: 'border-indigo-200 hover:border-indigo-400', bg: 'from-indigo-100 to-indigo-200', icon: 'text-indigo-600'},
-                        'dermatological': {border: 'border-orange-200 hover:border-orange-400', bg: 'from-orange-100 to-orange-200', icon: 'text-orange-600'},
-                        'orthopedic': {border: 'border-teal-200 hover:border-teal-400', bg: 'from-teal-100 to-teal-200', icon: 'text-teal-600'},
-                        'ent': {border: 'border-yellow-200 hover:border-yellow-400', bg: 'from-yellow-100 to-yellow-200', icon: 'text-yellow-600'},
-                        'pdcntss': {border: 'border-cyan-200 hover:border-cyan-400', bg: 'from-cyan-100 to-cyan-200', icon: 'text-cyan-600'},
-                        'ophthalmology': {border: 'border-slate-200 hover:border-slate-400', bg: 'from-slate-100 to-slate-200', icon: 'text-slate-600'},
-                        'endocrinology': {border: 'border-emerald-200 hover:border-emerald-400', bg: 'from-emerald-100 to-emerald-200', icon: 'text-emerald-600'},
-                        'gastroenterology': {border: 'border-amber-200 hover:border-amber-400', bg: 'from-amber-100 to-amber-200', icon: 'text-amber-600'},
-                        'urology': {border: 'border-rose-200 hover:border-rose-400', bg: 'from-rose-100 to-rose-200', icon: 'text-rose-600'}
-                      };
-
-                      // Define icons for each assessment type
-                      const getIcon = (type: string) => {
-                        const iconMap: Record<string, any> = {
-                          'antenatal': Heart,
-                          'pediatric': User,
-                          'cardiac': Heart,
-                          'respiratory': Activity,
-                          'neurological': Brain,
-                          'mental-health': MessageCircle,
-                          'dermatological': Eye,
-                          'orthopedic': Activity,
-                          'ent': Ear,
-                          'pdcntss': FileText,
-                          'ophthalmology': Eye,
-                          'endocrinology': Activity,
-                          'gastroenterology': Pill,
-                          'urology': User
-                        };
-                        return iconMap[type] || FileText;
-                      };
-
-                      const colors = colorSchemes[assessment.type] || {border: 'border-gray-200 hover:border-gray-400', bg: 'from-gray-100 to-gray-200', icon: 'text-gray-600'};
-                      const IconComponent = getIcon(assessment.type);
-
-                      return (
-                        <Card 
-                          key={assessment.type}
-                          className={`cursor-pointer hover:shadow-lg transition-all duration-200 border-2 ${colors.border} hover:scale-105`}
-                          onClick={() => handleAssessmentFormSelect(assessment.type)}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3">
-                              <div className={`w-12 h-12 bg-gradient-to-br ${colors.bg} rounded-xl flex items-center justify-center shadow-sm`}>
-                                <IconComponent className={`w-6 h-6 ${colors.icon}`} />
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-gray-900">{assessment.name}</h3>
-                                <p className="text-sm text-gray-600">{assessment.description}</p>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="labs">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Laboratory Results</CardTitle>
-                  <CardDescription>Recent lab tests and results</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {labResults?.map((lab: any) => (
-                      <div key={lab.id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h4 className="font-medium">{lab.testName}</h4>
-                            <p className="text-sm text-gray-500">
-                              {new Date(lab.testDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <Badge variant={lab.status === 'normal' ? 'default' : 'destructive'}>
-                            {lab.status}
-                          </Badge>
-                        </div>
-                        <div className="mt-2">
-                          <p className="text-sm">
-                            <span className="font-medium">Result:</span> {lab.result} {lab.unit}
-                          </p>
-                          {lab.referenceRange && (
-                            <p className="text-sm text-gray-500">
-                              Reference: {lab.referenceRange}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="medications">
+            <TabsContent value="specialty" className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <Pill className="h-5 w-5 text-purple-500" />
-                    Medications & Prescriptions
+                    <Stethoscope className="w-5 h-5 text-blue-600" />
+                    Specialty Consultations & Assessments
                   </CardTitle>
+                  <CardDescription>
+                    Comprehensive specialty assessment forms and consultation history
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="current" className="w-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-                        <TabsTrigger value="current" className="flex items-center gap-2">
-                          <Pill className="w-4 h-4" />
-                          Current ({prescriptions?.filter(p => p.status === 'active')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="past" className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Past ({prescriptions?.filter(p => p.status === 'completed')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="repeat" className="flex items-center gap-2">
-                          <Activity className="w-4 h-4" />
-                          Repeat ({prescriptions?.filter(p => p.duration?.includes('Ongoing'))?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="summary" className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          Summary
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      {(user?.role === 'doctor' || user?.role === 'admin') && (
-                        <Button 
-                          onClick={() => setShowPrescriptionModal(true)}
-                          className="bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Prescribe Medication
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* Current Medications Tab */}
-                    <TabsContent value="current" className="space-y-4">
-                      {prescriptions?.filter(p => p.status === 'active').length > 0 ? (
-                        <div className="grid gap-4">
-                          {prescriptions
-                            .filter((prescription: any) => prescription.status === 'active')
-                            .map((prescription: any) => (
-                              <div key={prescription.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <h4 className="font-semibold text-slate-800 text-lg">
-                                        {prescription.medicationName}
-                                      </h4>
-                                      <Badge className="bg-green-100 text-green-800 border-green-200">
-                                        Active
-                                      </Badge>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Dosage</span>
-                                        <p className="text-slate-900">{prescription.dosage}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Frequency</span>
-                                        <p className="text-slate-900">{prescription.frequency}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Duration</span>
-                                        <p className="text-slate-900">{prescription.duration}</p>
-                                      </div>
-                                      <div className="bg-slate-50 p-3 rounded-md">
-                                        <span className="font-medium text-slate-700 block">Start Date</span>
-                                        <p className="text-slate-900">{prescription.createdAt ? new Date(prescription.createdAt).toLocaleDateString() : 'N/A'}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    {prescription.instructions && (
-                                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                                        <span className="font-medium text-blue-800 block mb-1">Instructions:</span>
-                                        <p className="text-blue-900 text-sm">{prescription.instructions}</p>
-                                      </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex flex-col gap-2 ml-4">
-                                    {(user?.role === 'doctor' || user?.role === 'admin') && (
-                                      <>
-                                        <Button variant="outline" size="sm" onClick={() => console.log('Complete medication:', prescription.id)}>
-                                          Complete
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => console.log('Print prescription:', prescription.id)}>
-                                          <Printer className="w-4 h-4 mr-1" />
-                                          Print
-                                        </Button>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Pill className="mx-auto h-12 w-12 text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No active medications</h3>
-                          <p className="mt-2 text-sm text-gray-500">This patient currently has no active medications.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    {/* Past Medications Tab */}
-                    <TabsContent value="past" className="space-y-4">
-                      {prescriptions?.filter(p => p.status === 'completed').length > 0 ? (
-                        <div className="grid gap-4">
-                          {prescriptions
-                            .filter((prescription: any) => prescription.status === 'completed')
-                            .map((prescription: any) => (
-                              <div key={prescription.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div className="flex justify-between items-start">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <h4 className="font-semibold text-gray-700">{prescription.medicationName}</h4>
-                                      <Badge variant="secondary">Completed</Badge>
-                                    </div>
-                                    <div className="text-sm text-gray-600">
-                                      <p>Dosage: {prescription.dosage} • Frequency: {prescription.frequency}</p>
-                                      <p>Duration: {prescription.duration}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <Clock className="mx-auto h-12 w-12 text-gray-400" />
-                          <h3 className="mt-4 text-lg font-medium text-gray-900">No past medications</h3>
-                          <p className="mt-2 text-sm text-gray-500">No completed medications found.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    {/* Repeat Medications Tab */}
-                    <TabsContent value="repeat" className="space-y-4">
-                      <div className="text-center py-8">
-                        <Activity className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">No repeat medications</h3>
-                        <p className="mt-2 text-sm text-gray-500">No repeat prescriptions available.</p>
-                      </div>
-                    </TabsContent>
-
-                    {/* Summary Tab */}
-                    <TabsContent value="summary" className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-green-600">{prescriptions?.filter(p => p.status === 'active')?.length || 0}</div>
-                            <div className="text-sm text-gray-600">Active Medications</div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-blue-600">{prescriptions?.length || 0}</div>
-                            <div className="text-sm text-gray-600">Total Prescriptions</div>
-                          </CardContent>
-                        </Card>
-                        <Card>
-                          <CardContent className="p-4 text-center">
-                            <div className="text-2xl font-bold text-orange-600">0</div>
-                            <div className="text-sm text-gray-600">Allergies Noted</div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="prescriptions">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-500" />
-                        Prescription History
-                      </CardTitle>
-                      <CardDescription>All prescriptions (current and past)</CardDescription>
-                    </div>
-                    {(user?.role === 'doctor' || user?.role === 'admin') && (
-                      <Button 
-                        onClick={() => setShowPrescriptionModal(true)}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Prescribe Medication
-                      </Button>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {prescriptions && prescriptions.length > 0 ? (
-                    <div className="space-y-4">
-                      {prescriptions.map((prescription: any) => (
-                        <div key={prescription.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold text-lg">{prescription.medicationName}</h4>
-                                <Badge variant={prescription.status === 'active' ? 'default' : 'secondary'}>
-                                  {prescription.status}
-                                </Badge>
-                                {prescription.status === 'active' && (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    Current
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Dosage</span>
-                                  <p className="text-gray-900">{prescription.dosage}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Frequency</span>
-                                  <p className="text-gray-900">{prescription.frequency}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Duration</span>
-                                  <p className="text-gray-900">{prescription.duration}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Prescribed By</span>
-                                  <p className="text-gray-900">Dr. {prescription.doctorName || 'Unknown'}</p>
-                                </div>
-                              </div>
-                              
-                              {prescription.instructions && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                  <span className="font-medium text-blue-800 block mb-1">Special Instructions:</span>
-                                  <p className="text-blue-900 text-sm">{prescription.instructions}</p>
-                                </div>
-                              )}
-                              
-                              {prescription.pharmacyId && (
-                                <div className="mt-2 text-sm text-gray-600">
-                                  <span className="font-medium">Dispensed at:</span> {prescription.pharmacyName || `Pharmacy ID: ${prescription.pharmacyId}`}
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-col gap-2 ml-4">
-                              {prescription.status === 'active' && (user?.role === 'doctor' || user?.role === 'admin') && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm"
-                                  onClick={() => {
-                                    // TODO: Implement discontinue prescription functionality
-                                    console.log('Discontinuing prescription:', prescription.id);
-                                  }}
-                                >
-                                  Discontinue
-                                </Button>
-                              )}
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => {
-                                  // TODO: Implement print prescription functionality
-                                  console.log('Printing prescription:', prescription.id);
-                                }}
-                              >
-                                <Printer className="w-4 h-4 mr-1" />
-                                Print
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No prescriptions yet</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        This patient has no prescription history. Click "Prescribe Medication" to add the first prescription.
-                      </p>
-                      {(user?.role === 'doctor' || user?.role === 'admin') && (
-                        <Button 
-                          onClick={() => setShowPrescriptionModal(true)}
-                          className="mt-4 bg-blue-600 hover:bg-blue-700"
-                        >
-                          <Plus className="mr-2 h-4 w-4" />
-                          Prescribe First Medication
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="documents">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Patient Documents</CardTitle>
-                  <CardDescription>Medical records and patient files</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                    <h3 className="mt-4 text-lg font-medium text-gray-900">No documents yet</h3>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Patient documents will appear here when uploaded.
-                    </p>
-                  </div>
+                  <ConsultationHistoryDisplay patientId={patient.id} />
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
-        
-        {/* Floating Action Menu */}
-        <FloatingActionMenu
-          onRecordVisit={() => setShowVisitModal(true)}
-          onAddLabResult={() => setShowLabModal(true)}
-          onAddPrescription={() => setShowPrescriptionModal(true)}
-          onCreateConsultation={() => setShowVisitModal(true)}
-          userRole={user?.role || 'guest'}
-        />
       </main>
-
-      {/* Modals */}
-      <EnhancedVisitRecording
-        open={showVisitModal}
-        onOpenChange={setShowVisitModal}
-        patientId={patientId || 0}
-      />
-      <LabResultModal
-        open={showLabModal}
-        onOpenChange={setShowLabModal}
-        patientId={patientId}
-      />
-      <PrescriptionModal
-        open={showPrescriptionModal}
-        onOpenChange={setShowPrescriptionModal}
-        patientId={patientId}
-      />
-
-      {/* Edit Patient Modal */}
-      {patient && (
-        <EditPatientModal
-          open={showEditPatientModal}
-          onOpenChange={setShowEditPatientModal}
-          patient={patient as any}
-          onPatientUpdated={() => {
-            // Refresh patient data after update
-            window.location.reload();
-          }}
-        />
-      )}
-
-      {/* Specialty Assessment Modal */}
-      <Dialog open={showAssessmentModal} onOpenChange={setShowAssessmentModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedAssessmentType ? `${selectedAssessmentType.charAt(0).toUpperCase() + selectedAssessmentType.slice(1)} Assessment` : 'Specialty Assessment'}
-            </DialogTitle>
-            <DialogDescription>
-              Complete the {selectedAssessmentType} assessment form for {patient?.firstName} {patient?.lastName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4">
-            {selectedAssessmentType && (
-              <div className="space-y-4">
-                <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {selectedAssessmentType.charAt(0).toUpperCase() + selectedAssessmentType.slice(1)} Assessment
-                  </h3>
-                  <p className="text-gray-500 mb-6">
-                    This would open the {selectedAssessmentType} assessment form for completion.
-                    Assessment results will be saved to the patient's consultation history.
-                  </p>
-                  <div className="flex justify-center space-x-3">
-                    <Button 
-                      onClick={() => {
-                        // Simulate assessment completion
-                        handleAssessmentComplete({
-                          findings: `${selectedAssessmentType} assessment completed`,
-                          diagnosis: 'Assessment findings recorded',
-                          treatment: 'Follow-up as needed',
-                          assessmentType: selectedAssessmentType
-                        });
-                      }}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      Complete Assessment
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setShowAssessmentModal(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-
-
-      {/* Hidden Printable Patient Summary */}
-      <div className="hidden">
-        <PatientSummaryPrintable
-          patient={patient as Patient}
-          visits={visits || []}
-          organization={currentOrganization}
-        />
-      </div>
     </div>
   );
 }
