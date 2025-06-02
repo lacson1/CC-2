@@ -30,6 +30,7 @@ interface Patient {
   gender?: string;
   phone?: string;
   title?: string;
+  address?: string;
 }
 
 interface Doctor {
@@ -103,13 +104,22 @@ export default function PrescriptionDocument({
 
         {/* Patient Info */}
         <div className="mb-4 bg-white rounded p-3 border border-green-100">
-          <h4 className="font-semibold text-green-800 mb-1">Patient:</h4>
-          <p className="text-sm text-green-700">
-            {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
-          </p>
-          {patient.phone && (
-            <p className="text-xs text-green-600">{patient.phone}</p>
-          )}
+          <h4 className="font-semibold text-green-800 mb-2">Patient Information:</h4>
+          <div className="text-xs text-green-700 space-y-1">
+            <p><span className="font-medium">Name:</span> {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}</p>
+            {patient.dateOfBirth && (
+              <p><span className="font-medium">DOB:</span> {format(new Date(patient.dateOfBirth), 'MMM dd, yyyy')} (Age: {Math.floor((new Date().getTime() - new Date(patient.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))})</p>
+            )}
+            {patient.phone && (
+              <p><span className="font-medium">Phone:</span> {patient.phone}</p>
+            )}
+            {patient.address && (
+              <p><span className="font-medium">Address:</span> {patient.address}</p>
+            )}
+            {patient.gender && (
+              <p><span className="font-medium">Gender:</span> {patient.gender}</p>
+            )}
+          </div>
         </div>
 
         {/* Medications */}
@@ -140,10 +150,31 @@ export default function PrescriptionDocument({
         {/* Additional Notes */}
         {prescription.notes && (
           <div className="mb-4 bg-white rounded p-3 border border-green-100">
-            <h4 className="font-semibold text-green-800 mb-1">Notes:</h4>
+            <h4 className="font-semibold text-green-800 mb-1">Additional Instructions:</h4>
             <p className="text-xs text-green-700">{prescription.notes}</p>
           </div>
         )}
+
+        {/* Pharmacy Instructions */}
+        <div className="mb-4 bg-white rounded p-3 border border-green-100">
+          <h4 className="font-semibold text-green-800 mb-1">Pharmacy Instructions:</h4>
+          <div className="text-xs text-green-700 space-y-1">
+            <p>• Generic substitution permitted unless marked "Brand Medically Necessary"</p>
+            <p>• Dispense as written - follow exact dosing instructions</p>
+            <p>• Patient counseling required for first-time medications</p>
+            <p>• Verify patient allergies before dispensing</p>
+          </div>
+        </div>
+
+        {/* Prescriber Contact */}
+        <div className="mb-4 bg-white rounded p-3 border border-green-100">
+          <h4 className="font-semibold text-green-800 mb-1">Prescriber Contact:</h4>
+          <div className="text-xs text-green-700 space-y-1">
+            <p><span className="font-medium">For pharmacy questions:</span> {organization.phone}</p>
+            <p><span className="font-medium">Emergency contact:</span> {organization.phone}</p>
+            <p><span className="font-medium">Email:</span> {organization.email}</p>
+          </div>
+        </div>
 
         {/* Doctor Signature Section */}
         <div className="mt-6 pt-4 border-t border-green-200">
