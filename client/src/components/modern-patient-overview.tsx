@@ -950,7 +950,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           </TabsTrigger>
           <TabsTrigger value="consultation" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
             <FileText className="w-5 h-5" />
-            Forms
+            Specialty Assessment
           </TabsTrigger>
           <TabsTrigger value="appointments" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
             <CalendarDays className="w-5 h-5" />
