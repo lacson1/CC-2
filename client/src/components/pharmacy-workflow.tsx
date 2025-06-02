@@ -28,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatDistanceToNow } from "date-fns";
 import { MedicationSelectionGuide } from "@/components/medication-selection-guide";
 import { z } from "zod";
 
