@@ -176,8 +176,19 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // Serve a working healthcare platform page as root
+  // Simple diagnostic page to test display
   app.get('/', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`<html><body style="background: red; color: white; font-size: 24px; padding: 20px;">
+      <h1>HEALTHCARE PLATFORM TEST</h1>
+      <p>If you can see this red page, the server is working!</p>
+      <p>Time: ${new Date().toLocaleString()}</p>
+      <p>Server Status: ONLINE</p>
+    </body></html>`);
+  });
+
+  // Full healthcare platform page
+  app.get('/app', (req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html lang="en">
