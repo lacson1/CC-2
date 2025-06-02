@@ -65,12 +65,13 @@ export function FloatingActionMenu({
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
             className="absolute bottom-16 right-0 space-y-2"
           >
             {availableActions.map((action, index) => (
@@ -79,7 +80,7 @@ export function FloatingActionMenu({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.1, duration: 0.2 }}
               >
                 <Button
                   onClick={() => {
