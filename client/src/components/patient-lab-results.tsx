@@ -4,8 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FlaskRound, Plus, Eye, Printer, Calendar, User, Clock, TestTube } from "lucide-react";
+import { FlaskRound, Plus, Eye, Printer, Calendar, User, Clock, TestTube, MoreVertical, Download, Share, Edit, Trash2, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import LabOrderForm from "@/components/lab-order-form";
 
@@ -42,6 +45,96 @@ interface LabOrderItem {
 export default function PatientLabResults({ patientId }: PatientLabResultsProps) {
   const [showLabOrderModal, setShowLabOrderModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const { toast } = useToast();
+
+  // Lab order functions
+  const handlePrintOrder = (orderId: number) => {
+    window.open(`/api/lab-orders/${orderId}/print`, '_blank');
+    toast({
+      title: "Printing Lab Order",
+      description: "Lab order is being prepared for printing.",
+    });
+  };
+
+  const handleDownloadResults = async (orderId: number) => {
+    try {
+      const response = await fetch(`/api/lab-orders/${orderId}/download`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `lab-order-${orderId}-results.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast({
+        title: "Download Complete",
+        description: "Lab results downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: "Could not download lab results.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareResults = (orderId: number) => {
+    const shareUrl = `${window.location.origin}/lab-results/${orderId}`;
+    navigator.clipboard.writeText(shareUrl);
+    toast({
+      title: "Link Copied",
+      description: "Lab results link copied to clipboard.",
+    });
+  };
+
+  const handleRefreshOrder = async (orderId: number) => {
+    try {
+      await queryClient.invalidateQueries({
+        queryKey: [`/api/patients/${patientId}/lab-orders`]
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [`/api/lab-orders/${orderId}/items`]
+      });
+      toast({
+        title: "Refreshed",
+        description: "Lab order data updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh lab order data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelOrder = async (orderId: number) => {
+    try {
+      const response = await fetch(`/api/lab-orders/${orderId}/cancel`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+      if (response.ok) {
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/patients/${patientId}/lab-orders`]
+        });
+        toast({
+          title: "Order Cancelled",
+          description: "Lab order has been cancelled successfully.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Cancellation Failed",
+        description: "Could not cancel lab order.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch lab orders for this patient
   const { data: labOrders = [], isLoading: ordersLoading } = useQuery<LabOrder[]>({
@@ -167,7 +260,7 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
                           )}
                         </div>
                         
-                        <div className="flex flex-col gap-2 ml-4">
+                        <div className="flex items-center gap-2 ml-4">
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -176,10 +269,45 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
                             <Eye className="w-4 h-4 mr-1" />
                             {selectedOrderId === order.id ? 'Hide' : 'View'} Tests
                           </Button>
-                          <Button variant="ghost" size="sm">
-                            <Printer className="w-4 h-4 mr-1" />
-                            Print
-                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => handlePrintOrder(order.id)}>
+                                <Printer className="w-4 h-4 mr-2" />
+                                Print Order
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDownloadResults(order.id)}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Results
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShareResults(order.id)}>
+                                <Share className="w-4 h-4 mr-2" />
+                                Share Results Link
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleRefreshOrder(order.id)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Refresh Status
+                              </DropdownMenuItem>
+                              {order.status === 'pending' && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    className="text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Cancel Order
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
 
@@ -256,47 +384,164 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
               )}
             </TabsContent>
 
-            <TabsContent value="pending" className="space-y-4 mt-4">
-              {labOrders.filter(order => order.status === 'pending').map((order) => (
-                <div key={order.id} className="border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold">Lab Order #{order.id}</h4>
-                    <Badge className="bg-yellow-100 text-yellow-800">PENDING</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Ordered on {format(new Date(order.createdAt), 'MMM dd, yyyy')}
-                  </p>
-                </div>
-              ))}
-            </TabsContent>
+            {['pending', 'completed', 'in_progress'].map((status) => (
+              <TabsContent key={status} value={status} className="space-y-4 mt-4">
+                {labOrders.filter(order => order.status === status).length > 0 ? (
+                  labOrders.filter(order => order.status === status).map((order) => (
+                    <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-semibold text-lg">Lab Order #{order.id}</h4>
+                            <Badge className={getStatusColor(order.status)}>
+                              {order.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                            <Badge className={getPriorityColor(order.priority)}>
+                              {order.priority ? order.priority.toUpperCase() : 'NORMAL'}
+                            </Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mb-3">
+                            <div className="bg-gray-50 p-3 rounded">
+                              <span className="font-medium text-gray-700 block">Order Date</span>
+                              <p className="text-gray-900">{format(new Date(order.createdAt), 'MMM dd, yyyy')}</p>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                              <span className="font-medium text-gray-700 block">Status</span>
+                              <p className="text-gray-900 capitalize">{order.status.replace('_', ' ')}</p>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded">
+                              <span className="font-medium text-gray-700 block">Priority</span>
+                              <p className="text-gray-900 capitalize">{order.priority}</p>
+                            </div>
+                          </div>
+                          
+                          {order.notes && (
+                            <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
+                              <span className="font-medium text-blue-800 block mb-1">Notes:</span>
+                              <p className="text-blue-900 text-sm">{order.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 ml-4">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setSelectedOrderId(selectedOrderId === order.id ? null : order.id)}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            {selectedOrderId === order.id ? 'Hide' : 'View'} Tests
+                          </Button>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => handlePrintOrder(order.id)}>
+                                <Printer className="w-4 h-4 mr-2" />
+                                Print Order
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDownloadResults(order.id)}>
+                                <Download className="w-4 h-4 mr-2" />
+                                Download Results
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleShareResults(order.id)}>
+                                <Share className="w-4 h-4 mr-2" />
+                                Share Results Link
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleRefreshOrder(order.id)}>
+                                <RefreshCw className="w-4 h-4 mr-2" />
+                                Refresh Status
+                              </DropdownMenuItem>
+                              {order.status === 'pending' && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    className="text-red-600 focus:text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Cancel Order
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
 
-            <TabsContent value="completed" className="space-y-4 mt-4">
-              {labOrders.filter(order => order.status === 'completed').map((order) => (
-                <div key={order.id} className="border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold">Lab Order #{order.id}</h4>
-                    <Badge className="bg-green-100 text-green-800">COMPLETED</Badge>
+                      {/* Show order items when expanded */}
+                      {selectedOrderId === order.id && orderItems.length > 0 && (
+                        <div className="mt-4 border-t pt-4">
+                          <h5 className="font-medium text-gray-900 mb-3">Test Results</h5>
+                          <div className="space-y-3">
+                            {orderItems.map((item) => (
+                              <div key={item.id} className="bg-gray-50 rounded-lg p-3">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <h6 className="font-medium text-gray-900">{item.testName}</h6>
+                                      <Badge variant="outline" className="text-xs">
+                                        {item.testCategory}
+                                      </Badge>
+                                      <Badge className={getStatusColor(item.status)} variant="outline">
+                                        {item.status}
+                                      </Badge>
+                                    </div>
+                                    
+                                    {item.result && (
+                                      <div className="bg-white border rounded p-2 mb-2">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                                          <div>
+                                            <span className="font-medium text-gray-700">Result:</span>
+                                            <p className="text-gray-900">{item.result} {item.units}</p>
+                                          </div>
+                                          <div>
+                                            <span className="font-medium text-gray-700">Reference Range:</span>
+                                            <p className="text-gray-900">{item.referenceRange}</p>
+                                          </div>
+                                          {item.completedAt && (
+                                            <div>
+                                              <span className="font-medium text-gray-700">Completed:</span>
+                                              <p className="text-gray-900">{format(new Date(item.completedAt), 'MMM dd, yyyy')}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    
+                                    {item.remarks && (
+                                      <div className="text-sm text-gray-600">
+                                        <span className="font-medium">Remarks:</span> {item.remarks}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <FlaskRound className="mx-auto h-12 w-12 text-gray-400" />
+                    <h3 className="mt-4 text-lg font-medium text-gray-900">No {status.replace('_', ' ')} orders</h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      {status === 'pending' && 'Orders awaiting lab processing will appear here.'}
+                      {status === 'completed' && 'Completed lab orders with results will appear here.'}
+                      {status === 'in_progress' && 'Lab orders currently being processed will appear here.'}
+                    </p>
                   </div>
-                  <p className="text-sm text-gray-600">
-                    Completed on {format(new Date(order.updatedAt), 'MMM dd, yyyy')}
-                  </p>
-                </div>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="in_progress" className="space-y-4 mt-4">
-              {labOrders.filter(order => order.status === 'in_progress').map((order) => (
-                <div key={order.id} className="border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h4 className="font-semibold">Lab Order #{order.id}</h4>
-                    <Badge className="bg-blue-100 text-blue-800">IN PROGRESS</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Started on {format(new Date(order.createdAt), 'MMM dd, yyyy')}
-                  </p>
-                </div>
-              ))}
-            </TabsContent>
+                )}
+              </TabsContent>
+            ))}
           </Tabs>
         </CardContent>
       </Card>
