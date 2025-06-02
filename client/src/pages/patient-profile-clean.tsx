@@ -1041,16 +1041,21 @@ export default function PatientProfile() {
             </TabsContent>
 
             <TabsContent value="vitals" className="space-y-6">
-              {/* Vital Signs Monitor - Exact design from screenshot */}
-              <div className="bg-white">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <Activity className="w-5 h-5" />
-                    Vital Signs Monitor
-                  </h2>
+              {/* Vital Signs Monitor - Enhanced Professional Design */}
+              <div className="bg-gradient-to-br from-white via-blue-50/30 to-green-50/30 rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Activity className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-900">Vital Signs Monitor</h2>
+                      <p className="text-sm text-gray-600">Real-time patient monitoring dashboard</p>
+                    </div>
+                  </div>
                   <Button 
                     onClick={() => setShowStandaloneVitals(true)}
-                    className="btn-primary shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                    className="btn-primary shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 border-0"
                     disabled={!user || (user.role !== 'nurse' && user.role !== 'doctor' && user.role !== 'admin')}
                   >
                     <Plus className="w-4 h-4 mr-2 icon-professional" />
@@ -1058,33 +1063,33 @@ export default function PatientProfile() {
                   </Button>
                 </div>
                 
-                {/* Vital Signs Cards - exact layout from screenshot */}
-                <div className="grid grid-cols-4 gap-6 mb-8">
+                {/* Enhanced Vital Signs Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                   {(() => {
                     const latestVitals = vitalSigns?.[0]; // Most recent vital signs
                     
                     const getVitalStatus = (type: string, value: any) => {
-                      if (!value) return { status: 'no data', color: 'text-gray-400' };
+                      if (!value) return { status: 'No Data', color: 'text-gray-400', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' };
                       
                       switch (type) {
                         case 'bloodPressure':
                           const systolic = latestVitals?.bloodPressureSystolic;
-                          if (systolic < 90) return { status: 'low', color: 'text-blue-600' };
-                          if (systolic > 140) return { status: 'high', color: 'text-red-600' };
-                          return { status: 'normal', color: 'text-green-600' };
+                          if (systolic < 90) return { status: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' };
+                          if (systolic > 140) return { status: 'High', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+                          return { status: 'Normal', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
                         case 'heartRate':
-                          if (value < 60) return { status: 'low', color: 'text-blue-600' };
-                          if (value > 100) return { status: 'high', color: 'text-red-600' };
-                          return { status: 'normal', color: 'text-green-600' };
+                          if (value < 60) return { status: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' };
+                          if (value > 100) return { status: 'High', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+                          return { status: 'Normal', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
                         case 'temperature':
-                          if (value < 36.1) return { status: 'low', color: 'text-blue-600' };
-                          if (value > 37.2) return { status: 'high', color: 'text-red-600' };
-                          return { status: 'normal', color: 'text-green-600' };
+                          if (value < 36.1) return { status: 'Low', color: 'text-blue-600', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' };
+                          if (value > 37.2) return { status: 'High', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+                          return { status: 'Normal', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
                         case 'oxygenSat':
-                          if (value < 95) return { status: 'low', color: 'text-red-600' };
-                          return { status: 'normal', color: 'text-green-600' };
+                          if (value < 95) return { status: 'Low', color: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' };
+                          return { status: 'Normal', color: 'text-green-600', bgColor: 'bg-green-50', borderColor: 'border-green-200' };
                         default:
-                          return { status: 'normal', color: 'text-gray-600' };
+                          return { status: 'Normal', color: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' };
                       }
                     };
 
@@ -1095,86 +1100,206 @@ export default function PatientProfile() {
 
                     return (
                       <>
-                        {/* Blood Pressure */}
-                        <div className="text-center">
-                          <Heart className="w-6 h-6 mx-auto mb-2 text-red-500" />
-                          <div className={`text-xs font-medium mb-1 ${bpStatus.color}`}>
-                            {bpStatus.status}
+                        {/* Blood Pressure Card */}
+                        <div className={`${bpStatus.bgColor} ${bpStatus.borderColor} border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <Heart className="w-6 h-6 text-white" />
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${bpStatus.bgColor} ${bpStatus.color} border ${bpStatus.borderColor}`}>
+                              {bpStatus.status}
+                            </div>
                           </div>
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
-                            {latestVitals?.bloodPressureSystolic && latestVitals?.bloodPressureDiastolic 
-                              ? `${latestVitals.bloodPressureSystolic}/${latestVitals.bloodPressureDiastolic}`
-                              : 'N/A'
-                            }
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-900 mb-1">
+                              {latestVitals?.bloodPressureSystolic && latestVitals?.bloodPressureDiastolic 
+                                ? `${latestVitals.bloodPressureSystolic}/${latestVitals.bloodPressureDiastolic}`
+                                : 'N/A'
+                              }
+                            </div>
+                            <div className="text-sm font-medium text-gray-600">Blood Pressure</div>
+                            <div className="text-xs text-gray-500">mmHg</div>
                           </div>
-                          <div className="text-xs text-gray-600">Blood Pressure</div>
                         </div>
                         
-                        {/* Heart Rate */}
-                        <div className="text-center">
-                          <Activity className="w-6 h-6 mx-auto mb-2 text-blue-500" />
-                          <div className={`text-xs font-medium mb-1 ${hrStatus.color}`}>
-                            {hrStatus.status}
+                        {/* Heart Rate Card */}
+                        <div className={`${hrStatus.bgColor} ${hrStatus.borderColor} border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <Activity className="w-6 h-6 text-white" />
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${hrStatus.bgColor} ${hrStatus.color} border ${hrStatus.borderColor}`}>
+                              {hrStatus.status}
+                            </div>
                           </div>
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
-                            {latestVitals?.heartRate || 'N/A'}
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-900 mb-1">
+                              {latestVitals?.heartRate || 'N/A'}
+                            </div>
+                            <div className="text-sm font-medium text-gray-600">Heart Rate</div>
+                            <div className="text-xs text-gray-500">bpm</div>
                           </div>
-                          <div className="text-xs text-gray-600">Heart Rate (bpm)</div>
                         </div>
                         
-                        {/* Temperature */}
-                        <div className="text-center">
-                          <Thermometer className="w-6 h-6 mx-auto mb-2 text-orange-500" />
-                          <div className={`text-xs font-medium mb-1 ${tempStatus.color}`}>
-                            {tempStatus.status}
+                        {/* Temperature Card */}
+                        <div className={`${tempStatus.bgColor} ${tempStatus.borderColor} border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <Thermometer className="w-6 h-6 text-white" />
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${tempStatus.bgColor} ${tempStatus.color} border ${tempStatus.borderColor}`}>
+                              {tempStatus.status}
+                            </div>
                           </div>
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
-                            {latestVitals?.temperature ? `${latestVitals.temperature}°C` : 'N/A'}
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-900 mb-1">
+                              {latestVitals?.temperature ? `${latestVitals.temperature}°C` : 'N/A'}
+                            </div>
+                            <div className="text-sm font-medium text-gray-600">Temperature</div>
+                            <div className="text-xs text-gray-500">Celsius</div>
                           </div>
-                          <div className="text-xs text-gray-600">Temperature</div>
                         </div>
                         
-                        {/* Oxygen Saturation */}
-                        <div className="text-center">
-                          <Activity className="w-6 h-6 mx-auto mb-2 text-green-500" />
-                          <div className={`text-xs font-medium mb-1 ${o2Status.color}`}>
-                            {o2Status.status}
+                        {/* Oxygen Saturation Card */}
+                        <div className={`${o2Status.bgColor} ${o2Status.borderColor} border-2 rounded-xl p-6 transition-all duration-200 hover:shadow-lg hover:scale-105`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+                              <Activity className="w-6 h-6 text-white" />
+                            </div>
+                            <div className={`px-3 py-1 rounded-full text-xs font-semibold ${o2Status.bgColor} ${o2Status.color} border ${o2Status.borderColor}`}>
+                              {o2Status.status}
+                            </div>
                           </div>
-                          <div className="text-2xl font-bold text-gray-900 mb-1">
-                            {latestVitals?.oxygenSaturation ? `${latestVitals.oxygenSaturation}%` : 'N/A'}
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-gray-900 mb-1">
+                              {latestVitals?.oxygenSaturation ? `${latestVitals.oxygenSaturation}%` : 'N/A'}
+                            </div>
+                            <div className="text-sm font-medium text-gray-600">Oxygen Saturation</div>
+                            <div className="text-xs text-gray-500">SpO2</div>
                           </div>
-                          <div className="text-xs text-gray-600">Oxygen Saturation</div>
                         </div>
                       </>
                     );
                   })()}
                 </div>
 
-                {/* Trends Chart Section - matching screenshot */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-medium text-gray-700">Trends</h3>
-                  <h3 className="text-sm font-medium text-gray-700">History</h3>
-                </div>
-                
-                {/* Chart area - matching the line chart from screenshot */}
-                <div className="h-32 bg-white border rounded relative">
-                  {/* Y-axis labels */}
-                  <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
-                    <span>140</span>
-                    <span>105</span>
-                    <span>70</span>
-                    <span>35</span>
-                    <span>0</span>
+                {/* Enhanced Trends Chart Section */}
+                <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Vital Signs Trends</h3>
+                        <p className="text-sm text-gray-600">Historical monitoring data</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <span className="text-gray-600">Blood Pressure</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-gray-600">Heart Rate</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span className="text-gray-600">Temperature</span>
+                      </div>
+                    </div>
                   </div>
                   
-                  {/* Chart lines simulation */}
-                  <div className="ml-8 h-full relative">
-                    {/* Red line (top) */}
-                    <div className="absolute top-4 left-0 w-full h-px bg-red-400"></div>
-                    {/* Blue line (middle) */}
-                    <div className="absolute top-1/2 left-0 w-full h-px bg-blue-400"></div>
-                    {/* Orange line (bottom) */}
-                    <div className="absolute bottom-6 left-0 w-full h-px bg-orange-400"></div>
+                  {/* Enhanced Chart area */}
+                  <div className="h-40 bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 rounded-xl relative overflow-hidden">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0">
+                      <div className="h-full flex flex-col justify-between">
+                        {[...Array(5)].map((_, i) => (
+                          <div key={i} className="border-t border-slate-200/60"></div>
+                        ))}
+                      </div>
+                      <div className="absolute inset-0 flex justify-between">
+                        {[...Array(7)].map((_, i) => (
+                          <div key={i} className="border-l border-slate-200/60 h-full"></div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Y-axis labels */}
+                    <div className="absolute left-2 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-3">
+                      <span className="bg-white px-1 rounded">140</span>
+                      <span className="bg-white px-1 rounded">105</span>
+                      <span className="bg-white px-1 rounded">70</span>
+                      <span className="bg-white px-1 rounded">35</span>
+                      <span className="bg-white px-1 rounded">0</span>
+                    </div>
+                    
+                    {/* Chart lines with gradients */}
+                    <div className="ml-10 mr-4 h-full relative">
+                      {/* Blood Pressure line (curved) */}
+                      <svg className="absolute inset-0 w-full h-full">
+                        <path 
+                          d="M 0 30 Q 25 25, 50 35 T 100 30 T 150 25 T 200 30 T 250 35 T 300 30" 
+                          stroke="url(#redGradient)" 
+                          strokeWidth="3" 
+                          fill="none"
+                          className="drop-shadow-sm"
+                        />
+                        <defs>
+                          <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#ef4444" />
+                            <stop offset="100%" stopColor="#dc2626" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      
+                      {/* Heart Rate line (curved) */}
+                      <svg className="absolute inset-0 w-full h-full">
+                        <path 
+                          d="M 0 60 Q 25 55, 50 65 T 100 60 T 150 55 T 200 60 T 250 65 T 300 60" 
+                          stroke="url(#blueGradient)" 
+                          strokeWidth="3" 
+                          fill="none"
+                          className="drop-shadow-sm"
+                        />
+                        <defs>
+                          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#3b82f6" />
+                            <stop offset="100%" stopColor="#2563eb" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                      
+                      {/* Temperature line (curved) */}
+                      <svg className="absolute inset-0 w-full h-full">
+                        <path 
+                          d="M 0 100 Q 25 95, 50 105 T 100 100 T 150 95 T 200 100 T 250 105 T 300 100" 
+                          stroke="url(#orangeGradient)" 
+                          strokeWidth="3" 
+                          fill="none"
+                          className="drop-shadow-sm"
+                        />
+                        <defs>
+                          <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#f97316" />
+                            <stop offset="100%" stopColor="#ea580c" />
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                    
+                    {/* X-axis time labels */}
+                    <div className="absolute bottom-1 left-10 right-4 flex justify-between text-xs text-gray-500">
+                      <span>6h ago</span>
+                      <span>5h ago</span>
+                      <span>4h ago</span>
+                      <span>3h ago</span>
+                      <span>2h ago</span>
+                      <span>1h ago</span>
+                      <span>Now</span>
+                    </div>
                   </div>
                 </div>
               </div>
