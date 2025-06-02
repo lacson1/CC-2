@@ -142,15 +142,20 @@ export default function PatientProfile() {
       case 'bloodPressure':
         if (typeof value === 'string' && value.includes('/')) {
           const [systolic, diastolic] = value.split('/').map(Number);
-          if (systolic >= 120 && systolic <= 139 || diastolic >= 80 && diastolic <= 89) {
-            return { status: 'Elevated', color: 'text-yellow-800', bgColor: 'from-yellow-50 to-yellow-100', borderColor: 'border-yellow-500' };
+          // European Heart Association guidelines
+          if (systolic >= 180 || diastolic >= 110) {
+            return { status: 'Grade 3 Hypertension', color: 'text-red-800', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-500' };
+          } else if (systolic >= 160 || diastolic >= 100) {
+            return { status: 'Grade 2 Hypertension', color: 'text-red-700', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-400' };
           } else if (systolic >= 140 || diastolic >= 90) {
-            return { status: 'High', color: 'text-red-800', bgColor: 'from-red-50 to-red-100', borderColor: 'border-red-500' };
+            return { status: 'Grade 1 Hypertension', color: 'text-orange-800', bgColor: 'from-orange-50 to-orange-100', borderColor: 'border-orange-500' };
+          } else if (systolic >= 130 || diastolic >= 85) {
+            return { status: 'High Normal', color: 'text-yellow-800', bgColor: 'from-yellow-50 to-yellow-100', borderColor: 'border-yellow-500' };
           } else if (systolic < 90 || diastolic < 60) {
-            return { status: 'Low', color: 'text-orange-800', bgColor: 'from-orange-50 to-orange-100', borderColor: 'border-orange-500' };
+            return { status: 'Low', color: 'text-blue-800', bgColor: 'from-blue-50 to-blue-100', borderColor: 'border-blue-500' };
           }
         }
-        return { status: 'Normal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
+        return { status: 'Optimal', color: 'text-green-800', bgColor: 'from-green-50 to-green-100', borderColor: 'border-green-500' };
       
       case 'heartRate':
         const hr = typeof value === 'string' ? parseInt(value) : value;
@@ -1535,30 +1540,34 @@ export default function PatientProfile() {
                               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
                                 {visit.bloodPressure && (
                                   <div className={`bg-white p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-md ${
-                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Normal' ? 'border-green-200 hover:border-green-300' :
-                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Elevated' ? 'border-yellow-200 hover:border-yellow-300' :
-                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High' ? 'border-red-200 hover:border-red-300' :
-                                    'border-orange-200 hover:border-orange-300'
+                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Optimal' ? 'border-green-200 hover:border-green-300' :
+                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High Normal' ? 'border-yellow-200 hover:border-yellow-300' :
+                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Grade 1 Hypertension' ? 'border-orange-200 hover:border-orange-300' :
+                                    getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Low' ? 'border-blue-200 hover:border-blue-300' :
+                                    'border-red-200 hover:border-red-300'
                                   }`}>
                                     <div className={`font-medium text-xs flex items-center justify-between`}>
                                       <span className={
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Normal' ? 'text-green-600' :
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Elevated' ? 'text-yellow-600' :
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High' ? 'text-red-600' :
-                                        'text-orange-600'
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Optimal' ? 'text-green-600' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High Normal' ? 'text-yellow-600' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Grade 1 Hypertension' ? 'text-orange-600' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Low' ? 'text-blue-600' :
+                                        'text-red-600'
                                       }>Blood Pressure</span>
                                       <span className={`text-xs px-2 py-1 rounded-full ${
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Normal' ? 'bg-green-100 text-green-700' :
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Elevated' ? 'bg-yellow-100 text-yellow-700' :
-                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High' ? 'bg-red-100 text-red-700' :
-                                        'bg-orange-100 text-orange-700'
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Optimal' ? 'bg-green-100 text-green-700' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High Normal' ? 'bg-yellow-100 text-yellow-700' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Grade 1 Hypertension' ? 'bg-orange-100 text-orange-700' :
+                                        getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Low' ? 'bg-blue-100 text-blue-700' :
+                                        'bg-red-100 text-red-700'
                                       }`}>{getVitalStatus('bloodPressure', visit.bloodPressure).status}</span>
                                     </div>
                                     <div className={`font-bold ${
-                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Normal' ? 'text-green-800' :
-                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Elevated' ? 'text-yellow-800' :
-                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High' ? 'text-red-800' :
-                                      'text-orange-800'
+                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Optimal' ? 'text-green-800' :
+                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'High Normal' ? 'text-yellow-800' :
+                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Grade 1 Hypertension' ? 'text-orange-800' :
+                                      getVitalStatus('bloodPressure', visit.bloodPressure).status === 'Low' ? 'text-blue-800' :
+                                      'text-red-800'
                                     }`}>{visit.bloodPressure}</div>
                                   </div>
                                 )}
