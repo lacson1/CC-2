@@ -1142,6 +1142,32 @@ export default function PatientProfile() {
                                         <p className="text-blue-900 text-sm">{prescription.instructions}</p>
                                       </div>
                                     )}
+
+                                    {/* Pharmacy Communication Section */}
+                                    {(prescription.pharmacyId || prescription.pharmacistNotes) && (
+                                      <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded">
+                                        <div className="flex items-center justify-between mb-2">
+                                          <span className="font-medium text-purple-800 block">Pharmacy Information</span>
+                                          {prescription.dispensedAt && (
+                                            <span className="text-xs text-purple-600">
+                                              Dispensed: {new Date(prescription.dispensedAt).toLocaleDateString()}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {prescription.pharmacistNotes && (
+                                          <div className="mb-2">
+                                            <span className="text-sm font-medium text-purple-700">Pharmacist Notes:</span>
+                                            <p className="text-purple-900 text-sm mt-1">{prescription.pharmacistNotes}</p>
+                                          </div>
+                                        )}
+                                        {prescription.sentToPharmacyAt && (
+                                          <div className="flex items-center text-xs text-purple-600">
+                                            <Clock className="w-3 h-3 mr-1" />
+                                            Sent to pharmacy: {new Date(prescription.sentToPharmacyAt).toLocaleString()}
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
                                   
                                   <div className="flex items-center gap-2 ml-4">
