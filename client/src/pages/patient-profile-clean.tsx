@@ -990,6 +990,57 @@ export default function PatientProfile() {
             </TabsContent>
 
             <TabsContent value="medications">
+              {/* Pharmacist Quick Actions Panel */}
+              {(user?.role === 'pharmacist' || user?.role === 'admin') && (
+                <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200 mb-6">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Pill className="w-5 h-5 text-purple-600" />
+                      Pharmacy Actions
+                    </CardTitle>
+                    <CardDescription>
+                      Quick access to pharmacy verification, dispensing, and patient counseling tools.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+                      >
+                        <CheckSquare className="w-4 h-4 mr-2 text-purple-600" />
+                        Verify Prescriptions
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+                      >
+                        <Package className="w-4 h-4 mr-2 text-green-600" />
+                        Mark Dispensed
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-orange-50 hover:border-orange-300 transition-all duration-200"
+                      >
+                        <AlertTriangle className="w-4 h-4 mr-2 text-orange-600" />
+                        Check Interactions
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="justify-start btn-outline hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2 text-blue-600" />
+                        Patient Counseling
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -1046,6 +1097,24 @@ export default function PatientProfile() {
                                       <Badge className="bg-green-100 text-green-800 border-green-200">
                                         Active
                                       </Badge>
+                                      {/* Pharmacy Status Badge */}
+                                      {prescription.pharmacyStatus && (
+                                        <Badge 
+                                          className={`
+                                            ${prescription.pharmacyStatus === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : ''}
+                                            ${prescription.pharmacyStatus === 'sent' ? 'bg-blue-100 text-blue-800 border-blue-200' : ''}
+                                            ${prescription.pharmacyStatus === 'dispensed' ? 'bg-purple-100 text-purple-800 border-purple-200' : ''}
+                                            ${prescription.pharmacyStatus === 'ready' ? 'bg-orange-100 text-orange-800 border-orange-200' : ''}
+                                            ${prescription.pharmacyStatus === 'collected' ? 'bg-green-100 text-green-800 border-green-200' : ''}
+                                          `}
+                                        >
+                                          {prescription.pharmacyStatus === 'pending' && 'Pending Pharmacy'}
+                                          {prescription.pharmacyStatus === 'sent' && 'Sent to Pharmacy'}
+                                          {prescription.pharmacyStatus === 'dispensed' && 'Dispensed'}
+                                          {prescription.pharmacyStatus === 'ready' && 'Ready for Pickup'}
+                                          {prescription.pharmacyStatus === 'collected' && 'Collected'}
+                                        </Badge>
+                                      )}
                                     </div>
                                     
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
@@ -1076,6 +1145,54 @@ export default function PatientProfile() {
                                   </div>
                                   
                                   <div className="flex items-center gap-2 ml-4">
+                                    {/* Pharmacist Actions */}
+                                    {(user?.role === 'pharmacist' || user?.role === 'admin') && (
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-8 w-8 p-0 hover:bg-purple-100"
+                                          >
+                                            <Pill className="h-4 w-4 text-purple-600" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className="w-64">
+                                          <DropdownMenuItem>
+                                            <CheckSquare className="mr-2 h-4 w-4 text-green-600" />
+                                            Mark as Verified
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <Package className="mr-2 h-4 w-4 text-blue-600" />
+                                            Mark as Dispensed
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <Clock className="mr-2 h-4 w-4 text-orange-600" />
+                                            Mark Ready for Pickup
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <User className="mr-2 h-4 w-4 text-purple-600" />
+                                            Mark as Collected
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem>
+                                            <AlertTriangle className="mr-2 h-4 w-4 text-red-600" />
+                                            Flag Drug Interaction
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem>
+                                            <MessageSquare className="mr-2 h-4 w-4 text-blue-600" />
+                                            Add Pharmacist Notes
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator />
+                                          <DropdownMenuItem>
+                                            <Phone className="mr-2 h-4 w-4 text-green-600" />
+                                            Contact Patient
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    )}
+
+                                    {/* Doctor Actions */}
                                     {(user?.role === 'doctor' || user?.role === 'admin') && (
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
