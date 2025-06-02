@@ -3869,6 +3869,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get patient vital signs alerts
+  app.get("/api/patients/:id/vital-alerts", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      
+      const alerts = await db
+        .select()
+        .from(vitalSignsAlerts)
+        .where(eq(vitalSignsAlerts.patientId, patientId))
+        .orderBy(desc(vitalSignsAlerts.createdAt));
+      
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching vital signs alerts:", error);
+      res.status(500).json({ message: "Failed to fetch vital signs alerts" });
+    }
+  });
+
+  // Create vital signs alert
+  app.post("/api/patients/:id/vital-alerts", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      
+      const alertData = {
+        patientId,
+        vitalType: req.body.vitalType,
+        condition: req.body.condition,
+        thresholdMin: req.body.thresholdMin,
+        thresholdMax: req.body.thresholdMax,
+        severity: req.body.severity,
+        isActive: req.body.isActive ?? true,
+        alertMethod: req.body.alertMethod,
+        createdBy: req.user?.username || 'Unknown',
+        organizationId: req.user?.organizationId
+      };
+
+      const [newAlert] = await db.insert(vitalSignsAlerts).values(alertData).returning();
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logPatientAction('VITAL_ALERT_CREATED', patientId, {
+        alertId: newAlert.id,
+        vitalType: alertData.vitalType,
+        condition: alertData.condition,
+        severity: alertData.severity
+      });
+      
+      res.status(201).json(newAlert);
+    } catch (error) {
+      console.error("Error creating vital signs alert:", error);
+      res.status(500).json({ message: "Failed to create vital signs alert" });
+    }
+  });
+
+  // Update vital signs alert
+  app.patch("/api/vital-alerts/:alertId", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const alertId = parseInt(req.params.alertId);
+      
+      const [updatedAlert] = await db
+        .update(vitalSignsAlerts)
+        .set(req.body)
+        .where(eq(vitalSignsAlerts.id, alertId))
+        .returning();
+      
+      if (!updatedAlert) {
+        return res.status(404).json({ message: "Alert not found" });
+      }
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logPatientAction('VITAL_ALERT_UPDATED', updatedAlert.patientId, {
+        alertId,
+        changes: req.body
+      });
+      
+      res.json(updatedAlert);
+    } catch (error) {
+      console.error("Error updating vital signs alert:", error);
+      res.status(500).json({ message: "Failed to update vital signs alert" });
+    }
+  });
+
+  // Delete vital signs alert
+  app.delete("/api/vital-alerts/:alertId", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const alertId = parseInt(req.params.alertId);
+      
+      const [deletedAlert] = await db
+        .delete(vitalSignsAlerts)
+        .where(eq(vitalSignsAlerts.id, alertId))
+        .returning();
+      
+      if (!deletedAlert) {
+        return res.status(404).json({ message: "Alert not found" });
+      }
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logPatientAction('VITAL_ALERT_DELETED', deletedAlert.patientId, {
+        alertId,
+        vitalType: deletedAlert.vitalType
+      });
+      
+      res.json({ message: "Alert deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting vital signs alert:", error);
+      res.status(500).json({ message: "Failed to delete vital signs alert" });
+    }
+  });
+
   // Appointments endpoints
   app.get("/api/appointments", authenticateToken, async (req: AuthRequest, res) => {
     try {

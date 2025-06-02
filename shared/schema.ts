@@ -176,6 +176,21 @@ export const vitalSigns = pgTable('vital_signs', {
   organizationId: integer('organization_id').references(() => organizations.id)
 });
 
+export const vitalSignsAlerts = pgTable('vital_signs_alerts', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  vitalType: varchar('vital_type', { length: 50 }).notNull(), // bloodPressureSystolic, heartRate, etc.
+  condition: varchar('condition', { length: 20 }).notNull(), // above, below, between
+  thresholdMin: decimal('threshold_min', { precision: 8, scale: 2 }),
+  thresholdMax: decimal('threshold_max', { precision: 8, scale: 2 }),
+  severity: varchar('severity', { length: 20 }).notNull(), // low, medium, high
+  isActive: boolean('is_active').default(true),
+  alertMethod: varchar('alert_method', { length: 20 }).notNull(), // notification, email, both
+  createdBy: varchar('created_by', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id)
+});
+
 export const auditLogs = pgTable('audit_logs', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').references(() => users.id).notNull(),
