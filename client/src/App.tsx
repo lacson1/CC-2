@@ -187,17 +187,32 @@ function AuthenticatedApp() {
 function Router() {
   const { user, isLoading } = useAuth();
 
+  console.log("Router - User:", user, "Loading:", isLoading);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/90 to-indigo-900/80 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="text-4xl mb-4">🏥</div>
+          <div className="text-xl">Loading Healthcare Platform...</div>
+        </div>
+      </div>
+    );
+  }
+
   // Patient Portal Route - Independent of staff authentication
   return (
     <Switch>
       <Route path="/patient-portal" component={PatientPortal} />
       <Route>
         {() => {
-          // Temporary bypass for debugging - show login page directly
+          // Show login if no user authenticated
           if (!user) {
             return <Login />;
           }
 
+          // Show full authenticated app
           return <AuthenticatedApp />;
         }}
       </Route>

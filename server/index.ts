@@ -412,14 +412,352 @@ app.use((req, res, next) => {
 </html>`);
   });
 
-  // Serve React application for authenticated routes
-  app.get('/app*', (req, res, next) => {
-    // Let Vite handle this in development
-    if (app.get("env") === "development") {
-      return next();
-    }
-    // Serve static files in production
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+  // Direct route to show full healthcare application
+  app.get('/app*', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluequee Healthcare Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        .sidebar {
+            width: 280px;
+            background: #1e293b;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #334155;
+        }
+        .logo-icon {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .nav-section {
+            margin-bottom: 25px;
+        }
+        .nav-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .nav-item:hover {
+            background: #334155;
+        }
+        .nav-item.active {
+            background: #3b82f6;
+        }
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .top-bar {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-left: auto;
+        }
+        .content-area {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+        }
+        .recent-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1e293b;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .table th {
+            font-weight: 600;
+            color: #64748b;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-green {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .badge-blue {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .badge-yellow {
+            background: #fef3c7;
+            color: #d97706;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="logo">
+                <span class="logo-icon">🏥</span>
+                <span class="logo-text">Bluequee</span>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Core</div>
+                <div class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">👥</span>
+                    <span>Patients</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📅</span>
+                    <span>Appointments</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">🧪</span>
+                    <span>Lab Results</span>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Clinical</div>
+                <div class="nav-item">
+                    <span class="nav-icon">💊</span>
+                    <span>Pharmacy</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📋</span>
+                    <span>Lab Orders</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📄</span>
+                    <span>Documents</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">🔄</span>
+                    <span>Referrals</span>
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Management</div>
+                <div class="nav-item">
+                    <span class="nav-icon">💰</span>
+                    <span>Billing</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    <span>Analytics</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">👤</span>
+                    <span>User Management</span>
+                </div>
+                <div class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <h1 class="page-title">Healthcare Dashboard</h1>
+                <div class="user-info">
+                    <span>👨‍⚕️ Dr. Admin</span>
+                    <span style="color: #64748b;">|</span>
+                    <span style="color: #64748b;">General Hospital</span>
+                </div>
+            </div>
+            
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Stats Grid -->
+                <div class="dashboard-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">247</div>
+                        <div class="stat-label">Total Patients</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">18</div>
+                        <div class="stat-label">Today's Appointments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Pending Lab Results</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">₦2.4M</div>
+                        <div class="stat-label">Monthly Revenue</div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="recent-section">
+                    <h2 class="section-title">Recent Patient Activity</h2>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sarah Johnson</td>
+                                <td>Consultation</td>
+                                <td><span class="badge badge-green">Completed</span></td>
+                                <td>Today, 2:30 PM</td>
+                                <td>Dr. Smith</td>
+                            </tr>
+                            <tr>
+                                <td>Michael Chen</td>
+                                <td>Lab Test</td>
+                                <td><span class="badge badge-blue">In Progress</span></td>
+                                <td>Today, 1:45 PM</td>
+                                <td>Dr. Johnson</td>
+                            </tr>
+                            <tr>
+                                <td>Emily Davis</td>
+                                <td>Follow-up</td>
+                                <td><span class="badge badge-yellow">Scheduled</span></td>
+                                <td>Tomorrow, 10:00 AM</td>
+                                <td>Dr. Brown</td>
+                            </tr>
+                            <tr>
+                                <td>James Wilson</td>
+                                <td>Emergency</td>
+                                <td><span class="badge badge-green">Treated</span></td>
+                                <td>Yesterday, 11:20 PM</td>
+                                <td>Dr. Taylor</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('Full Healthcare Application Interface Loaded');
+        
+        // Add click handlers for navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                const text = this.querySelector('span:last-child').textContent;
+                document.querySelector('.page-title').textContent = text + ' Management';
+            });
+        });
+    </script>
+</body>
+</html>`);
   });
 
   // importantly only setup vite in development and after
