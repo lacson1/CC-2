@@ -53,6 +53,7 @@ import { PatientSummaryPrintable } from "@/components/patient-summary-printable"
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
 import PatientDocuments from "@/components/patient-documents";
+import PatientLabResults from "@/components/patient-lab-results";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
 interface Organization {
@@ -602,113 +603,7 @@ export default function PatientProfile() {
             </TabsContent>
 
             <TabsContent value="labs" className="space-y-6">
-              {/* Lab Results Section */}
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FlaskRound className="w-5 h-5 text-green-500" />
-                        Laboratory Results
-                      </CardTitle>
-                      <CardDescription>View and manage lab test results</CardDescription>
-                    </div>
-                    <Button 
-                      onClick={() => setShowLabModal(true)}
-                      className="bg-green-600 hover:bg-green-700"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      Order Lab Test
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {labResults && labResults.length > 0 ? (
-                    <div className="space-y-4">
-                      {labResults.map((result: any) => (
-                        <div key={result.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-semibold text-lg">{result.testName}</h4>
-                                <Badge variant={result.status === 'completed' ? 'default' : 'secondary'}>
-                                  {result.status}
-                                </Badge>
-                                {result.status === 'completed' && result.result && (
-                                  <Badge className="bg-green-100 text-green-800 border-green-200">
-                                    Results Available
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Test Date</span>
-                                  <p className="text-gray-900">{new Date(result.testDate).toLocaleDateString()}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Category</span>
-                                  <p className="text-gray-900">{result.category || 'General'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Ordered By</span>
-                                  <p className="text-gray-900">Dr. {result.doctorName || 'Unknown'}</p>
-                                </div>
-                                <div className="bg-gray-50 p-3 rounded">
-                                  <span className="font-medium text-gray-700 block">Priority</span>
-                                  <p className="text-gray-900">{result.priority || 'Normal'}</p>
-                                </div>
-                              </div>
-                              
-                              {result.result && (
-                                <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                                  <span className="font-medium text-blue-800 block mb-1">Results:</span>
-                                  <p className="text-blue-900 text-sm">{result.result}</p>
-                                  {result.normalRange && (
-                                    <p className="text-blue-700 text-xs mt-1">Normal Range: {result.normalRange}</p>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {result.notes && (
-                                <div className="mt-2 text-sm text-gray-600">
-                                  <span className="font-medium">Notes:</span> {result.notes}
-                                </div>
-                              )}
-                            </div>
-                            
-                            <div className="flex flex-col gap-2 ml-4">
-                              <Button variant="ghost" size="sm" onClick={() => console.log('View lab result:', result.id)}>
-                                <Eye className="w-4 h-4 mr-1" />
-                                View
-                              </Button>
-                              <Button variant="ghost" size="sm" onClick={() => console.log('Print lab result:', result.id)}>
-                                <Printer className="w-4 h-4 mr-1" />
-                                Print
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <FlaskRound className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No lab results yet</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Lab test results will appear here when available. Click "Order Lab Test" to request new tests.
-                      </p>
-                      <Button 
-                        onClick={() => setShowLabModal(true)}
-                        className="mt-4 bg-green-600 hover:bg-green-700"
-                      >
-                        <Plus className="mr-2 h-4 w-4" />
-                        Order First Lab Test
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <PatientLabResults patientId={patient.id} />
             </TabsContent>
 
             <TabsContent value="medications">
