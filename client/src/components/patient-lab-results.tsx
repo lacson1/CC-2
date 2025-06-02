@@ -221,7 +221,11 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
             </span>
           </CardTitle>
           <Button 
-            onClick={() => setShowLabOrderModal(true)}
+            onClick={() => {
+              // Navigate to lab orders tab
+              const event = new CustomEvent('switchToLabOrdersTab');
+              window.dispatchEvent(event);
+            }}
             className="bg-green-600 hover:bg-green-700"
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -388,7 +392,11 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
                   Lab orders and results will appear here when available.
                 </p>
                 <Button 
-                  onClick={() => setShowLabOrderModal(true)}
+                  onClick={() => {
+                    // Navigate to lab orders tab
+                    const event = new CustomEvent('switchToLabOrdersTab');
+                    window.dispatchEvent(event);
+                  }}
                   className="mt-4 bg-green-600 hover:bg-green-700"
                 >
                   <Plus className="mr-2 h-4 w-4" />

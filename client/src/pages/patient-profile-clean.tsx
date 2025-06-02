@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,6 +108,21 @@ export default function PatientProfile() {
   const [showVitalsTrends, setShowVitalsTrends] = useState(false);
   const [showVitalsAlerts, setShowVitalsAlerts] = useState(false);
   const [vitalsTimeRange, setVitalsTimeRange] = useState('30'); // Days to show
+
+  // Handle lab orders navigation events
+  useEffect(() => {
+    const handleLabOrdersNavigation = () => {
+      setActiveTab("lab-orders");
+    };
+
+    window.addEventListener('switchToLabOrdersTab', handleLabOrdersNavigation);
+    window.addEventListener('switchToLabsTab', handleLabOrdersNavigation);
+
+    return () => {
+      window.removeEventListener('switchToLabOrdersTab', handleLabOrdersNavigation);
+      window.removeEventListener('switchToLabsTab', handleLabOrdersNavigation);
+    };
+  }, []);
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
