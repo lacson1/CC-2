@@ -179,11 +179,30 @@ app.use((req, res, next) => {
   // Simple diagnostic page to test display
   app.get('/', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
-    res.send(`<html><body style="background: red; color: white; font-size: 24px; padding: 20px;">
-      <h1>HEALTHCARE PLATFORM TEST</h1>
-      <p>If you can see this red page, the server is working!</p>
+    res.send(`<!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Bluequee Healthcare Platform</title>
+      <style>
+        body { 
+          background: #ff0000; 
+          color: white; 
+          font-size: 32px; 
+          padding: 40px; 
+          text-align: center;
+          font-family: Arial, sans-serif;
+        }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+      </style>
+    </head>
+    <body>
+      <h1 class="blink">🏥 HEALTHCARE PLATFORM ACTIVE</h1>
+      <p>✅ SERVER IS WORKING CORRECTLY</p>
       <p>Time: ${new Date().toLocaleString()}</p>
-      <p>Server Status: ONLINE</p>
+      <p>Status: ONLINE</p>
+      <p><a href="/app" style="color: yellow; font-size: 28px;">Click here for full healthcare app</a></p>
     </body></html>`);
   });
 
