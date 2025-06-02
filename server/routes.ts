@@ -2744,6 +2744,269 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Optimized: Nursing workflow dashboard
+  app.get("/api/nursing/dashboard", authenticateToken, requireAnyRole(['nurse', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const [
+        pendingVitals,
+        recentAssessments,
+        criticalAlerts,
+        todaysTasks,
+        patientSummary
+      ] = await Promise.all([
+        // Patients needing vital signs update
+        db.select({
+          id: patients.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          lastVitalsDate: sql<string>`MAX(${vitals.recordedAt})`,
+          urgency: sql<string>`CASE WHEN DATE(MAX(${vitals.recordedAt})) < DATE('now', '-1 day') THEN 'high' ELSE 'normal' END`
+        })
+        .from(patients)
+        .leftJoin(vitals, eq(patients.id, vitals.patientId))
+        .where(eq(patients.organizationId, req.user!.organizationId!))
+        .groupBy(patients.id, patients.firstName, patients.lastName)
+        .having(sql`DATE(MAX(${vitals.recordedAt})) < DATE('now') OR MAX(${vitals.recordedAt}) IS NULL`)
+        .limit(15),
+
+        // Recent nursing assessments
+        db.select({
+          id: consultationRecords.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          assessmentType: consultationRecords.formData,
+          recordedAt: consultationRecords.createdAt,
+          nurseId: consultationRecords.filledBy
+        })
+        .from(consultationRecords)
+        .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+        .where(and(
+          eq(consultationRecords.filledBy, req.user!.id),
+          gte(consultationRecords.createdAt, sql`DATE('now', '-7 days')`)
+        ))
+        .orderBy(desc(consultationRecords.createdAt))
+        .limit(10),
+
+        // Critical patient alerts
+        db.select({
+          id: safetyAlerts.id,
+          patientId: safetyAlerts.patientId,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          alertType: safetyAlerts.alertType,
+          severity: safetyAlerts.severity,
+          description: safetyAlerts.description,
+          createdAt: safetyAlerts.createdAt
+        })
+        .from(safetyAlerts)
+        .leftJoin(patients, eq(safetyAlerts.patientId, patients.id))
+        .where(and(
+          eq(safetyAlerts.resolved, false),
+          eq(patients.organizationId, req.user!.organizationId!)
+        ))
+        .orderBy(desc(safetyAlerts.severity), desc(safetyAlerts.createdAt))
+        .limit(10),
+
+        // Today's scheduled appointments requiring nursing support
+        db.select({
+          id: appointments.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          doctorName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+          appointmentTime: appointments.appointmentTime,
+          status: appointments.status,
+          notes: appointments.notes
+        })
+        .from(appointments)
+        .leftJoin(patients, eq(appointments.patientId, patients.id))
+        .leftJoin(users, eq(appointments.doctorId, users.id))
+        .where(and(
+          gte(appointments.appointmentTime, sql`DATE('now')`),
+          lt(appointments.appointmentTime, sql`DATE('now', '+1 day')`),
+          eq(appointments.organizationId, req.user!.organizationId!)
+        ))
+        .orderBy(appointments.appointmentTime)
+        .limit(15),
+
+        // Patient care summary stats
+        Promise.all([
+          db.select({ count: sql<number>`count(*)` })
+            .from(vitals)
+            .leftJoin(patients, eq(vitals.patientId, patients.id))
+            .where(and(
+              gte(vitals.recordedAt, sql`DATE('now')`),
+              eq(patients.organizationId, req.user!.organizationId!)
+            )),
+          db.select({ count: sql<number>`count(*)` })
+            .from(consultationRecords)
+            .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+            .where(and(
+              eq(consultationRecords.filledBy, req.user!.id),
+              gte(consultationRecords.createdAt, sql`DATE('now')`)
+            ))
+        ]).then(([vitalsToday, assessmentsToday]) => ({
+          vitalsRecordedToday: vitalsToday[0]?.count || 0,
+          assessmentsCompletedToday: assessmentsToday[0]?.count || 0
+        }))
+      ]);
+
+      const dashboardData = {
+        vitals: {
+          pending: pendingVitals,
+          recordedToday: patientSummary.vitalsRecordedToday
+        },
+        assessments: {
+          recent: recentAssessments,
+          completedToday: patientSummary.assessmentsCompletedToday
+        },
+        alerts: {
+          critical: criticalAlerts,
+          totalActive: criticalAlerts.length
+        },
+        schedule: {
+          todaysAppointments: todaysTasks,
+          totalScheduled: todaysTasks.length
+        },
+        summary: {
+          vitalsRecorded: patientSummary.vitalsRecordedToday,
+          assessmentsCompleted: patientSummary.assessmentsCompletedToday,
+          criticalAlerts: criticalAlerts.length,
+          scheduledAppointments: todaysTasks.length,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error('Error fetching nursing dashboard:', error);
+      res.status(500).json({ error: 'Failed to fetch nursing dashboard' });
+    }
+  });
+
+  // Optimized: Physiotherapy workflow dashboard
+  app.get("/api/physiotherapy/dashboard", authenticateToken, requireAnyRole(['physiotherapist', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      const [
+        activePatients,
+        recentSessions,
+        upcomingAppointments,
+        exerciseCompliance,
+        workloadStats
+      ] = await Promise.all([
+        // Active physiotherapy patients
+        db.select({
+          patientId: consultationRecords.patientId,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          lastSessionDate: sql<string>`MAX(${consultationRecords.createdAt})`,
+          treatmentPhase: sql<string>`'Active Treatment'`,
+          progressNotes: consultationRecords.formData
+        })
+        .from(consultationRecords)
+        .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+        .where(and(
+          eq(consultationRecords.filledBy, req.user!.id),
+          gte(consultationRecords.createdAt, sql`DATE('now', '-30 days')`)
+        ))
+        .groupBy(consultationRecords.patientId, patients.firstName, patients.lastName, consultationRecords.formData)
+        .orderBy(sql`MAX(${consultationRecords.createdAt}) DESC`)
+        .limit(20),
+
+        // Recent physiotherapy sessions
+        db.select({
+          id: consultationRecords.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          sessionType: sql<string>`'Physiotherapy Assessment'`,
+          sessionDate: consultationRecords.createdAt,
+          notes: consultationRecords.formData
+        })
+        .from(consultationRecords)
+        .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+        .where(and(
+          eq(consultationRecords.filledBy, req.user!.id),
+          gte(consultationRecords.createdAt, sql`DATE('now', '-7 days')`)
+        ))
+        .orderBy(desc(consultationRecords.createdAt))
+        .limit(10),
+
+        // Upcoming physiotherapy appointments
+        db.select({
+          id: appointments.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          appointmentTime: appointments.appointmentTime,
+          appointmentType: sql<string>`'Physiotherapy Session'`,
+          status: appointments.status,
+          notes: appointments.notes
+        })
+        .from(appointments)
+        .leftJoin(patients, eq(appointments.patientId, patients.id))
+        .where(and(
+          eq(appointments.doctorId, req.user!.id),
+          gte(appointments.appointmentTime, sql`DATETIME('now')`),
+          eq(appointments.organizationId, req.user!.organizationId!)
+        ))
+        .orderBy(appointments.appointmentTime)
+        .limit(15),
+
+        // Exercise compliance tracking (mock data structure)
+        Promise.resolve([
+          { patientName: "Sample Patient", compliance: 85, exerciseType: "Range of Motion" },
+          { patientName: "Another Patient", compliance: 72, exerciseType: "Strength Training" }
+        ]),
+
+        // Workload statistics
+        Promise.all([
+          db.select({ count: sql<number>`count(*)` })
+            .from(consultationRecords)
+            .where(and(
+              eq(consultationRecords.filledBy, req.user!.id),
+              gte(consultationRecords.createdAt, sql`DATE('now')`)
+            )),
+          db.select({ count: sql<number>`count(*)` })
+            .from(appointments)
+            .where(and(
+              eq(appointments.doctorId, req.user!.id),
+              gte(appointments.appointmentTime, sql`DATE('now')`),
+              lt(appointments.appointmentTime, sql`DATE('now', '+1 day')`)
+            ))
+        ]).then(([sessionsToday, appointmentsToday]) => ({
+          sessionsCompletedToday: sessionsToday[0]?.count || 0,
+          appointmentsScheduledToday: appointmentsToday[0]?.count || 0
+        }))
+      ]);
+
+      const dashboardData = {
+        patients: {
+          active: activePatients,
+          totalActive: activePatients.length
+        },
+        sessions: {
+          recent: recentSessions,
+          completedToday: workloadStats.sessionsCompletedToday
+        },
+        appointments: {
+          upcoming: upcomingAppointments,
+          scheduledToday: workloadStats.appointmentsScheduledToday
+        },
+        compliance: {
+          exerciseTracking: exerciseCompliance,
+          averageCompliance: exerciseCompliance.length > 0 
+            ? exerciseCompliance.reduce((sum, item) => sum + item.compliance, 0) / exerciseCompliance.length 
+            : 0
+        },
+        summary: {
+          activePatients: activePatients.length,
+          sessionsCompleted: workloadStats.sessionsCompletedToday,
+          upcomingAppointments: upcomingAppointments.length,
+          avgCompliance: exerciseCompliance.length > 0 
+            ? Math.round(exerciseCompliance.reduce((sum, item) => sum + item.compliance, 0) / exerciseCompliance.length)
+            : 0,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error('Error fetching physiotherapy dashboard:', error);
+      res.status(500).json({ error: 'Failed to fetch physiotherapy dashboard' });
+    }
+  });
+
   // Pharmacy Review endpoints
   app.post("/api/patients/:patientId/pharmacy-review", authenticateToken, requireAnyRole(['pharmacist', 'admin']), async (req: AuthRequest, res) => {
     try {
