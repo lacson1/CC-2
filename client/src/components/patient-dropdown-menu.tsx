@@ -68,6 +68,11 @@ export function PatientDropdownMenu({
             </div>
           </>
         )}
+        <DropdownMenuItem onClick={() => navigate(`/appointments?patientId=${patient.id}`)} className="bg-blue-50 border-blue-200 text-blue-700 font-medium">
+          <CalendarDays className="mr-2 h-4 w-4" />
+          Schedule Appointment
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => {
           if (onEditPatient) {
             onEditPatient();
@@ -91,10 +96,6 @@ export function PatientDropdownMenu({
         <DropdownMenuItem onClick={() => navigate(`/form-builder?patientId=${patient.id}`)}>
           <FileText className="mr-2 h-4 w-4" />
           Create Consultation Form
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate(`/appointments?patientId=${patient.id}`)}>
-          <CalendarDays className="mr-2 h-4 w-4" />
-          Schedule Appointment
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate(`/referrals?patientId=${patient.id}`)}>
