@@ -737,25 +737,42 @@ export default function PatientProfile() {
             <TabsContent value="overview" className="space-y-6">
               {/* Patient Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Recent Activity */}
+                {/* Quick Timeline Summary */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Clock className="w-5 h-5" />
-                      Recent Activity
+                      Patient Timeline
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {visits?.slice(0, 3).map((visit: any) => (
-                        <div key={visit.id} className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">{visit.reason}</p>
-                            <p className="text-sm text-gray-500">{new Date(visit.visitDate).toLocaleDateString()}</p>
-                          </div>
-                          <Badge variant="outline">{visit.status}</Badge>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Stethoscope className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm">Visits: {visits?.length || 0}</span>
                         </div>
-                      ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FlaskRound className="w-4 h-4 text-green-600" />
+                          <span className="text-sm">Lab Orders: {labOrders?.length || 0}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Pill className="w-4 h-4 text-purple-600" />
+                          <span className="text-sm">Prescriptions: {prescriptions?.length || 0}</span>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full mt-2"
+                        onClick={() => setActiveTab("timeline")}
+                      >
+                        View Full Timeline
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -1500,6 +1517,10 @@ export default function PatientProfile() {
               />
               
               <ConsultationHistory patientId={patient.id} />
+            </TabsContent>
+
+            <TabsContent value="timeline" className="space-y-6">
+              <PatientTimeline patientId={patient.id} />
             </TabsContent>
 
             <TabsContent value="vitals" className="space-y-6">
