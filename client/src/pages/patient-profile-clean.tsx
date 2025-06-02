@@ -883,10 +883,20 @@ export default function PatientProfile() {
                                   <div className="flex flex-col gap-2 ml-4">
                                     {(user?.role === 'doctor' || user?.role === 'admin') && (
                                       <>
-                                        <Button variant="outline" size="sm" onClick={() => console.log('Complete medication:', prescription.id)}>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm" 
+                                          onClick={() => handleCompletePrescription(prescription)}
+                                          title="Mark as Completed"
+                                        >
                                           Complete
                                         </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => console.log('Print prescription:', prescription.id)}>
+                                        <Button 
+                                          variant="ghost" 
+                                          size="sm" 
+                                          onClick={() => handlePrintPrescription(prescription)}
+                                          title="Print Prescription"
+                                        >
                                           <Printer className="w-4 h-4 mr-1" />
                                           Print
                                         </Button>
@@ -1486,6 +1496,97 @@ export default function PatientProfile() {
       </Dialog>
 
 
+
+      {/* Visit Details Modal */}
+      {showVisitDetails && selectedVisit && (
+        <Dialog open={showVisitDetails} onOpenChange={setShowVisitDetails}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-blue-600" />
+                Visit Details - {new Date(selectedVisit.visitDate).toLocaleDateString()}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Visit Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Visit Type</label>
+                  <p className="text-gray-900 font-medium">{selectedVisit.visitType}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Date</label>
+                  <p className="text-gray-900 font-medium">{new Date(selectedVisit.visitDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              {/* Chief Complaint */}
+              <div>
+                <label className="text-sm font-medium text-gray-600">Chief Complaint</label>
+                <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
+                  {selectedVisit.complaint || 'Not recorded'}
+                </p>
+              </div>
+
+              {/* Diagnosis */}
+              <div>
+                <label className="text-sm font-medium text-gray-600">Diagnosis</label>
+                <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
+                  {selectedVisit.diagnosis || 'Not recorded'}
+                </p>
+              </div>
+
+              {/* Treatment */}
+              <div>
+                <label className="text-sm font-medium text-gray-600">Treatment Plan</label>
+                <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
+                  {selectedVisit.treatment || 'Not recorded'}
+                </p>
+              </div>
+
+              {/* Vital Signs */}
+              {selectedVisit.vitalSigns && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Vital Signs</label>
+                  <div className="mt-2 grid grid-cols-2 gap-4 p-3 bg-blue-50 rounded-lg">
+                    <div>
+                      <span className="text-sm text-gray-600">Blood Pressure:</span>
+                      <p className="font-medium">{selectedVisit.vitalSigns.bloodPressure || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Heart Rate:</span>
+                      <p className="font-medium">{selectedVisit.vitalSigns.heartRate || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Temperature:</span>
+                      <p className="font-medium">{selectedVisit.vitalSigns.temperature || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Weight:</span>
+                      <p className="font-medium">{selectedVisit.vitalSigns.weight || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePrintVisit(selectedVisit)}
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print Visit
+                </Button>
+                <Button onClick={() => setShowVisitDetails(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Hidden Printable Patient Summary */}
       <div className="hidden">
