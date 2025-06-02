@@ -27,7 +27,6 @@ interface Patient {
   id: number;
   firstName: string;
   lastName: string;
-  title?: string;
 }
 
 export default function LabOrderForm({ patientId, onOrderCreated }: LabOrderFormProps) {
@@ -177,7 +176,7 @@ export default function LabOrderForm({ patientId, onOrderCreated }: LabOrderForm
               <SelectContent>
                 {patients.map(patient => (
                   <SelectItem key={patient.id} value={patient.id.toString()}>
-                    {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
+                    {patient.firstName} {patient.lastName}
                   </SelectItem>
                 ))}
               </SelectContent>

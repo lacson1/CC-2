@@ -910,9 +910,6 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         <p className="text-xs text-gray-500">
                           ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          DOB: {new Date(patient.dateOfBirth).toLocaleDateString()} • {patient.phone}
-                        </p>
                       </div>
                     </Button>
                   </PatientDropdownMenu>
@@ -926,39 +923,39 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
       {/* Enhanced Tabbed Interface - Full Width */}
       <Tabs defaultValue="overview" className="w-full h-full">
-        <TabsList className="grid w-full grid-cols-8 mb-6 h-14 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-1 shadow-sm">
-          {/* Professional tab layout with proper spacing and visual hierarchy */}
-          <TabsTrigger value="overview" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <User className="w-4 h-4" />
-            <span>Overview</span>
+        <TabsList className="grid w-full grid-cols-9 mb-6 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300 rounded-xl p-2 shadow-lg backdrop-blur-sm">
+          <TabsTrigger value="overview" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <User className="w-5 h-5" />
+            Overview
           </TabsTrigger>
-          <TabsTrigger value="medications" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <Pill className="w-4 h-4" />
-            <span>Medications</span>
+          <TabsTrigger value="medications" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <Pill className="w-5 h-5" />
+            Medications
           </TabsTrigger>
-          <TabsTrigger value="timeline" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <Activity className="w-4 h-4" />
-            <span>Timeline</span>
+          <TabsTrigger value="timeline" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <Activity className="w-5 h-5" />
+            Timeline
           </TabsTrigger>
-          <TabsTrigger value="safety" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <Heart className="w-4 h-4" />
-            <span>Safety</span>
+          <TabsTrigger value="safety" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <Heart className="w-5 h-5" />
+            Safety
           </TabsTrigger>
-          <TabsTrigger value="vitals" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <Monitor className="w-4 h-4" />
-            <span>Vitals</span>
+          <TabsTrigger value="vitals" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <Monitor className="w-5 h-5" />
+            Vitals
           </TabsTrigger>
-          <TabsTrigger value="record-visit" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <Calendar className="w-4 h-4" />
-            <span>Visit</span>
+          <TabsTrigger value="record-visit" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <Calendar className="w-5 h-5" />
+            Visit
           </TabsTrigger>
-          <TabsTrigger value="consultation" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-2 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <FileText className="w-4 h-4" />
-            <span className="text-center leading-tight">Assessment</span>
+          <TabsTrigger value="consultation" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <FileText className="w-5 h-5" />
+            Specialty Assessment
           </TabsTrigger>
-          <TabsTrigger value="communication" className="flex flex-col items-center justify-center gap-1 text-xs font-medium px-3 py-2 rounded-md transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-700 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/60 text-slate-600 hover:text-blue-600">
-            <MessageSquare className="w-4 h-4" />
-            <span>Chat</span>
+
+          <TabsTrigger value="communication" className="flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-blue-800 data-[state=active]:border data-[state=active]:border-blue-200 hover:bg-white/70 hover:shadow-sm text-blue-700">
+            <MessageSquare className="w-5 h-5" />
+            Chat
           </TabsTrigger>
         </TabsList>
 
@@ -1667,13 +1664,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <p className="text-sm text-gray-500">
                       ID: HC{patient.id?.toString().padStart(6, "0")}
                     </p>
-                    <div className="text-sm text-gray-600 mt-2 space-y-1">
-                      <div>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</div>
-                      <div>Phone: {patient.phone}</div>
-                      {patient.address && <div>Address: {patient.address}</div>}
-                      {patient.email && <div>Email: {patient.email}</div>}
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className="text-xs">
                         Active Patient
                       </Badge>
@@ -1690,15 +1681,19 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <span>{patient.phone}</span>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="truncate">{patient.email || 'Email not recorded'}</span>
-                  </div>
+                  {patient.email && (
+                    <div className="flex items-center space-x-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="truncate">{patient.email}</span>
+                    </div>
+                  )}
 
-                  <div className="flex items-center space-x-2 md:col-span-2">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="truncate">{patient.address || 'Address not recorded'}</span>
-                  </div>
+                  {patient.address && (
+                    <div className="flex items-center space-x-2 md:col-span-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      <span className="truncate">{patient.address}</span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

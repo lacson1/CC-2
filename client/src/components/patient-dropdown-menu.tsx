@@ -28,7 +28,6 @@ interface Patient {
   id: number;
   firstName: string;
   lastName: string;
-  title?: string;
 }
 
 interface PatientDropdownMenuProps {
@@ -64,7 +63,7 @@ export function PatientDropdownMenu({
         {showHeader && (
           <>
             <div className="px-3 py-2 border-b">
-              <p className="text-sm font-medium">{patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}</p>
+              <p className="text-sm font-medium">{patient.firstName} {patient.lastName}</p>
               <p className="text-xs text-gray-500">ID: HC{patient.id?.toString().padStart(6, "0")}</p>
             </div>
           </>

@@ -13,7 +13,6 @@ import TopBar from "@/components/top-bar";
 import TouchQuickActions from "@/components/touch-quick-actions";
 import OfflineStatusBar from "@/components/offline-status-bar";
 import { GlobalSearch } from "@/components/global-search";
-import { ErrorBoundary } from "@/components/error-boundary";
 import { Search } from "lucide-react";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
@@ -242,9 +241,7 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <ErrorBoundary>
-            <Router />
-          </ErrorBoundary>
+          <Router />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

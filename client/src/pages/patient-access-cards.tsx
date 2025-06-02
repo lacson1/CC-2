@@ -22,7 +22,6 @@ interface Patient {
   dateOfBirth: string;
   email?: string;
   gender?: string;
-  title?: string;
 }
 
 interface AccessCardData {
@@ -120,7 +119,7 @@ export default function PatientAccessCards() {
     
     toast({
       title: "Patient Added",
-      description: `${patient.firstName} ${patient.lastName} added to access card generation queue.`
+      description: `${patient.first_name} ${patient.last_name} added to access card generation queue.`
     });
   };
 
@@ -177,7 +176,7 @@ export default function PatientAccessCards() {
             <div class="clinic-name">Bluequee Patient Portal</div>
           </div>
           <div class="patient-section">
-            <div class="patient-name">${patient.title ? `${patient.title} ` : ''}${patient.firstName} ${patient.lastName}</div>
+            <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
             <div class="credentials">
               <div class="credential-row">
                 <span class="label">Patient ID:</span>
@@ -189,7 +188,7 @@ export default function PatientAccessCards() {
               </div>
               <div class="credential-row">
                 <span class="label">DOB:</span>
-                <span class="value">${patient.dateOfBirth}</span>
+                <span class="value">${patient.date_of_birth}</span>
               </div>
             </div>
           </div>
@@ -448,7 +447,7 @@ export default function PatientAccessCards() {
                         <div className="flex justify-between items-start">
                           <div>
                             <div className="font-medium">
-                              {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
+                              {patient.firstName} {patient.lastName}
                             </div>
                             <div className="text-sm text-gray-600">
                               ID: PT{patient.id.toString().padStart(6, '0')}<br />
