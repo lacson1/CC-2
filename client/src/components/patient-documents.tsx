@@ -378,6 +378,17 @@ export default function PatientDocuments({ patientId, patientName }: PatientDocu
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer */}
+      {selectedDocument && (
+        <PDFViewer
+          isOpen={pdfViewerOpen}
+          onClose={() => setPdfViewerOpen(false)}
+          fileName={selectedDocument.fileName}
+          originalName={selectedDocument.originalName}
+          onDownload={handlePdfViewerDownload}
+        />
+      )}
     </div>
   );
 }
