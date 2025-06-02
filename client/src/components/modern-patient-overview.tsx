@@ -910,6 +910,9 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         <p className="text-xs text-gray-500">
                           ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
                         </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          DOB: {new Date(patient.dateOfBirth).toLocaleDateString()} • {patient.phone}
+                        </p>
                       </div>
                     </Button>
                   </PatientDropdownMenu>
@@ -1664,7 +1667,13 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <p className="text-sm text-gray-500">
                       ID: HC{patient.id?.toString().padStart(6, "0")}
                     </p>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="text-sm text-gray-600 mt-2 space-y-1">
+                      <div>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</div>
+                      <div>Phone: {patient.phone}</div>
+                      {patient.address && <div>Address: {patient.address}</div>}
+                      {patient.email && <div>Email: {patient.email}</div>}
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
                       <Badge variant="outline" className="text-xs">
                         Active Patient
                       </Badge>

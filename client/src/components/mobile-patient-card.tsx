@@ -16,9 +16,12 @@ interface Patient {
   id: number;
   firstName: string;
   lastName: string;
-  age: number;
+  title?: string;
+  dateOfBirth: string;
   gender: string;
-  phone?: string;
+  phone: string;
+  email?: string;
+  address?: string;
   lastVisit?: string;
   hasAllergies?: boolean;
   criticalAlerts?: number;
@@ -50,10 +53,10 @@ export function MobilePatientCard({ patient, onClick, className }: MobilePatient
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-sm text-slate-800 truncate">
-                  {patient.firstName} {patient.lastName}
+                  {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
                 </h3>
                 <div className="flex items-center gap-3 text-xs text-slate-500">
-                  <span>{patient.age}y • {patient.gender}</span>
+                  <span>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()} • {patient.gender}</span>
                   {patient.phone && (
                     <div className="flex items-center gap-1">
                       <Phone className="w-3 h-3" />
