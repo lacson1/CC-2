@@ -207,16 +207,15 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <ErrorBoundary>
-            <Router />
-          </ErrorBoundary>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen bg-blue-50 flex items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-blue-900 mb-4">Bluequee Health Platform</h1>
+        <p className="text-lg text-gray-600">Digital Healthcare Management System</p>
+        <div className="mt-8 p-4 bg-white rounded-lg shadow">
+          <p className="text-sm text-gray-500">Application is loading...</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
