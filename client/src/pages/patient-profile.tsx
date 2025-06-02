@@ -161,7 +161,10 @@ export default function PatientProfile() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            {/* Test button - always visible */}
+            {/* DEBUG: Simple test text */}
+            <span className="px-4 py-2 bg-red-500 text-white rounded">TEST</span>
+            
+            {/* Schedule button - always visible */}
             <button className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
               Schedule
             </button>
