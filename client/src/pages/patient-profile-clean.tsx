@@ -83,6 +83,9 @@ export default function PatientProfile() {
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
   const [preSelectedFormId, setPreSelectedFormId] = useState<number | null>(null);
   const [assessmentSearchTerm, setAssessmentSearchTerm] = useState('');
+  const [selectedVisit, setSelectedVisit] = useState<any>(null);
+  const [showVisitDetails, setShowVisitDetails] = useState(false);
+  const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -113,6 +116,129 @@ export default function PatientProfile() {
   const currentOrganization = Array.isArray(organizations) 
     ? organizations.find(org => org.id === (user as any)?.organizationId)
     : undefined;
+
+  // Functional handlers for action buttons
+  const handleViewVisit = (visit: any) => {
+    setSelectedVisit(visit);
+    setShowVisitDetails(true);
+  };
+
+  const handlePrintVisit = (visit: any) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Visit Record - ${patient?.firstName} ${patient?.lastName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .section { margin-bottom: 20px; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>Visit Record</h2>
+              <p>Patient: ${patient?.firstName} ${patient?.lastName}</p>
+              <p>Date: ${new Date(visit.visitDate).toLocaleDateString()}</p>
+            </div>
+            <div class="section">
+              <div class="label">Visit Type:</div>
+              <p>${visit.visitType}</p>
+            </div>
+            <div class="section">
+              <div class="label">Chief Complaint:</div>
+              <p>${visit.complaint || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Diagnosis:</div>
+              <p>${visit.diagnosis || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Treatment:</div>
+              <p>${visit.treatment || 'N/A'}</p>
+            </div>
+            <div class="section">
+              <div class="label">Vital Signs:</div>
+              <p>Blood Pressure: ${visit.bloodPressure || 'N/A'}</p>
+              <p>Heart Rate: ${visit.heartRate || 'N/A'}</p>
+              <p>Temperature: ${visit.temperature || 'N/A'}</p>
+              <p>Weight: ${visit.weight || 'N/A'}</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleCompletePrescription = async (prescription: any) => {
+    try {
+      const response = await fetch(`/api/prescriptions/${prescription.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'completed' })
+      });
+      if (response.ok) {
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error('Failed to complete prescription:', error);
+    }
+  };
+
+  const handlePrintPrescription = (prescription: any) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Prescription - ${patient?.firstName} ${patient?.lastName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+              .patient-info { margin-bottom: 20px; }
+              .prescription-details { margin-bottom: 20px; }
+              .label { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h2>PRESCRIPTION</h2>
+              <p>Date: ${new Date(prescription.createdAt).toLocaleDateString()}</p>
+            </div>
+            <div class="patient-info">
+              <div class="label">Patient:</div>
+              <p>${patient?.firstName} ${patient?.lastName}</p>
+              <p>DOB: ${patient?.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
+            </div>
+            <div class="prescription-details">
+              <div class="label">Medication:</div>
+              <p style="font-size: 18px; font-weight: bold;">${prescription.medicationName}</p>
+              <div class="label">Dosage:</div>
+              <p>${prescription.dosage}</p>
+              <div class="label">Frequency:</div>
+              <p>${prescription.frequency}</p>
+              <div class="label">Duration:</div>
+              <p>${prescription.duration}</p>
+              ${prescription.instructions ? `
+                <div class="label">Instructions:</div>
+                <p>${prescription.instructions}</p>
+              ` : ''}
+            </div>
+            <div style="margin-top: 40px;">
+              <p>Doctor: _________________________</p>
+              <p>Signature: _____________________</p>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
 
   // Fetch consultation forms for specialty assessments
   const { data: consultationForms = [] } = useQuery({
@@ -632,10 +758,20 @@ export default function PatientProfile() {
                               )}
                             </div>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewVisit(visit)}
+                                title="View Visit Details"
+                              >
                                 <Eye className="w-4 h-4" />
                               </Button>
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handlePrintVisit(visit)}
+                                title="Print Visit Record"
+                              >
                                 <FileText className="w-4 h-4" />
                               </Button>
                             </div>
