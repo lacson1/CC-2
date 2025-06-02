@@ -343,13 +343,14 @@ export default function PatientProfile() {
         <div className="w-full max-w-none">
           {/* Tabs for different sections */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="visits">Visits</TabsTrigger>
+              <TabsTrigger value="vitals">Vitals</TabsTrigger>
+              <TabsTrigger value="chat">Chat</TabsTrigger>
               <TabsTrigger value="specialty">Specialty Assessment</TabsTrigger>
               <TabsTrigger value="labs">Lab Results</TabsTrigger>
               <TabsTrigger value="medications">Medications</TabsTrigger>
-              <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
               <TabsTrigger value="documents">Documents</TabsTrigger>
             </TabsList>
             
@@ -376,60 +377,6 @@ export default function PatientProfile() {
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Vital Signs */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-red-500" />
-                      Latest Vitals
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {visits && visits.length > 0 && (visits[0].bloodPressure || visits[0].heartRate || visits[0].temperature || visits[0].weight) ? (
-                      <div className="space-y-3">
-                        {visits[0].bloodPressure && (
-                          <div className="flex justify-between items-center p-2 bg-red-50 rounded">
-                            <span className="text-red-700 font-medium">Blood Pressure:</span>
-                            <span className="font-semibold text-red-900">{visits[0].bloodPressure}</span>
-                          </div>
-                        )}
-                        {visits[0].heartRate && (
-                          <div className="flex justify-between items-center p-2 bg-pink-50 rounded">
-                            <span className="text-pink-700 font-medium">Heart Rate:</span>
-                            <span className="font-semibold text-pink-900">{visits[0].heartRate} bpm</span>
-                          </div>
-                        )}
-                        {visits[0].temperature && (
-                          <div className="flex justify-between items-center p-2 bg-orange-50 rounded">
-                            <span className="text-orange-700 font-medium">Temperature:</span>
-                            <span className="font-semibold text-orange-900">{visits[0].temperature}°C</span>
-                          </div>
-                        )}
-                        {visits[0].weight && (
-                          <div className="flex justify-between items-center p-2 bg-blue-50 rounded">
-                            <span className="text-blue-700 font-medium">Weight:</span>
-                            <span className="font-semibold text-blue-900">{visits[0].weight} kg</span>
-                          </div>
-                        )}
-                        {visits[0].height && (
-                          <div className="flex justify-between items-center p-2 bg-green-50 rounded">
-                            <span className="text-green-700 font-medium">Height:</span>
-                            <span className="font-semibold text-green-900">{visits[0].height} cm</span>
-                          </div>
-                        )}
-                        <div className="text-xs text-gray-500 mt-2 text-center">
-                          Last recorded: {new Date(visits[0].visitDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-4">
-                        <Heart className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                        <p className="text-sm text-gray-500">No vital signs recorded</p>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
 
@@ -475,7 +422,7 @@ export default function PatientProfile() {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => setShowChatModal(true)}
+                        onClick={() => setActiveTab('chat')}
                         className="justify-start"
                       >
                         <MessageCircle className="w-4 h-4 mr-2" />
@@ -485,70 +432,6 @@ export default function PatientProfile() {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Enhanced Vitals Tracking Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-green-500" />
-                    Vital Signs History
-                  </CardTitle>
-                  <CardDescription>Track patient vitals over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {visits && visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length > 0 ? (
-                    <div className="space-y-4">
-                      {visits
-                        .filter(v => v.bloodPressure || v.heartRate || v.temperature)
-                        .slice(0, 5)
-                        .map((visit: any) => (
-                          <div key={visit.id} className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-green-50">
-                            <div className="flex justify-between items-start mb-3">
-                              <div className="text-sm font-medium text-gray-600">
-                                {new Date(visit.visitDate).toLocaleDateString()}
-                              </div>
-                              <Badge variant="outline">{visit.status}</Badge>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                              {visit.bloodPressure && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">BP</div>
-                                  <div className="font-semibold text-red-600">{visit.bloodPressure}</div>
-                                </div>
-                              )}
-                              {visit.heartRate && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">HR</div>
-                                  <div className="font-semibold text-pink-600">{visit.heartRate} bpm</div>
-                                </div>
-                              )}
-                              {visit.temperature && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">Temp</div>
-                                  <div className="font-semibold text-orange-600">{visit.temperature}°C</div>
-                                </div>
-                              )}
-                              {visit.weight && (
-                                <div className="bg-white p-2 rounded border">
-                                  <div className="text-gray-600">Weight</div>
-                                  <div className="font-semibold text-blue-600">{visit.weight} kg</div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Activity className="mx-auto h-12 w-12 text-gray-400" />
-                      <h3 className="mt-4 text-lg font-medium text-gray-900">No vitals history</h3>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Vital signs will appear here when recorded during visits.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
             </TabsContent>
 
             <TabsContent value="visits" className="space-y-6">
@@ -878,21 +761,149 @@ export default function PatientProfile() {
                 preSelectedFormId={preSelectedFormId}
               />
               
-              {/* Chat Integration */}
+              <ConsultationHistory patientId={patient.id} />
+            </TabsContent>
+
+            <TabsContent value="vitals" className="space-y-6">
+              {/* Latest Vitals Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-red-500" />
+                    Latest Vital Signs
+                  </CardTitle>
+                  <CardDescription>Most recent recorded vital signs</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {visits && visits.length > 0 && (visits[0].bloodPressure || visits[0].heartRate || visits[0].temperature || visits[0].weight) ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {visits[0].bloodPressure && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+                          <div className="text-red-600 text-sm font-medium">Blood Pressure</div>
+                          <div className="text-2xl font-bold text-red-800 mt-1">{visits[0].bloodPressure}</div>
+                        </div>
+                      )}
+                      {visits[0].heartRate && (
+                        <div className="p-4 bg-pink-50 border border-pink-200 rounded-lg text-center">
+                          <div className="text-pink-600 text-sm font-medium">Heart Rate</div>
+                          <div className="text-2xl font-bold text-pink-800 mt-1">{visits[0].heartRate}</div>
+                          <div className="text-pink-600 text-xs">bpm</div>
+                        </div>
+                      )}
+                      {visits[0].temperature && (
+                        <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
+                          <div className="text-orange-600 text-sm font-medium">Temperature</div>
+                          <div className="text-2xl font-bold text-orange-800 mt-1">{visits[0].temperature}</div>
+                          <div className="text-orange-600 text-xs">°C</div>
+                        </div>
+                      )}
+                      {visits[0].weight && (
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                          <div className="text-blue-600 text-sm font-medium">Weight</div>
+                          <div className="text-2xl font-bold text-blue-800 mt-1">{visits[0].weight}</div>
+                          <div className="text-blue-600 text-xs">kg</div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Heart className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-4 text-lg font-medium text-gray-900">No vital signs recorded</h3>
+                      <p className="mt-2 text-sm text-gray-500">Vital signs will appear here when recorded during visits.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Vitals History and Trends */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-green-500" />
+                    Vital Signs History & Trends
+                  </CardTitle>
+                  <CardDescription>Track patient vitals over time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {visits && visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length > 0 ? (
+                    <div className="space-y-4">
+                      {visits
+                        .filter(v => v.bloodPressure || v.heartRate || v.temperature)
+                        .slice(0, 10)
+                        .map((visit: any) => (
+                          <div key={visit.id} className="border rounded-lg p-4 bg-gradient-to-r from-blue-50 to-green-50">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="text-sm font-medium text-gray-600">
+                                {new Date(visit.visitDate).toLocaleDateString()} at {new Date(visit.visitDate).toLocaleTimeString()}
+                              </div>
+                              <Badge variant="outline">{visit.status}</Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                              {visit.bloodPressure && (
+                                <div className="bg-white p-3 rounded border border-red-100">
+                                  <div className="text-red-600 font-medium">Blood Pressure</div>
+                                  <div className="font-bold text-red-800">{visit.bloodPressure}</div>
+                                </div>
+                              )}
+                              {visit.heartRate && (
+                                <div className="bg-white p-3 rounded border border-pink-100">
+                                  <div className="text-pink-600 font-medium">Heart Rate</div>
+                                  <div className="font-bold text-pink-800">{visit.heartRate} bpm</div>
+                                </div>
+                              )}
+                              {visit.temperature && (
+                                <div className="bg-white p-3 rounded border border-orange-100">
+                                  <div className="text-orange-600 font-medium">Temperature</div>
+                                  <div className="font-bold text-orange-800">{visit.temperature}°C</div>
+                                </div>
+                              )}
+                              {visit.weight && (
+                                <div className="bg-white p-3 rounded border border-blue-100">
+                                  <div className="text-blue-600 font-medium">Weight</div>
+                                  <div className="font-bold text-blue-800">{visit.weight} kg</div>
+                                </div>
+                              )}
+                              {visit.height && (
+                                <div className="bg-white p-3 rounded border border-green-100">
+                                  <div className="text-green-600 font-medium">Height</div>
+                                  <div className="font-bold text-green-800">{visit.height} cm</div>
+                                </div>
+                              )}
+                            </div>
+                            {visit.reason && (
+                              <div className="mt-3 text-xs text-gray-600">
+                                Visit reason: {visit.reason}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Activity className="mx-auto h-12 w-12 text-gray-400" />
+                      <h3 className="mt-4 text-lg font-medium text-gray-900">No vitals history</h3>
+                      <p className="mt-2 text-sm text-gray-500">
+                        Vital signs will appear here when recorded during visits.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="chat" className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-blue-500" />
                     Patient Communication
                   </CardTitle>
-                  <CardDescription>Send messages and view communication history</CardDescription>
+                  <CardDescription>Send messages and view communication history with the patient</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <PatientChat patientId={patient.id} />
                 </CardContent>
               </Card>
-              
-              <ConsultationHistory patientId={patient.id} />
             </TabsContent>
 
             <TabsContent value="specialty">
