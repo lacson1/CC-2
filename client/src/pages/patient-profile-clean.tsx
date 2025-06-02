@@ -1276,8 +1276,8 @@ export default function PatientProfile() {
                                             Print Prescription
                                           </DropdownMenuItem>
                                           <DropdownMenuItem onClick={() => {
-                                            // For testing - try a simple URL format first
-                                            const qrText = `https://example.com/rx/${prescription.id}?patient=${encodeURIComponent(patient?.firstName + ' ' + patient?.lastName)}&med=${encodeURIComponent(prescription.medicationName)}&dose=${encodeURIComponent(prescription.dosage)}`;
+                                            // Very simple test text
+                                            const qrText = `RX${prescription.id}-${prescription.medicationName}`;
                                             setQRCodeData(qrText);
                                             setShowQRModal(true);
                                           }}>
