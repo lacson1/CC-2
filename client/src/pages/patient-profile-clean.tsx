@@ -855,8 +855,8 @@ export default function PatientProfile() {
 
             <TabsContent value="vitals" className="space-y-6">
               {/* Vital Signs Monitor - Exact design from screenshot */}
-              <div className="bg-white rounded-lg shadow-sm border">
-                <div className="flex items-center justify-between p-6 border-b">
+              <div className="bg-white">
+                <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
                     <Activity className="w-5 h-5" />
                     Vital Signs Monitor
@@ -867,70 +867,66 @@ export default function PatientProfile() {
                   </Button>
                 </div>
                 
-                <div className="p-6">
-                  {/* Vital Signs Cards with exact design from screenshot */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-                    {/* Blood Pressure */}
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                        <Heart className="w-8 h-8 text-red-500" />
-                      </div>
-                      <div className="text-sm text-green-600 font-medium mb-2">normal</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {visits && visits.length > 0 && visits[0].bloodPressure ? visits[0].bloodPressure : '110/70'}
-                      </div>
-                      <div className="text-sm text-gray-600">Blood Pressure</div>
-                    </div>
-
-                    {/* Heart Rate */}
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                        <Heart className="w-8 h-8 text-blue-500" />
-                      </div>
-                      <div className="text-sm text-green-600 font-medium mb-2">normal</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {visits && visits.length > 0 && visits[0].heartRate ? visits[0].heartRate : '72'}
-                      </div>
-                      <div className="text-sm text-gray-600">Heart Rate (bpm)</div>
-                    </div>
-
-                    {/* Temperature */}
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                        <Thermometer className="w-8 h-8 text-orange-500" />
-                      </div>
-                      <div className="text-sm text-green-600 font-medium mb-2">normal</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">
-                        {visits && visits.length > 0 && visits[0].temperature ? visits[0].temperature + '°C' : '36.9°C'}
-                      </div>
-                      <div className="text-sm text-gray-600">Temperature</div>
-                    </div>
-
-                    {/* Oxygen Saturation */}
-                    <div className="text-center">
-                      <div className="w-12 h-12 mx-auto mb-3 flex items-center justify-center">
-                        <Activity className="w-8 h-8 text-green-500" />
-                      </div>
-                      <div className="text-sm text-green-600 font-medium mb-2">normal</div>
-                      <div className="text-3xl font-bold text-gray-900 mb-1">99%</div>
-                      <div className="text-sm text-gray-600">Oxygen Saturation</div>
-                    </div>
+                {/* Vital Signs Cards - exact layout from screenshot */}
+                <div className="grid grid-cols-4 gap-6 mb-8">
+                  {/* Blood Pressure */}
+                  <div className="text-center">
+                    <Heart className="w-6 h-6 mx-auto mb-2 text-red-500" />
+                    <div className="text-xs text-green-600 font-medium mb-1">normal</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">110/70</div>
+                    <div className="text-xs text-gray-600">Blood Pressure</div>
                   </div>
 
-                  {/* Trends and History Section */}
-                  <div className="border-t pt-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Trends</h3>
-                      <Button variant="outline" size="sm">History</Button>
-                    </div>
-                    
-                    {/* Chart area placeholder - matching screenshot */}
-                    <div className="h-48 bg-gray-50 rounded-lg flex items-center justify-center border">
-                      <div className="text-center text-gray-500">
-                        <Activity className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                        <p className="text-sm">Vital signs trends chart</p>
-                      </div>
-                    </div>
+                  {/* Heart Rate */}
+                  <div className="text-center">
+                    <Heart className="w-6 h-6 mx-auto mb-2 text-blue-500" />
+                    <div className="text-xs text-green-600 font-medium mb-1">normal</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">72</div>
+                    <div className="text-xs text-gray-600">Heart Rate (bpm)</div>
+                  </div>
+
+                  {/* Temperature */}
+                  <div className="text-center">
+                    <Thermometer className="w-6 h-6 mx-auto mb-2 text-orange-500" />
+                    <div className="text-xs text-green-600 font-medium mb-1">normal</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">36.9°C</div>
+                    <div className="text-xs text-gray-600">Temperature</div>
+                  </div>
+
+                  {/* Oxygen Saturation */}
+                  <div className="text-center">
+                    <Activity className="w-6 h-6 mx-auto mb-2 text-green-500" />
+                    <div className="text-xs text-green-600 font-medium mb-1">normal</div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">99%</div>
+                    <div className="text-xs text-gray-600">Oxygen Saturation</div>
+                  </div>
+                </div>
+
+                {/* Trends Chart Section - matching screenshot */}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-gray-700">Trends</h3>
+                  <h3 className="text-sm font-medium text-gray-700">History</h3>
+                </div>
+                
+                {/* Chart area - matching the line chart from screenshot */}
+                <div className="h-32 bg-white border rounded relative">
+                  {/* Y-axis labels */}
+                  <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-500 py-2">
+                    <span>140</span>
+                    <span>105</span>
+                    <span>70</span>
+                    <span>35</span>
+                    <span>0</span>
+                  </div>
+                  
+                  {/* Chart lines simulation */}
+                  <div className="ml-8 h-full relative">
+                    {/* Red line (top) */}
+                    <div className="absolute top-4 left-0 w-full h-px bg-red-400"></div>
+                    {/* Blue line (middle) */}
+                    <div className="absolute top-1/2 left-0 w-full h-px bg-blue-400"></div>
+                    {/* Orange line (bottom) */}
+                    <div className="absolute bottom-6 left-0 w-full h-px bg-orange-400"></div>
                   </div>
                 </div>
               </div>
