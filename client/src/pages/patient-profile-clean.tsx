@@ -124,13 +124,33 @@ export default function PatientProfile() {
             </Avatar>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {patient.firstName} {patient.lastName}
+                {patient.title ? `${patient.title} ` : ''}{patient.firstName} {patient.lastName}
               </h1>
-              <p className="text-sm text-gray-500">
-                Patient ID: HC{patient.id?.toString().padStart(6, "0")} • 
-                Age: {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} years • 
-                {patient.gender}
-              </p>
+              <div className="space-y-1">
+                <p className="text-sm text-gray-500">
+                  Patient ID: HC{patient.id?.toString().padStart(6, "0")} • 
+                  Age: {new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear()} years • 
+                  {patient.gender}
+                </p>
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}
+                  </div>
+                  {patient.phone && (
+                    <div className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {patient.phone}
+                    </div>
+                  )}
+                  {patient.address && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {patient.address}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
           
