@@ -47,92 +47,90 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  // Lab order functions
-  const handlePrintOrder = (orderId: number) => {
-    window.open(`/api/lab-orders/${orderId}/print`, '_blank');
-    toast({
-      title: "Printing Lab Order",
-      description: "Lab order is being prepared for printing.",
-    });
-  };
-
-  const handleDownloadResults = async (orderId: number) => {
-    try {
-      const response = await fetch(`/api/lab-orders/${orderId}/download`);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `lab-order-${orderId}-results.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
+  // Unified lab order actions
+  const labOrderActions = {
+    print: (orderId: number) => {
+      window.open(`/api/lab-orders/${orderId}/print`, '_blank');
       toast({
-        title: "Download Complete",
-        description: "Lab results downloaded successfully.",
+        title: "Printing Lab Order",
+        description: "Lab order is being prepared for printing.",
       });
-    } catch (error) {
+    },
+    download: async (orderId: number) => {
+      try {
+        const response = await fetch(`/api/lab-orders/${orderId}/download`);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `lab-order-${orderId}-results.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        toast({
+          title: "Download Complete",
+          description: "Lab results downloaded successfully.",
+        });
+      } catch (error) {
+        toast({
+          title: "Download Failed",
+          description: "Could not download lab results.",
+          variant: "destructive",
+        });
+      }
+    },
+    share: (orderId: number) => {
+      const shareUrl = `${window.location.origin}/lab-results/${orderId}`;
+      navigator.clipboard.writeText(shareUrl);
       toast({
-        title: "Download Failed",
-        description: "Could not download lab results.",
-        variant: "destructive",
+        title: "Link Copied",
+        description: "Lab results link copied to clipboard.",
       });
-    }
-  };
-
-  const handleShareResults = (orderId: number) => {
-    const shareUrl = `${window.location.origin}/lab-results/${orderId}`;
-    navigator.clipboard.writeText(shareUrl);
-    toast({
-      title: "Link Copied",
-      description: "Lab results link copied to clipboard.",
-    });
-  };
-
-  const handleRefreshOrder = async (orderId: number) => {
-    try {
-      await queryClient.invalidateQueries({
-        queryKey: [`/api/patients/${patientId}/lab-orders`]
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [`/api/lab-orders/${orderId}/items`]
-      });
-      toast({
-        title: "Refreshed",
-        description: "Lab order data updated.",
-      });
-    } catch (error) {
-      toast({
-        title: "Refresh Failed",
-        description: "Could not refresh lab order data.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelOrder = async (orderId: number) => {
-    try {
-      const response = await fetch(`/api/lab-orders/${orderId}/cancel`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (response.ok) {
+    },
+    refresh: async (orderId: number) => {
+      try {
         await queryClient.invalidateQueries({
           queryKey: [`/api/patients/${patientId}/lab-orders`]
         });
+        await queryClient.invalidateQueries({
+          queryKey: [`/api/lab-orders/${orderId}/items`]
+        });
         toast({
-          title: "Order Cancelled",
-          description: "Lab order has been cancelled successfully.",
+          title: "Refreshed",
+          description: "Lab order data updated.",
+        });
+      } catch (error) {
+        toast({
+          title: "Refresh Failed",
+          description: "Could not refresh lab order data.",
+          variant: "destructive",
         });
       }
-    } catch (error) {
-      toast({
-        title: "Cancellation Failed",
-        description: "Could not cancel lab order.",
-        variant: "destructive",
-      });
+    },
+    cancel: async (orderId: number) => {
+      try {
+        const response = await fetch(`/api/lab-orders/${orderId}/cancel`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (response.ok) {
+          await queryClient.invalidateQueries({
+            queryKey: [`/api/patients/${patientId}/lab-orders`]
+          });
+          toast({
+            title: "Order Cancelled",
+            description: "Lab order has been cancelled successfully.",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Cancellation Failed",
+          description: "Could not cancel lab order.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
