@@ -76,6 +76,7 @@ import StandaloneVitalSignsRecorder from "@/components/standalone-vital-signs-re
 import VitalSignsTrends from "@/components/vital-signs-trends";
 import VitalSignsAlerts from "@/components/vital-signs-alerts";
 import PatientTimeline from "@/components/patient-timeline";
+import DocumentActionButtons from "@/components/DocumentActionButtons";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
 
 interface Organization {
