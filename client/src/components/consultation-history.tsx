@@ -70,18 +70,5 @@ export default function ConsultationHistory({ patientId }: ConsultationHistoryPr
     );
   }
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Consultation History
-          <Badge variant="secondary" className="ml-auto">
-            {consultations.length} records
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-
-    </Card>
-  );
+  return null;
 }
