@@ -7,7 +7,7 @@ import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMe
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
-import { eq, desc, or, ilike, gte, lte, and, isNotNull, isNull, inArray, sql, notExists } from "drizzle-orm";
+import { eq, desc, or, ilike, gte, lte, lt, and, isNotNull, isNull, inArray, sql, notExists } from "drizzle-orm";
 import { authenticateToken, requireRole, requireAnyRole, requireSuperOrOrgAdmin, hashPassword, comparePassword, generateToken, type AuthRequest } from "./middleware/auth";
 import { tenantMiddleware, type TenantRequest } from "./middleware/tenant";
 
@@ -2747,127 +2747,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Optimized: Nursing workflow dashboard
   app.get("/api/nursing/dashboard", authenticateToken, requireAnyRole(['nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
+      const orgId = req.user!.organizationId!;
+      
       const [
-        pendingVitals,
-        recentAssessments,
+        recentVitals,
+        todaysAppointments,
         criticalAlerts,
-        todaysTasks,
-        patientSummary
+        recentConsultations,
+        summaryStats
       ] = await Promise.all([
-        // Patients needing vital signs update
+        // Recent vital signs recorded
         db.select({
-          id: patients.id,
+          id: vitalSigns.id,
           patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          lastVitalsDate: sql<string>`MAX(${vitals.recordedAt})`,
-          urgency: sql<string>`CASE WHEN DATE(MAX(${vitals.recordedAt})) < DATE('now', '-1 day') THEN 'high' ELSE 'normal' END`
+          recordedAt: vitalSigns.recordedAt,
+          bloodPressure: sql<string>`CASE WHEN ${vitalSigns.bloodPressureSystolic} IS NOT NULL AND ${vitalSigns.bloodPressureDiastolic} IS NOT NULL THEN ${vitalSigns.bloodPressureSystolic} || '/' || ${vitalSigns.bloodPressureDiastolic} ELSE 'N/A' END`,
+          heartRate: vitalSigns.heartRate,
+          temperature: vitalSigns.temperature
         })
-        .from(patients)
-        .leftJoin(vitals, eq(patients.id, vitals.patientId))
-        .where(eq(patients.organizationId, req.user!.organizationId!))
-        .groupBy(patients.id, patients.firstName, patients.lastName)
-        .having(sql`DATE(MAX(${vitals.recordedAt})) < DATE('now') OR MAX(${vitals.recordedAt}) IS NULL`)
-        .limit(15),
-
-        // Recent nursing assessments
-        db.select({
-          id: consultationRecords.id,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          assessmentType: consultationRecords.formData,
-          recordedAt: consultationRecords.createdAt,
-          nurseId: consultationRecords.filledBy
-        })
-        .from(consultationRecords)
-        .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+        .from(vitalSigns)
+        .leftJoin(patients, eq(vitalSigns.patientId, patients.id))
         .where(and(
-          eq(consultationRecords.filledBy, req.user!.id),
-          gte(consultationRecords.createdAt, sql`DATE('now', '-7 days')`)
+          eq(patients.organizationId, orgId),
+          gte(vitalSigns.recordedAt, sql`DATE('now', '-7 days')`)
         ))
-        .orderBy(desc(consultationRecords.createdAt))
-        .limit(10),
+        .orderBy(desc(vitalSigns.recordedAt))
+        .limit(20),
 
-        // Critical patient alerts
-        db.select({
-          id: safetyAlerts.id,
-          patientId: safetyAlerts.patientId,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          alertType: safetyAlerts.alertType,
-          severity: safetyAlerts.severity,
-          description: safetyAlerts.description,
-          createdAt: safetyAlerts.createdAt
-        })
-        .from(safetyAlerts)
-        .leftJoin(patients, eq(safetyAlerts.patientId, patients.id))
-        .where(and(
-          eq(safetyAlerts.resolved, false),
-          eq(patients.organizationId, req.user!.organizationId!)
-        ))
-        .orderBy(desc(safetyAlerts.severity), desc(safetyAlerts.createdAt))
-        .limit(10),
-
-        // Today's scheduled appointments requiring nursing support
+        // Today's appointments
         db.select({
           id: appointments.id,
           patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          doctorName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
           appointmentTime: appointments.appointmentTime,
           status: appointments.status,
           notes: appointments.notes
         })
         .from(appointments)
         .leftJoin(patients, eq(appointments.patientId, patients.id))
-        .leftJoin(users, eq(appointments.doctorId, users.id))
         .where(and(
+          eq(appointments.organizationId, orgId),
           gte(appointments.appointmentTime, sql`DATE('now')`),
-          lt(appointments.appointmentTime, sql`DATE('now', '+1 day')`),
-          eq(appointments.organizationId, req.user!.organizationId!)
+          sql`${appointments.appointmentTime} < DATE('now', '+1 day')`
         ))
         .orderBy(appointments.appointmentTime)
         .limit(15),
 
-        // Patient care summary stats
+        // Active safety alerts
+        db.select({
+          id: safetyAlerts.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          type: safetyAlerts.type,
+          title: safetyAlerts.title,
+          description: safetyAlerts.description,
+          priority: safetyAlerts.priority,
+          dateAdded: safetyAlerts.dateAdded
+        })
+        .from(safetyAlerts)
+        .leftJoin(patients, eq(safetyAlerts.patientId, patients.id))
+        .where(and(
+          eq(safetyAlerts.isActive, true),
+          eq(patients.organizationId, orgId)
+        ))
+        .orderBy(desc(safetyAlerts.priority), desc(safetyAlerts.dateAdded))
+        .limit(10),
+
+        // Recent consultation records
+        db.select({
+          id: consultationRecords.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          createdAt: consultationRecords.createdAt,
+          filledBy: consultationRecords.filledBy
+        })
+        .from(consultationRecords)
+        .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+        .where(and(
+          eq(patients.organizationId, orgId),
+          gte(consultationRecords.createdAt, sql`DATE('now', '-7 days')`)
+        ))
+        .orderBy(desc(consultationRecords.createdAt))
+        .limit(10),
+
+        // Summary statistics
         Promise.all([
           db.select({ count: sql<number>`count(*)` })
-            .from(vitals)
-            .leftJoin(patients, eq(vitals.patientId, patients.id))
+            .from(vitalSigns)
+            .leftJoin(patients, eq(vitalSigns.patientId, patients.id))
             .where(and(
-              gte(vitals.recordedAt, sql`DATE('now')`),
-              eq(patients.organizationId, req.user!.organizationId!)
+              eq(patients.organizationId, orgId),
+              gte(vitalSigns.recordedAt, sql`DATE('now')`)
             )),
           db.select({ count: sql<number>`count(*)` })
-            .from(consultationRecords)
-            .leftJoin(patients, eq(consultationRecords.patientId, patients.id))
+            .from(appointments)
             .where(and(
-              eq(consultationRecords.filledBy, req.user!.id),
-              gte(consultationRecords.createdAt, sql`DATE('now')`)
+              eq(appointments.organizationId, orgId),
+              gte(appointments.appointmentTime, sql`DATE('now')`),
+              sql`${appointments.appointmentTime} < DATE('now', '+1 day')`
             ))
-        ]).then(([vitalsToday, assessmentsToday]) => ({
+        ]).then(([vitalsToday, appointmentsToday]) => ({
           vitalsRecordedToday: vitalsToday[0]?.count || 0,
-          assessmentsCompletedToday: assessmentsToday[0]?.count || 0
+          appointmentsToday: appointmentsToday[0]?.count || 0
         }))
       ]);
 
       const dashboardData = {
         vitals: {
-          pending: pendingVitals,
-          recordedToday: patientSummary.vitalsRecordedToday
+          recent: recentVitals,
+          recordedToday: summaryStats.vitalsRecordedToday
         },
-        assessments: {
-          recent: recentAssessments,
-          completedToday: patientSummary.assessmentsCompletedToday
+        appointments: {
+          today: todaysAppointments,
+          totalToday: summaryStats.appointmentsToday
         },
         alerts: {
           critical: criticalAlerts,
           totalActive: criticalAlerts.length
         },
-        schedule: {
-          todaysAppointments: todaysTasks,
-          totalScheduled: todaysTasks.length
+        consultations: {
+          recent: recentConsultations
         },
         summary: {
-          vitalsRecorded: patientSummary.vitalsRecordedToday,
-          assessmentsCompleted: patientSummary.assessmentsCompletedToday,
+          vitalsRecordedToday: summaryStats.vitalsRecordedToday,
+          appointmentsToday: summaryStats.appointmentsToday,
           criticalAlerts: criticalAlerts.length,
-          scheduledAppointments: todaysTasks.length,
           lastUpdated: new Date().toISOString()
         }
       };
@@ -2962,7 +2963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .where(and(
               eq(appointments.doctorId, req.user!.id),
               gte(appointments.appointmentTime, sql`DATE('now')`),
-              lt(appointments.appointmentTime, sql`DATE('now', '+1 day')`)
+              sql`${appointments.appointmentTime} < DATE('now', '+1 day')`
             ))
         ]).then(([sessionsToday, appointmentsToday]) => ({
           sessionsCompletedToday: sessionsToday[0]?.count || 0,
