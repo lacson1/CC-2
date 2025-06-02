@@ -39,7 +39,7 @@ import {
   Settings
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
+import { VisitRecordingModal } from "@/components/visit-recording-modal";
 import LabResultModal from "@/components/lab-result-modal";
 import PrescriptionModal from "@/components/prescription-modal";
 import { EditPatientModal } from "@/components/edit-patient-modal";
@@ -1267,7 +1267,7 @@ export default function PatientProfile() {
       </main>
 
       {/* Modals */}
-      <EnhancedVisitRecording
+      <VisitRecordingModal
         open={showVisitModal}
         onOpenChange={setShowVisitModal}
         patientId={patientId || 0}
