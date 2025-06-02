@@ -4202,12 +4202,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Optimized: Pharmacist dashboard with all essential data
+  app.get("/api/pharmacy/dashboard", authenticateToken, requireAnyRole(['pharmacist', 'admin']), async (req: AuthRequest, res) => {
+    try {
+      // Fetch all pharmacist workflow data in parallel
+      const [
+        pendingPrescriptions,
+        recentActivities,
+        lowStockMedicines,
+        dispensingQueue,
+        dailyStats
+      ] = await Promise.all([
+        // Pending prescriptions for dispensing
+        db.select({
+          id: prescriptions.id,
+          patientId: prescriptions.patientId,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          medicationName: prescriptions.medicationName,
+          dosage: prescriptions.dosage,
+          frequency: prescriptions.frequency,
+          instructions: prescriptions.instructions,
+          prescribedBy: prescriptions.prescribedBy,
+          startDate: prescriptions.startDate,
+          status: prescriptions.status
+        })
+        .from(prescriptions)
+        .leftJoin(patients, eq(prescriptions.patientId, patients.id))
+        .where(and(
+          inArray(prescriptions.status, ['active', 'pending']),
+          eq(prescriptions.organizationId, req.user!.organizationId!)
+        ))
+        .orderBy(desc(prescriptions.startDate))
+        .limit(20),
+
+        // Recent pharmacy activities
+        db.select({
+          id: pharmacyActivities.id,
+          activityType: pharmacyActivities.activityType,
+          title: pharmacyActivities.title,
+          description: pharmacyActivities.description,
+          quantity: pharmacyActivities.quantity,
+          status: pharmacyActivities.status,
+          priority: pharmacyActivities.priority,
+          createdAt: pharmacyActivities.createdAt,
+          medicationName: medicines.name,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`
+        })
+        .from(pharmacyActivities)
+        .leftJoin(medicines, eq(pharmacyActivities.medicineId, medicines.id))
+        .leftJoin(patients, eq(pharmacyActivities.patientId, patients.id))
+        .where(eq(pharmacyActivities.organizationId, req.user!.organizationId!))
+        .orderBy(desc(pharmacyActivities.createdAt))
+        .limit(15),
+
+        // Low stock medicines
+        db.select({
+          id: medicines.id,
+          name: medicines.name,
+          currentStock: medicines.quantity,
+          lowStockThreshold: medicines.lowStockThreshold,
+          expiryDate: medicines.expiryDate,
+          supplier: medicines.supplier
+        })
+        .from(medicines)
+        .where(
+          and(
+            lte(medicines.quantity, medicines.lowStockThreshold),
+            eq(medicines.organizationId, req.user!.organizationId!)
+          )
+        )
+        .orderBy(medicines.quantity)
+        .limit(10),
+
+        // Dispensed prescriptions today (queue status)
+        db.select({
+          id: prescriptions.id,
+          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
+          medicationName: prescriptions.medicationName,
+          status: prescriptions.status,
+          startDate: prescriptions.startDate
+        })
+        .from(prescriptions)
+        .leftJoin(patients, eq(prescriptions.patientId, patients.id))
+        .where(and(
+          eq(prescriptions.status, 'dispensed'),
+          gte(prescriptions.startDate, sql`CURRENT_DATE`),
+          eq(prescriptions.organizationId, req.user!.organizationId!)
+        ))
+        .limit(10),
+
+        // Daily statistics
+        Promise.all([
+          db.select({ count: sql<number>`count(*)` })
+            .from(prescriptions)
+            .where(and(
+              eq(prescriptions.status, 'dispensed'),
+              gte(prescriptions.startDate, sql`CURRENT_DATE`),
+              eq(prescriptions.organizationId, req.user!.organizationId!)
+            )),
+          db.select({ count: sql<number>`count(*)` })
+            .from(prescriptions)
+            .where(and(
+              inArray(prescriptions.status, ['active', 'pending']),
+              eq(prescriptions.organizationId, req.user!.organizationId!)
+            ))
+        ]).then(([dispensed, pending]) => ({
+          dispensedToday: dispensed[0]?.count || 0,
+          pendingDispensing: pending[0]?.count || 0
+        }))
+      ]);
+
+      const dashboardData = {
+        prescriptions: {
+          pending: pendingPrescriptions,
+          dispensingQueue: dispensingQueue,
+          totalPending: dailyStats.pendingDispensing,
+          dispensedToday: dailyStats.dispensedToday
+        },
+        activities: recentActivities,
+        inventory: {
+          lowStock: lowStockMedicines,
+          criticalCount: lowStockMedicines.filter(m => m.currentStock <= 5).length
+        },
+        summary: {
+          pendingPrescriptions: dailyStats.pendingDispensing,
+          dispensedToday: dailyStats.dispensedToday,
+          lowStockItems: lowStockMedicines.length,
+          recentActivities: recentActivities.length,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error('Error fetching pharmacy dashboard:', error);
+      res.status(500).json({ error: 'Failed to fetch pharmacy dashboard' });
+    }
+  });
+
   // Pharmacy Activity Logging endpoints
   app.get("/api/pharmacy/activities", authenticateToken, requireAnyRole(['pharmacist', 'admin']), async (req: AuthRequest, res) => {
     try {
       const { pharmacistId, activityType, startDate, endDate } = req.query;
       
-      const conditions = [eq(pharmacyActivities.organizationId, req.user!.organizationId)];
+      const conditions = [eq(pharmacyActivities.organizationId, req.user!.organizationId!)];
       
       if (pharmacistId) {
         conditions.push(eq(pharmacyActivities.pharmacistId, parseInt(pharmacistId as string)));
