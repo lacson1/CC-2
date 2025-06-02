@@ -89,6 +89,7 @@ export default function PatientProfile() {
   const [showVisitDetails, setShowVisitDetails] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
   const [showStandaloneVitals, setShowStandaloneVitals] = useState(false);
+  const [vitalsTimeRange, setVitalsTimeRange] = useState('30'); // Days to show
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -115,6 +116,50 @@ export default function PatientProfile() {
     queryKey: [`/api/patients/${patientId}/vitals`],
     enabled: !!patientId,
   });
+
+  // Filter visits based on selected time range
+  const filterVisitsByTimeRange = (visits: any[], days: string) => {
+    if (!visits) return [];
+    if (days === 'all') return visits;
+    
+    const daysToShow = parseInt(days);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToShow);
+    
+    return visits.filter(visit => {
+      const visitDate = new Date(visit.visitDate);
+      return visitDate >= cutoffDate;
+    });
+  };
+
+  const filteredVisits = filterVisitsByTimeRange(visits, vitalsTimeRange);
+  
+  // Calculate summary statistics for filtered data
+  const calculateVitalStats = (visits: any[]) => {
+    const visitsWithVitals = visits?.filter(v => v.bloodPressure || v.heartRate || v.temperature) || [];
+    if (visitsWithVitals.length === 0) return null;
+    
+    const bpValues = visitsWithVitals.filter(v => v.bloodPressure).map(v => v.bloodPressure);
+    const hrValues = visitsWithVitals.filter(v => v.heartRate).map(v => parseInt(v.heartRate));
+    const tempValues = visitsWithVitals.filter(v => v.temperature).map(v => parseFloat(v.temperature));
+    
+    return {
+      bloodPressure: {
+        trend: bpValues.length > 0 ? 'Stable' : 'No Data',
+        average: bpValues.length > 0 ? bpValues[0] : 'N/A'
+      },
+      heartRate: {
+        trend: hrValues.length > 0 ? 'Normal' : 'No Data',
+        average: hrValues.length > 0 ? Math.round(hrValues.reduce((a, b) => a + b, 0) / hrValues.length) : 'N/A'
+      },
+      temperature: {
+        trend: tempValues.length > 0 ? 'Normal' : 'No Data',
+        average: tempValues.length > 0 ? (tempValues.reduce((a, b) => a + b, 0) / tempValues.length).toFixed(1) : 'N/A'
+      }
+    };
+  };
+
+  const vitalStats = calculateVitalStats(filteredVisits);
 
   // Fetch organization data for branding
   const { data: organizations = [] } = useQuery<Organization[]>({
@@ -1236,58 +1281,113 @@ export default function PatientProfile() {
                       <span className="bg-white px-1 rounded">0</span>
                     </div>
                     
-                    {/* Chart lines with gradients */}
+                    {/* Chart lines with real data */}
                     <div className="ml-10 mr-4 h-full relative">
-                      {/* Blood Pressure line (curved) */}
-                      <svg className="absolute inset-0 w-full h-full">
-                        <path 
-                          d="M 0 30 Q 25 25, 50 35 T 100 30 T 150 25 T 200 30 T 250 35 T 300 30" 
-                          stroke="url(#redGradient)" 
-                          strokeWidth="3" 
-                          fill="none"
-                          className="drop-shadow-sm"
-                        />
-                        <defs>
-                          <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#ef4444" />
-                            <stop offset="100%" stopColor="#dc2626" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      
-                      {/* Heart Rate line (curved) */}
-                      <svg className="absolute inset-0 w-full h-full">
-                        <path 
-                          d="M 0 60 Q 25 55, 50 65 T 100 60 T 150 55 T 200 60 T 250 65 T 300 60" 
-                          stroke="url(#blueGradient)" 
-                          strokeWidth="3" 
-                          fill="none"
-                          className="drop-shadow-sm"
-                        />
-                        <defs>
-                          <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#3b82f6" />
-                            <stop offset="100%" stopColor="#2563eb" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      
-                      {/* Temperature line (curved) */}
-                      <svg className="absolute inset-0 w-full h-full">
-                        <path 
-                          d="M 0 100 Q 25 95, 50 105 T 100 100 T 150 95 T 200 100 T 250 105 T 300 100" 
-                          stroke="url(#orangeGradient)" 
-                          strokeWidth="3" 
-                          fill="none"
-                          className="drop-shadow-sm"
-                        />
-                        <defs>
-                          <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#f97316" />
-                            <stop offset="100%" stopColor="#ea580c" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
+                      {(() => {
+                        const vitalsData = filteredVisits
+                          .filter(v => v.bloodPressure || v.heartRate || v.temperature)
+                          .slice(-7) // Last 7 data points for the chart
+                          .reverse(); // Most recent first
+                        
+                        if (vitalsData.length === 0) {
+                          return <div className="flex items-center justify-center h-full text-gray-400 text-sm">No data available for selected time range</div>;
+                        }
+                        
+                        const chartWidth = 280;
+                        const chartHeight = 140;
+                        const maxDataPoints = 7;
+                        const stepX = chartWidth / (maxDataPoints - 1);
+                        
+                        // Generate paths based on real data
+                        const generatePath = (values: number[], scale: { min: number, max: number }) => {
+                          if (values.length === 0) return "";
+                          
+                          const points = values.map((value, index) => {
+                            const x = index * stepX;
+                            const normalizedValue = ((value - scale.min) / (scale.max - scale.min));
+                            const y = chartHeight - (normalizedValue * chartHeight * 0.8) - 20; // Keep some margin
+                            return `${x},${Math.max(10, Math.min(y, chartHeight - 10))}`; // Constrain to chart bounds
+                          });
+                          
+                          return `M ${points[0]} ` + points.slice(1).map((point, i) => {
+                            const prevPoint = points[i];
+                            const [prevX, prevY] = prevPoint.split(',').map(Number);
+                            const [currX, currY] = point.split(',').map(Number);
+                            const cpX = prevX + (currX - prevX) / 2;
+                            return `Q ${cpX},${prevY} ${currX},${currY}`;
+                          }).join(' ');
+                        };
+                        
+                        // Extract and scale data
+                        const bpSystolic = vitalsData.map(v => v.bloodPressure ? parseInt(v.bloodPressure.split('/')[0]) : null).filter(v => v !== null);
+                        const heartRates = vitalsData.map(v => v.heartRate ? parseInt(v.heartRate) : null).filter(v => v !== null);
+                        const temperatures = vitalsData.map(v => v.temperature ? parseFloat(v.temperature) : null).filter(v => v !== null);
+                        
+                        const bpPath = bpSystolic.length > 0 ? generatePath(bpSystolic, { min: 90, max: 180 }) : "";
+                        const hrPath = heartRates.length > 0 ? generatePath(heartRates, { min: 50, max: 120 }) : "";
+                        const tempPath = temperatures.length > 0 ? generatePath(temperatures, { min: 35, max: 40 }) : "";
+                        
+                        return (
+                          <>
+                            {/* Blood Pressure line */}
+                            {bpPath && (
+                              <svg className="absolute inset-0 w-full h-full">
+                                <path 
+                                  d={bpPath}
+                                  stroke="url(#redGradient)" 
+                                  strokeWidth="3" 
+                                  fill="none"
+                                  className="drop-shadow-sm"
+                                />
+                                <defs>
+                                  <linearGradient id="redGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#ef4444" />
+                                    <stop offset="100%" stopColor="#dc2626" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                            )}
+                            
+                            {/* Heart Rate line */}
+                            {hrPath && (
+                              <svg className="absolute inset-0 w-full h-full">
+                                <path 
+                                  d={hrPath}
+                                  stroke="url(#blueGradient)" 
+                                  strokeWidth="3" 
+                                  fill="none"
+                                  className="drop-shadow-sm"
+                                />
+                                <defs>
+                                  <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#3b82f6" />
+                                    <stop offset="100%" stopColor="#2563eb" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                            )}
+                            
+                            {/* Temperature line */}
+                            {tempPath && (
+                              <svg className="absolute inset-0 w-full h-full">
+                                <path 
+                                  d={tempPath}
+                                  stroke="url(#orangeGradient)" 
+                                  strokeWidth="3" 
+                                  fill="none"
+                                  className="drop-shadow-sm"
+                                />
+                                <defs>
+                                  <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#f97316" />
+                                    <stop offset="100%" stopColor="#ea580c" />
+                                  </linearGradient>
+                                </defs>
+                              </svg>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                     
                     {/* X-axis time labels */}
@@ -1321,7 +1421,11 @@ export default function PatientProfile() {
                     {/* Time Range Selector */}
                     <div className="flex items-center gap-2">
                       <label className="text-sm text-gray-600">Time Range:</label>
-                      <select className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white">
+                      <select 
+                        value={vitalsTimeRange}
+                        onChange={(e) => setVitalsTimeRange(e.target.value)}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-md bg-white hover:border-gray-400 transition-colors"
+                      >
                         <option value="7">Last 7 days</option>
                         <option value="30">Last 30 days</option>
                         <option value="90">Last 3 months</option>
@@ -1333,24 +1437,24 @@ export default function PatientProfile() {
                 </div>
 
                 <div className="p-6">
-                  {visits && visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length > 0 ? (
+                  {filteredVisits && filteredVisits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length > 0 ? (
                     <div className="space-y-6">
                       {/* Summary Statistics */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg border-l-4 border-red-500">
                           <div className="text-sm text-red-700 font-medium">Blood Pressure Trend</div>
-                          <div className="text-lg font-bold text-red-800">Stable</div>
-                          <div className="text-xs text-red-600">Average: 120/80 mmHg</div>
+                          <div className="text-lg font-bold text-red-800">{vitalStats?.bloodPressure?.trend || 'No Data'}</div>
+                          <div className="text-xs text-red-600">Average: {vitalStats?.bloodPressure?.average || 'N/A'}</div>
                         </div>
                         <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
                           <div className="text-sm text-blue-700 font-medium">Heart Rate Trend</div>
-                          <div className="text-lg font-bold text-blue-800">Normal</div>
-                          <div className="text-xs text-blue-600">Average: 72 bpm</div>
+                          <div className="text-lg font-bold text-blue-800">{vitalStats?.heartRate?.trend || 'No Data'}</div>
+                          <div className="text-xs text-blue-600">Average: {vitalStats?.heartRate?.average || 'N/A'} {typeof vitalStats?.heartRate?.average === 'number' ? 'bpm' : ''}</div>
                         </div>
                         <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg border-l-4 border-orange-500">
                           <div className="text-sm text-orange-700 font-medium">Temperature Trend</div>
-                          <div className="text-lg font-bold text-orange-800">Normal</div>
-                          <div className="text-xs text-orange-600">Average: 98.6°F</div>
+                          <div className="text-lg font-bold text-orange-800">{vitalStats?.temperature?.trend || 'No Data'}</div>
+                          <div className="text-xs text-orange-600">Average: {vitalStats?.temperature?.average || 'N/A'} {typeof vitalStats?.temperature?.average === 'number' ? '°C' : ''}</div>
                         </div>
                       </div>
 
@@ -1359,11 +1463,11 @@ export default function PatientProfile() {
                         <div className="flex items-center justify-between">
                           <h4 className="text-md font-semibold text-gray-800">Recent Records</h4>
                           <div className="text-sm text-gray-500">
-                            Showing {Math.min(visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length, 10)} of {visits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length} records
+                            Showing {Math.min(filteredVisits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length, 10)} of {filteredVisits.filter(v => v.bloodPressure || v.heartRate || v.temperature).length} records
                           </div>
                         </div>
                         
-                        {visits
+                        {filteredVisits
                           .filter(v => v.bloodPressure || v.heartRate || v.temperature)
                           .slice(0, 10)
                           .map((visit: any) => (
