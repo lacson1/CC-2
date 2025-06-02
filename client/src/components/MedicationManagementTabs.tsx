@@ -316,12 +316,37 @@ export default function MedicationManagementTabs({ patient, prescriptions }: Med
       return apiRequest('POST', `/api/prescriptions/${prescriptionId}/print`, {});
     },
     onSuccess: (response: any) => {
-      // Open print preview in new window
-      const printWindow = window.open('', '_blank');
+      // Create a blob URL for the HTML content
+      const blob = new Blob([response.html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      // Open in new window
+      const printWindow = window.open(url, '_blank');
       if (printWindow) {
-        printWindow.document.write(response.html);
-        printWindow.document.close();
-        printWindow.print();
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+            URL.revokeObjectURL(url);
+          }, 500);
+        };
+      } else {
+        // Fallback: create a temporary iframe
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'absolute';
+        iframe.style.left = '-9999px';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        document.body.appendChild(iframe);
+        
+        iframe.contentDocument?.open();
+        iframe.contentDocument?.write(response.html);
+        iframe.contentDocument?.close();
+        
+        setTimeout(() => {
+          iframe.contentWindow?.print();
+          document.body.removeChild(iframe);
+        }, 500);
       }
       toast({ title: "Success", description: "Prescription sent to printer" });
     },
