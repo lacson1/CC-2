@@ -73,6 +73,7 @@ import { useRole } from "@/components/role-guard";
 import PatientDocuments from "@/components/patient-documents";
 import PatientLabResults from "@/components/patient-lab-results";
 import PatientLabOrdersSummary from "@/components/patient-lab-orders-summary";
+import MedicationManagementTabs from "@/components/MedicationManagementTabs";
 import StandaloneVitalSignsRecorder from "@/components/standalone-vital-signs-recorder";
 import VitalSignsTrends from "@/components/vital-signs-trends";
 import VitalSignsAlerts from "@/components/vital-signs-alerts";
@@ -1089,37 +1090,12 @@ export default function PatientProfile() {
                     </CardTitle>
                   </CardHeader>
                 <CardContent>
-                  <Tabs defaultValue="current" className="w-full">
-                    <div className="flex items-center justify-between mb-4">
-                      <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-                        <TabsTrigger value="current" className="flex items-center gap-2">
-                          <Pill className="w-4 h-4" />
-                          Current ({prescriptions?.filter(p => p.status === 'active')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="past" className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          Past ({prescriptions?.filter(p => p.status === 'completed')?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="repeat" className="flex items-center gap-2">
-                          <Activity className="w-4 h-4" />
-                          Repeat ({prescriptions?.filter(p => p.duration?.includes('Ongoing'))?.length || 0})
-                        </TabsTrigger>
-                        <TabsTrigger value="summary" className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          Summary
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      {(user?.role === 'doctor' || user?.role === 'admin') && (
-                        <Button 
-                          onClick={() => setShowPrescriptionModal(true)}
-                          className="btn-primary shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                        >
-                          <Plus className="mr-2 h-4 w-4 icon-professional" />
-                          Prescribe Medication
-                        </Button>
-                      )}
-                    </div>
+                  <MedicationManagementTabs 
+                    patient={{ id: patient.id, firstName: patient.firstName, lastName: patient.lastName }}
+                    prescriptions={prescriptions || []}
+                  />
+                </CardContent>
+              </Card>
 
                     <TabsContent value="current" className="space-y-4">
                       {prescriptions?.filter(p => p.status === 'active').length > 0 ? (
