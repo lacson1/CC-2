@@ -6,12 +6,10 @@ import { FlaskRound, Clock, CheckCircle, AlertCircle, Eye } from "lucide-react";
 interface LabOrder {
   id: number;
   patientId: number;
-  orderedBy: string;
-  doctorName?: string;
-  orderDate: string;
+  orderedBy: number;
   status: 'pending' | 'completed' | 'cancelled';
-  priority: 'routine' | 'urgent' | 'stat';
-  notes?: string;
+  createdAt: string;
+  completedAt: string | null;
 }
 
 interface PatientLabOrdersSummaryProps {
@@ -20,7 +18,7 @@ interface PatientLabOrdersSummaryProps {
 
 export default function PatientLabOrdersSummary({ patientId }: PatientLabOrdersSummaryProps) {
   const { data: labOrders, isLoading } = useQuery<LabOrder[]>({
-    queryKey: ['/api/patients', patientId, 'lab-orders'],
+    queryKey: [`/api/patients/${patientId}/lab-orders`],
     enabled: !!patientId,
   });
 
@@ -71,11 +69,11 @@ export default function PatientLabOrdersSummary({ patientId }: PatientLabOrdersS
                 {order.status === 'completed' && <CheckCircle className="w-3 h-3 text-green-500" />}
                 {order.status === 'cancelled' && <AlertCircle className="w-3 h-3 text-red-500" />}
                 <span className="font-medium text-xs">
-                  {new Date(order.orderDate).toLocaleDateString()}
+                  {new Date(order.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <div className="text-xs text-gray-500 mt-1">
-                By {order.doctorName || order.orderedBy}
+                By Doctor #{order.orderedBy}
               </div>
             </div>
             <Badge 
