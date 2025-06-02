@@ -50,7 +50,6 @@ import AllergyManagement from "@/components/allergy-management";
 import MedicalHistoryManagement from "@/components/medical-history-management";
 
 import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
-import { ModernPatientOverview } from "@/components/modern-patient-overview";
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
 import PatientDocuments from "@/components/patient-documents";
