@@ -392,7 +392,7 @@ app.use((req, res, next) => {
                     localStorage.setItem('clinic_user', JSON.stringify(data.user));
                     
                     // Redirect to main application
-                    window.location.href = '/dashboard';
+                    window.location.href = '/app';
                 } else {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Invalid username or password');
@@ -410,6 +410,16 @@ app.use((req, res, next) => {
     </script>
 </body>
 </html>`);
+  });
+
+  // Serve React application for authenticated routes
+  app.get('/app*', (req, res, next) => {
+    // Let Vite handle this in development
+    if (app.get("env") === "development") {
+      return next();
+    }
+    // Serve static files in production
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
   });
 
   // importantly only setup vite in development and after
