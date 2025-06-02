@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { 
   User, 
   Calendar, 
@@ -27,7 +28,9 @@ import {
   Brain,
   MessageCircle,
   Eye,
-  Ear
+  Ear,
+  Search,
+  X
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
@@ -71,6 +74,7 @@ export default function PatientProfile() {
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
+  const [assessmentSearchTerm, setAssessmentSearchTerm] = useState('');
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -156,6 +160,35 @@ export default function PatientProfile() {
       setShowAssessmentModal(true);
     }
   };
+
+  // Define all available assessments for filtering
+  const allAssessments = [
+    { type: 'antenatal', name: 'Antenatal Assessment', description: 'Prenatal care evaluation', keywords: ['pregnancy', 'prenatal', 'maternal'] },
+    { type: 'pediatric', name: 'Pediatric Assessment', description: 'Child health evaluation', keywords: ['child', 'kids', 'pediatric'] },
+    { type: 'cardiac', name: 'Cardiac Assessment', description: 'Heart health evaluation', keywords: ['heart', 'cardiology', 'cardiovascular'] },
+    { type: 'respiratory', name: 'Respiratory Assessment', description: 'Lung function evaluation', keywords: ['lung', 'breathing', 'pulmonary'] },
+    { type: 'neurological', name: 'Neurological Assessment', description: 'Nervous system evaluation', keywords: ['brain', 'nerve', 'neuro'] },
+    { type: 'mental-health', name: 'Mental Health Assessment', description: 'Psychological evaluation', keywords: ['mental', 'psychology', 'psychiatric'] },
+    { type: 'dermatological', name: 'Dermatological Assessment', description: 'Skin health evaluation', keywords: ['skin', 'dermatology', 'rash'] },
+    { type: 'orthopedic', name: 'Orthopedic Assessment', description: 'Bone and joint evaluation', keywords: ['bone', 'joint', 'orthopedic'] },
+    { type: 'ent', name: 'ENT Assessment', description: 'Ear, nose, throat evaluation', keywords: ['ear', 'nose', 'throat'] },
+    { type: 'pdcntss', name: 'PDCNTSS Assessment', description: 'Specialized diagnostic screening', keywords: ['diagnostic', 'screening', 'pdcntss'] },
+    { type: 'ophthalmology', name: 'Ophthalmology Assessment', description: 'Eye health examination', keywords: ['eye', 'vision', 'sight'] },
+    { type: 'endocrinology', name: 'Endocrinology Assessment', description: 'Hormone and gland evaluation', keywords: ['hormone', 'diabetes', 'thyroid'] },
+    { type: 'gastroenterology', name: 'Gastroenterology Assessment', description: 'Digestive system evaluation', keywords: ['stomach', 'digestive', 'gastro'] },
+    { type: 'urology', name: 'Urology Assessment', description: 'Urinary system evaluation', keywords: ['kidney', 'bladder', 'urinary'] }
+  ];
+
+  // Filter assessments based on search term
+  const filteredAssessments = allAssessments.filter(assessment => {
+    if (!assessmentSearchTerm) return true;
+    const searchLower = assessmentSearchTerm.toLowerCase();
+    return (
+      assessment.name.toLowerCase().includes(searchLower) ||
+      assessment.description.toLowerCase().includes(searchLower) ||
+      assessment.keywords.some(keyword => keyword.toLowerCase().includes(searchLower))
+    );
+  });
 
   // Handler for creating a new assessment form
 
