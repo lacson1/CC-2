@@ -1658,13 +1658,23 @@ export default function PatientProfile() {
                             </p>
                           )}
                           <div className="flex justify-center gap-2">
-                            <Button size="sm" variant="outline" className="text-xs">
-                              <Activity className="w-3 h-3 mr-1" />
-                              Rhythm
-                            </Button>
-                            <Button size="sm" variant="outline" className="text-xs">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs"
+                              onClick={() => setShowVitalsTrends(true)}
+                            >
                               <TrendingUp className="w-3 h-3 mr-1" />
-                              History
+                              Trends
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="text-xs"
+                              onClick={() => setShowVitalsAlerts(true)}
+                            >
+                              <AlertTriangle className="w-3 h-3 mr-1" />
+                              Alerts
                             </Button>
                           </div>
                         </div>
