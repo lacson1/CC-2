@@ -18,7 +18,6 @@ import { Search } from "lucide-react";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
 import PatientProfile from "@/pages/patient-profile-clean";
-import EnhancedPatientProfile from "@/pages/enhanced-patient-profile";
 import Visits from "@/pages/visits";
 import LabResults from "@/pages/lab-results";
 import Pharmacy from "@/pages/pharmacy";
@@ -104,7 +103,6 @@ function AuthenticatedApp() {
                   <Route path="/dashboard" component={Dashboard} />
                   <Route path="/patients" component={Patients} />
                   <Route path="/patients/:id" component={PatientProfile} />
-                  <Route path="/patients/:id/enhanced" component={EnhancedPatientProfile} />
                   <Route path="/patients/:patientId/record-visit" component={RecordVisitPage} />
                   <Route path="/patients/:patientId/visits/:visitId/edit" component={EditVisit} />
                   <Route path="/consultation-records/:id" component={ConsultationRecordDetails} />
