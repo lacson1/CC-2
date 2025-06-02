@@ -109,23 +109,49 @@ export default function PatientProfile() {
 
   // Handler for selecting an assessment form
   const handleAssessmentFormSelect = (assessmentType: string) => {
-    // Find matching consultation form from Form Builder
-    const matchingForm = consultationForms.find((form: any) => 
-      form.name.toLowerCase().includes(assessmentType.toLowerCase()) ||
-      assessmentType.toLowerCase().includes(form.name.toLowerCase())
-    );
+    // Enhanced matching logic for consultation forms
+    const matchingForm = consultationForms.find((form: any) => {
+      const formName = (form.name || form.templateName || '').toLowerCase();
+      const assessmentLower = assessmentType.toLowerCase();
+      
+      // Direct name matches
+      if (formName.includes(assessmentLower) || assessmentLower.includes(formName)) {
+        return true;
+      }
+      
+      // Specific mapping for common assessment types
+      const mappings: Record<string, string[]> = {
+        'dermatological': ['dermatology', 'skin', 'dermatological'],
+        'ent': ['ent', 'ear nose throat', 'otolaryngology'],
+        'cardiac': ['cardiac', 'cardiology', 'heart'],
+        'respiratory': ['respiratory', 'pulmonary', 'lung'],
+        'neurological': ['neurological', 'neurology', 'neuro'],
+        'pediatric': ['pediatric', 'paediatric', 'child', 'kids'],
+        'antenatal': ['antenatal', 'prenatal', 'pregnancy', 'maternal'],
+        'mental-health': ['mental', 'psychiatric', 'psychology', 'psych'],
+        'orthopedic': ['orthopedic', 'orthopaedic', 'bone', 'joint'],
+        'pdcntss': ['pdcntss', 'diagnostic', 'screening'],
+        'ophthalmology': ['ophthalmology', 'eye', 'vision', 'ophthalmic'],
+        'endocrinology': ['endocrinology', 'hormone', 'endocrine', 'diabetes'],
+        'gastroenterology': ['gastroenterology', 'gastro', 'digestive', 'gi'],
+        'urology': ['urology', 'urological', 'kidney', 'bladder']
+      };
+      
+      const keywords = mappings[assessmentLower] || [assessmentLower];
+      return keywords.some(keyword => formName.includes(keyword));
+    });
     
     if (matchingForm) {
-      // Switch to visits tab (where consultation forms are) and pre-select the form
+      // Switch to visits tab and pre-select the form
       setActiveTab("visits");
       setSelectedFormId(matchingForm.id);
       
-      // Clear the selection after a brief moment to allow for future selections
+      // Clear the selection after a brief delay
       setTimeout(() => {
         setSelectedFormId(null);
-      }, 1000);
+      }, 1500);
     } else {
-      // Fallback to assessment modal for forms not yet created
+      // Show modal for forms not yet created
       setSelectedAssessmentType(assessmentType);
       setShowAssessmentModal(true);
     }
@@ -428,17 +454,17 @@ export default function PatientProfile() {
                     
                     {/* Default Specialty Assessment Cards */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-pink-200 hover:border-pink-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-pink-200 hover:border-pink-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('antenatal')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                            <Heart className="w-5 h-5 text-pink-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-pink-100 to-pink-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Heart className="w-6 h-6 text-pink-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Antenatal Assessment</h3>
-                            <p className="text-sm text-gray-500">Prenatal care evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Antenatal Assessment</h3>
+                            <p className="text-sm text-gray-600">Prenatal care evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -446,17 +472,17 @@ export default function PatientProfile() {
 
                     {/* Pediatric Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-blue-200 hover:border-blue-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-blue-200 hover:border-blue-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('pediatric')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <User className="w-5 h-5 text-blue-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <User className="w-6 h-6 text-blue-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Pediatric Assessment</h3>
-                            <p className="text-sm text-gray-500">Child health evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Pediatric Assessment</h3>
+                            <p className="text-sm text-gray-600">Child health evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -464,17 +490,17 @@ export default function PatientProfile() {
 
                     {/* Cardiac Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-red-200 hover:border-red-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-red-200 hover:border-red-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('cardiac')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                            <Heart className="w-5 h-5 text-red-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Heart className="w-6 h-6 text-red-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Cardiac Assessment</h3>
-                            <p className="text-sm text-gray-500">Heart health evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Cardiac Assessment</h3>
+                            <p className="text-sm text-gray-600">Heart health evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -482,17 +508,17 @@ export default function PatientProfile() {
 
                     {/* Respiratory Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-green-200 hover:border-green-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-green-200 hover:border-green-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('respiratory')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-green-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Activity className="w-6 h-6 text-green-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Respiratory Assessment</h3>
-                            <p className="text-sm text-gray-500">Lung function evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Respiratory Assessment</h3>
+                            <p className="text-sm text-gray-600">Lung function evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -500,17 +526,17 @@ export default function PatientProfile() {
 
                     {/* Neurological Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-purple-200 hover:border-purple-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-purple-200 hover:border-purple-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('neurological')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <Brain className="w-5 h-5 text-purple-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Brain className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Neurological Assessment</h3>
-                            <p className="text-sm text-gray-500">Nervous system evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Neurological Assessment</h3>
+                            <p className="text-sm text-gray-600">Nervous system evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -518,17 +544,17 @@ export default function PatientProfile() {
 
                     {/* Mental Health Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-indigo-200 hover:border-indigo-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-indigo-200 hover:border-indigo-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('mental-health')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <MessageCircle className="w-5 h-5 text-indigo-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <MessageCircle className="w-6 h-6 text-indigo-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Mental Health Assessment</h3>
-                            <p className="text-sm text-gray-500">Psychological evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Mental Health Assessment</h3>
+                            <p className="text-sm text-gray-600">Psychological evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -536,17 +562,17 @@ export default function PatientProfile() {
 
                     {/* Dermatological Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-orange-200 hover:border-orange-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-orange-200 hover:border-orange-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('dermatological')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                            <Eye className="w-5 h-5 text-orange-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Eye className="w-6 h-6 text-orange-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Dermatological Assessment</h3>
-                            <p className="text-sm text-gray-500">Skin health evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Dermatological Assessment</h3>
+                            <p className="text-sm text-gray-600">Skin health evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -554,17 +580,17 @@ export default function PatientProfile() {
 
                     {/* Orthopedic Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-teal-200 hover:border-teal-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-teal-200 hover:border-teal-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('orthopedic')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-teal-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-teal-100 to-teal-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Activity className="w-6 h-6 text-teal-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Orthopedic Assessment</h3>
-                            <p className="text-sm text-gray-500">Bone and joint evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Orthopedic Assessment</h3>
+                            <p className="text-sm text-gray-600">Bone and joint evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -572,17 +598,17 @@ export default function PatientProfile() {
 
                     {/* ENT Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-yellow-200 hover:border-yellow-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-yellow-200 hover:border-yellow-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('ent')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <Ear className="w-5 h-5 text-yellow-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Ear className="w-6 h-6 text-yellow-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">ENT Assessment</h3>
-                            <p className="text-sm text-gray-500">Ear, nose, throat evaluation</p>
+                            <h3 className="font-semibold text-gray-900">ENT Assessment</h3>
+                            <p className="text-sm text-gray-600">Ear, nose, throat evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -590,17 +616,17 @@ export default function PatientProfile() {
 
                     {/* PDCNTSS Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-cyan-200 hover:border-cyan-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-cyan-200 hover:border-cyan-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('pdcntss')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-cyan-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-cyan-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <FileText className="w-6 h-6 text-cyan-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">PDCNTSS Assessment</h3>
-                            <p className="text-sm text-gray-500">Specialized diagnostic screening</p>
+                            <h3 className="font-semibold text-gray-900">PDCNTSS Assessment</h3>
+                            <p className="text-sm text-gray-600">Specialized diagnostic screening</p>
                           </div>
                         </div>
                       </CardContent>
@@ -608,17 +634,17 @@ export default function PatientProfile() {
 
                     {/* Ophthalmology Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-slate-200 hover:border-slate-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-slate-200 hover:border-slate-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('ophthalmology')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                            <Eye className="w-5 h-5 text-slate-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Eye className="w-6 h-6 text-slate-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Ophthalmology Assessment</h3>
-                            <p className="text-sm text-gray-500">Eye health examination</p>
+                            <h3 className="font-semibold text-gray-900">Ophthalmology Assessment</h3>
+                            <p className="text-sm text-gray-600">Eye health examination</p>
                           </div>
                         </div>
                       </CardContent>
@@ -626,17 +652,17 @@ export default function PatientProfile() {
 
                     {/* Endocrinology Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-emerald-200 hover:border-emerald-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-emerald-200 hover:border-emerald-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('endocrinology')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                            <Activity className="w-5 h-5 text-emerald-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Activity className="w-6 h-6 text-emerald-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Endocrinology Assessment</h3>
-                            <p className="text-sm text-gray-500">Hormone and gland evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Endocrinology Assessment</h3>
+                            <p className="text-sm text-gray-600">Hormone and gland evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -644,17 +670,17 @@ export default function PatientProfile() {
 
                     {/* Gastroenterology Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-amber-200 hover:border-amber-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-amber-200 hover:border-amber-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('gastroenterology')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                            <Pill className="w-5 h-5 text-amber-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <Pill className="w-6 h-6 text-amber-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Gastroenterology Assessment</h3>
-                            <p className="text-sm text-gray-500">Digestive system evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Gastroenterology Assessment</h3>
+                            <p className="text-sm text-gray-600">Digestive system evaluation</p>
                           </div>
                         </div>
                       </CardContent>
@@ -662,17 +688,17 @@ export default function PatientProfile() {
 
                     {/* Urology Assessment */}
                     <Card 
-                      className="cursor-pointer hover:shadow-lg transition-shadow border-rose-200 hover:border-rose-400"
+                      className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-rose-200 hover:border-rose-400 hover:scale-105"
                       onClick={() => handleAssessmentFormSelect('urology')}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-rose-100 rounded-lg flex items-center justify-center">
-                            <User className="w-5 h-5 text-rose-600" />
+                          <div className="w-12 h-12 bg-gradient-to-br from-rose-100 to-rose-200 rounded-xl flex items-center justify-center shadow-sm">
+                            <User className="w-6 h-6 text-rose-600" />
                           </div>
                           <div>
-                            <h3 className="font-medium text-gray-900">Urology Assessment</h3>
-                            <p className="text-sm text-gray-500">Urinary system evaluation</p>
+                            <h3 className="font-semibold text-gray-900">Urology Assessment</h3>
+                            <p className="text-sm text-gray-600">Urinary system evaluation</p>
                           </div>
                         </div>
                       </CardContent>
