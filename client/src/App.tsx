@@ -193,40 +193,7 @@ function Router() {
       <Route path="/patient-portal" component={PatientPortal} />
       <Route>
         {() => {
-          if (isLoading) {
-            return (
-              <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-slate-50 relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500 rounded-full blur-3xl"></div>
-                  <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500 rounded-full blur-3xl"></div>
-                </div>
-                
-                <div className="flex flex-col items-center space-y-6 z-10">
-                  {/* Enhanced Loading Animation */}
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-600 rounded-full animate-spin"></div>
-                    <div className="absolute inset-2 w-8 h-8 border-2 border-blue-200 border-b-blue-500 rounded-full animate-spin animate-reverse"></div>
-                  </div>
-                  
-                  {/* Brand and Status */}
-                  <div className="text-center space-y-2">
-                    <div className="text-2xl font-bold text-gray-800 tracking-tight">Bluequee</div>
-                    <div className="text-lg font-medium text-gray-600">Loading your workspace...</div>
-                    <div className="text-sm text-gray-500">Preparing healthcare tools and patient data</div>
-                  </div>
-                  
-                  {/* Progress Dots */}
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-75"></div>
-                    <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-150"></div>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
+          // Temporary bypass for debugging - show login page directly
           if (!user) {
             return <Login />;
           }
