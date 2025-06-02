@@ -2148,10 +2148,6 @@ export default function PatientProfile() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="labs" className="space-y-6">
-              <PatientLabResults patientId={patient.id} />
-            </TabsContent>
-
             <TabsContent value="documents">
               <PatientDocuments patientId={patient.id} patientName={`${patient.firstName} ${patient.lastName}`} />
             </TabsContent>

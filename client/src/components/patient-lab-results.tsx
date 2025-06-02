@@ -294,7 +294,7 @@ export default function PatientLabResults({ patientId }: PatientLabResultsProps)
         <div className="mt-4 pt-4 border-t">
           <h5 className="font-medium text-gray-900 mb-3">Test Items</h5>
           <div className="grid gap-3">
-            {labOrderItems[order.id].map((item) => (
+            {labOrderItems[order.id].map((item: any) => (
               <div key={item.id} className={`border rounded-lg p-3 ${getResultStatus(item.result, item.status)}`}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
