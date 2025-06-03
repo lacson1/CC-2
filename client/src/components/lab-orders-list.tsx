@@ -71,7 +71,13 @@ export default function LabOrdersList({ patientId, showPendingOnly, showAll }: L
     );
   }
 
-  if (labOrders.length === 0) {
+  if (filteredLabOrders.length === 0) {
+    const emptyMessage = showPendingOnly 
+      ? "No pending laboratory orders found for this patient."
+      : showAll 
+        ? "No laboratory orders found for this patient."
+        : "No recent laboratory orders found for this patient.";
+        
     return (
       <Card>
         <CardHeader>
@@ -83,7 +89,7 @@ export default function LabOrdersList({ patientId, showPendingOnly, showAll }: L
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
             <TestTube className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No laboratory orders found for this patient.</p>
+            <p>{emptyMessage}</p>
           </div>
         </CardContent>
       </Card>
@@ -95,11 +101,11 @@ export default function LabOrdersList({ patientId, showPendingOnly, showAll }: L
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TestTube className="h-5 w-5" />
-          Laboratory Orders ({labOrders.length})
+          Laboratory Orders ({filteredLabOrders.length})
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {labOrders.map(order => (
+        {filteredLabOrders.map(order => (
           <LabOrderCard
             key={order.id}
             order={order}
