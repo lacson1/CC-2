@@ -1,11 +1,19 @@
 /**
- * Utility functions for patient-related operations
+ * Utility functions for patient and staff name formatting operations
  */
 
 export interface PatientName {
   title?: string | null;
   firstName: string;
   lastName: string;
+}
+
+export interface StaffName {
+  title?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  username?: string;
+  role?: string;
 }
 
 /**
@@ -39,4 +47,44 @@ export function getPatientInitials(patient: PatientName): string {
   const lastInitial = lastName.charAt(0).toUpperCase();
   
   return `${firstInitial}${lastInitial}`;
+}
+
+/**
+ * Format staff/doctor name with title consistently across the application
+ */
+export function formatStaffName(staff: StaffName): string {
+  const { title, firstName, lastName, username, role } = staff;
+  
+  // If we have firstName and lastName, use them
+  if (firstName && lastName) {
+    const titlePart = title ? `${title} ` : (role === 'doctor' ? 'Dr. ' : '');
+    return `${titlePart}${firstName} ${lastName}`.trim();
+  }
+  
+  // Fallback to username if no proper name
+  if (username) {
+    const titlePart = title ? `${title} ` : (role === 'doctor' ? 'Dr. ' : '');
+    return `${titlePart}${username}`.trim();
+  }
+  
+  return 'Healthcare Staff';
+}
+
+/**
+ * Get staff initials for avatar display
+ */
+export function getStaffInitials(staff: StaffName): string {
+  const firstName = staff.firstName || '';
+  const lastName = staff.lastName || '';
+  const username = staff.username || '';
+  
+  if (firstName && lastName) {
+    return `${firstName.charAt(0).toUpperCase()}${lastName.charAt(0).toUpperCase()}`;
+  }
+  
+  if (username) {
+    return username.charAt(0).toUpperCase() + (username.charAt(1) || '').toUpperCase();
+  }
+  
+  return 'HS';
 }

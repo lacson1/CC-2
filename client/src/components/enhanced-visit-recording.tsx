@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { formatPatientName } from "@/lib/patient-utils";
 import { QuickMedicationSearch } from "@/components/quick-medication-search";
 import { GlobalMedicationSearch } from "@/components/global-medication-search";
 
@@ -149,8 +150,8 @@ export function EnhancedVisitRecording({ patientId, onSave }: EnhancedVisitRecor
     enabled: !!patientId,
   });
 
-  // Get patient name safely
-  const patientName = patient ? `${patient.firstName || ''} ${patient.lastName || ''}`.trim() : 'Patient';
+  // Get patient name safely using standardized formatting
+  const patientName = patient ? formatPatientName(patient) : 'Patient';
 
   // Submit visit record
   const submitVisit = useMutation({

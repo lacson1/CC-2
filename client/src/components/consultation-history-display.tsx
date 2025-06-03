@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ConsultationDropdownMenu } from "./consultation-dropdown-menu";
+import { formatStaffName } from "@/lib/patient-utils";
 import { FileText, Clock, User, Activity, Pill, Calendar, ChevronDown, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -33,7 +34,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
   ).map((visit: any) => {
     // Find the doctor who conducted this visit
     const doctor = staffData.find((staff: any) => staff.id === visit.doctorId);
-    const doctorName = doctor ? `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() : doctor?.username || 'Healthcare Staff';
+    const doctorName = doctor ? formatStaffName(doctor) : 'Healthcare Staff';
     
     return {
       id: visit.id,
