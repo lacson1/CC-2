@@ -35,7 +35,7 @@ export default function LabOrdersList({ patientId, showPendingOnly, showAll }: L
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
 
   const { data: labOrders = [], isLoading } = useQuery<LabOrder[]>({
-    queryKey: ['/api/patients', patientId, 'lab-orders']
+    queryKey: [`/api/patients/${patientId}/lab-orders`]
   });
 
   // Filter lab orders based on props
