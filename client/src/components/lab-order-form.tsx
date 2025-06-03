@@ -451,14 +451,53 @@ export default function LabOrderForm({ patientId, onOrderCreated }: LabOrderForm
                           <div className="font-medium">{category}</div>
                           <div className="text-sm text-muted-foreground">
                             {tests.length} test{tests.length > 1 ? 's' : ''} available
+                            {(() => {
+                              const categoryTestIds = tests.map(test => test.id);
+                              const selectedInCategory = selectedTests.filter(id => categoryTestIds.includes(id)).length;
+                              if (selectedInCategory > 0) {
+                                return (
+                                  <span className="text-blue-600 font-medium ml-2">
+                                    • {selectedInCategory} selected
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                         </div>
                       </div>
-                      {expandedCategories.includes(category) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const categoryTestIds = tests.map(test => test.id);
+                          const selectedInCategory = selectedTests.filter(id => categoryTestIds.includes(id)).length;
+                          const allSelected = selectedInCategory === tests.length && tests.length > 0;
+                          
+                          return (
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-xs px-2 py-1"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (allSelected) {
+                                    deselectAllInCategory(category);
+                                  } else {
+                                    selectAllInCategory(category);
+                                  }
+                                }}
+                              >
+                                {allSelected ? 'Deselect All' : 'Select All'}
+                              </Button>
+                            </div>
+                          );
+                        })()}
+                        {expandedCategories.includes(category) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </div>
                     </Button>
                   </CollapsibleTrigger>
                   
