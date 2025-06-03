@@ -61,7 +61,7 @@ export default function Patients() {
       </div>
 
       {/* Scrollable Content Area */}
-      <div className="scrollable-content bg-slate-50">
+      <div className="scrollable-content bg-gradient-to-br from-slate-50/60 via-white to-blue-50/30">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="w-full max-w-7xl mx-auto">
             <TabsContent value="patients" className="mt-0">

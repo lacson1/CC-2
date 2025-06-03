@@ -91,12 +91,18 @@ function AuthenticatedApp() {
       <Sidebar onStartTour={startTour} />
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         <TopBar />
-        <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-50/30 via-white to-blue-50/20">
+        <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-50/80 via-white to-blue-50/40 relative">
+          {/* Subtle Background Pattern */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
+            <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-accent rounded-full blur-3xl"></div>
+            <div className="absolute top-2/3 left-1/2 w-64 h-64 bg-blue-400 rounded-full blur-3xl"></div>
+          </div>
           {/* Enhanced Container with Healthcare-Focused Design */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-300 scrollbar-track-transparent relative z-10">
             <div className="w-full">
               {/* Page Content with Smooth Transitions */}
-              <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out">
+              <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out relative">
                 <Switch>
                   <Route path="/" component={Dashboard} />
                   <Route path="/dashboard" component={Dashboard} />
