@@ -6495,190 +6495,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/notifications', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const organizationId = req.user!.organizationId!;
-      const userId = req.user!.id;
-      
-      // Get recent appointments (today and upcoming)
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const upcomingAppointments = await db
-        .select({
-          id: appointments.id,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          appointmentDate: appointments.appointmentDate,
-          appointmentTime: appointments.appointmentTime,
-          status: appointments.status,
-          type: appointments.type
-        })
-        .from(appointments)
-        .leftJoin(patients, eq(appointments.patientId, patients.id))
-        .where(and(
-          eq(appointments.organizationId, organizationId),
-          gte(appointments.appointmentDate, today),
-          inArray(appointments.status, ['scheduled', 'confirmed'])
-        ))
-        .orderBy(appointments.appointmentDate, appointments.appointmentTime)
-        .limit(5);
-
-      // Get recent lab results that are ready
-      const recentLabResults = await db
-        .select({
-          id: labOrders.id,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          testName: labTests.name,
-          status: labOrders.status,
-          completedAt: labOrders.completedAt,
-          urgency: labOrders.urgency
-        })
-        .from(labOrders)
-        .leftJoin(patients, eq(labOrders.patientId, patients.id))
-        .leftJoin(labOrderItems, eq(labOrderItems.labOrderId, labOrders.id))
-        .leftJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
-        .where(and(
-          eq(labOrders.organizationId, organizationId),
-          eq(labOrders.status, 'completed'),
-          isNotNull(labOrders.completedAt)
-        ))
-        .orderBy(desc(labOrders.completedAt))
-        .limit(5);
-
-      // Get expiring prescriptions (ending within 7 days)
-      const expiringPrescriptions = await db
-        .select({
-          id: prescriptions.id,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          medicationName: prescriptions.medicationName,
-          endDate: prescriptions.endDate,
-          status: prescriptions.status
-        })
-        .from(prescriptions)
-        .leftJoin(patients, eq(prescriptions.patientId, patients.id))
-        .where(and(
-          eq(prescriptions.organizationId, organizationId),
-          eq(prescriptions.status, 'active'),
-          lte(prescriptions.endDate, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))
-        ))
-        .orderBy(prescriptions.endDate)
-        .limit(5);
-
-      // Get pending pharmacy activities
-      const pendingPharmacyActivities = await db
-        .select({
-          id: pharmacyActivities.id,
-          title: pharmacyActivities.title,
-          description: pharmacyActivities.description,
-          activityType: pharmacyActivities.activityType,
-          priority: pharmacyActivities.priority,
-          status: pharmacyActivities.status,
-          createdAt: pharmacyActivities.createdAt,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`
-        })
-        .from(pharmacyActivities)
-        .leftJoin(patients, eq(pharmacyActivities.patientId, patients.id))
-        .where(and(
-          eq(pharmacyActivities.organizationId, organizationId),
-          inArray(pharmacyActivities.status, ['pending', 'in_progress'])
-        ))
-        .orderBy(desc(pharmacyActivities.createdAt))
-        .limit(3);
-
-      // Get recent safety alerts
-      const recentSafetyAlerts = await db
-        .select({
-          id: safetyAlerts.id,
-          title: safetyAlerts.title,
-          description: safetyAlerts.description,
-          type: safetyAlerts.type,
-          priority: safetyAlerts.priority,
-          patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
-          dateAdded: safetyAlerts.dateAdded
-        })
-        .from(safetyAlerts)
-        .leftJoin(patients, eq(safetyAlerts.patientId, patients.id))
-        .where(and(
-          eq(safetyAlerts.organizationId, organizationId),
-          eq(safetyAlerts.isActive, true)
-        ))
-        .orderBy(desc(safetyAlerts.dateAdded))
-        .limit(3);
-
-      // Format notifications
       const notifications = [];
 
-      // Add appointment notifications
-      upcomingAppointments.forEach(appointment => {
-        const appointmentDate = new Date(appointment.appointmentDate);
-        const isToday = appointmentDate.toDateString() === today.toDateString();
-        
-        notifications.push({
-          id: `appointment-${appointment.id}`,
-          type: 'appointment',
-          priority: isToday ? 'high' : 'medium',
-          title: isToday ? 'Appointment Today' : 'Upcoming Appointment',
-          description: `${appointment.patientName} - ${appointment.appointmentTime}`,
-          timestamp: appointment.appointmentDate,
-          color: 'blue',
-          metadata: { appointmentId: appointment.id, patientName: appointment.patientName }
-        });
-      });
+      // Get recent active prescriptions
+      try {
+        const recentPrescriptions = await db
+          .select()
+          .from(prescriptions)
+          .where(and(
+            eq(prescriptions.organizationId, organizationId),
+            eq(prescriptions.status, 'active')
+          ))
+          .orderBy(desc(prescriptions.startDate))
+          .limit(3);
 
-      // Add lab result notifications
-      recentLabResults.forEach(result => {
-        notifications.push({
-          id: `lab-${result.id}`,
-          type: 'lab_result',
-          priority: result.urgency === 'urgent' ? 'high' : 'medium',
-          title: 'Lab Results Available',
-          description: `${result.patientName} - ${result.testName}`,
-          timestamp: result.completedAt,
-          color: 'green',
-          metadata: { labOrderId: result.id, patientName: result.patientName }
-        });
-      });
+        // Get patient names for prescriptions
+        if (recentPrescriptions.length > 0) {
+          const prescriptionPatientIds = recentPrescriptions.map(p => p.patientId).filter(Boolean);
+          let patientNames = {};
+          
+          if (prescriptionPatientIds.length > 0) {
+            const patientData = await db
+              .select()
+              .from(patients)
+              .where(inArray(patients.id, prescriptionPatientIds));
+            
+            patientData.forEach(patient => {
+              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
+            });
+          }
 
-      // Add prescription expiry notifications
-      expiringPrescriptions.forEach(prescription => {
-        const daysUntilExpiry = Math.ceil((new Date(prescription.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-        
-        notifications.push({
-          id: `prescription-${prescription.id}`,
-          type: 'prescription_expiry',
-          priority: daysUntilExpiry <= 2 ? 'high' : 'medium',
-          title: 'Prescription Expiring Soon',
-          description: `${prescription.patientName} - ${prescription.medicationName}`,
-          timestamp: prescription.endDate,
-          color: 'orange',
-          metadata: { prescriptionId: prescription.id, daysUntilExpiry, patientName: prescription.patientName }
-        });
-      });
+          // Add prescription notifications
+          recentPrescriptions.forEach(prescription => {
+            const patientName = patientNames[prescription.patientId] || 'Unknown Patient';
+            notifications.push({
+              id: `prescription-${prescription.id}`,
+              type: 'prescription',
+              priority: 'medium',
+              title: 'Active Prescription',
+              description: `${patientName} - ${prescription.medicationName}`,
+              timestamp: prescription.startDate,
+              color: 'blue'
+            });
+          });
+        }
+      } catch (prescriptionError) {
+        console.log('Error fetching prescriptions for notifications:', prescriptionError);
+      }
 
-      // Add pharmacy activity notifications
-      pendingPharmacyActivities.forEach(activity => {
-        notifications.push({
-          id: `pharmacy-${activity.id}`,
-          type: 'pharmacy_activity',
-          priority: activity.priority || 'medium',
-          title: activity.title,
-          description: activity.description,
-          timestamp: activity.createdAt,
-          color: 'purple',
-          metadata: { activityId: activity.id, activityType: activity.activityType }
-        });
-      });
+      // Get recent visits
+      try {
+        const recentVisits = await db
+          .select()
+          .from(visits)
+          .where(eq(visits.organizationId, organizationId))
+          .orderBy(desc(visits.visitDate))
+          .limit(3);
 
-      // Add safety alert notifications
-      recentSafetyAlerts.forEach(alert => {
-        notifications.push({
-          id: `safety-${alert.id}`,
-          type: 'safety_alert',
-          priority: alert.priority || 'high',
-          title: alert.title,
-          description: `${alert.patientName} - ${alert.description}`,
-          timestamp: alert.dateAdded,
-          color: 'red',
-          metadata: { alertId: alert.id, alertType: alert.type, patientName: alert.patientName }
-        });
-      });
+        // Get patient names for visits
+        if (recentVisits.length > 0) {
+          const visitPatientIds = recentVisits.map(v => v.patientId).filter(Boolean);
+          let patientNames = {};
+          
+          if (visitPatientIds.length > 0) {
+            const patientData = await db
+              .select()
+              .from(patients)
+              .where(inArray(patients.id, visitPatientIds));
+            
+            patientData.forEach(patient => {
+              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
+            });
+          }
+
+          // Add visit notifications
+          recentVisits.forEach(visit => {
+            const isRecent = new Date(visit.visitDate).getTime() > Date.now() - 24 * 60 * 60 * 1000;
+            const patientName = patientNames[visit.patientId] || 'Unknown Patient';
+            
+            notifications.push({
+              id: `visit-${visit.id}`,
+              type: 'visit',
+              priority: isRecent ? 'high' : 'medium',
+              title: isRecent ? 'Recent Visit' : 'Patient Visit',
+              description: `${patientName} - ${visit.purpose || 'General consultation'}`,
+              timestamp: visit.visitDate,
+              color: 'green'
+            });
+          });
+        }
+      } catch (visitError) {
+        console.log('Error fetching visits for notifications:', visitError);
+      }
+
+      // Get recent appointments
+      try {
+        const upcomingAppointments = await db
+          .select()
+          .from(appointments)
+          .where(and(
+            eq(appointments.organizationId, organizationId),
+            inArray(appointments.status, ['scheduled', 'confirmed'])
+          ))
+          .orderBy(desc(appointments.appointmentDate))
+          .limit(3);
+
+        // Get patient names for appointments
+        if (upcomingAppointments.length > 0) {
+          const appointmentPatientIds = upcomingAppointments.map(a => a.patientId).filter(Boolean);
+          let patientNames = {};
+          
+          if (appointmentPatientIds.length > 0) {
+            const patientData = await db
+              .select()
+              .from(patients)
+              .where(inArray(patients.id, appointmentPatientIds));
+            
+            patientData.forEach(patient => {
+              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
+            });
+          }
+
+          // Add appointment notifications
+          upcomingAppointments.forEach(appointment => {
+            const appointmentDate = new Date(appointment.appointmentDate);
+            const today = new Date();
+            const isToday = appointmentDate.toDateString() === today.toDateString();
+            const patientName = patientNames[appointment.patientId] || 'Unknown Patient';
+            
+            notifications.push({
+              id: `appointment-${appointment.id}`,
+              type: 'appointment',
+              priority: isToday ? 'high' : 'medium',
+              title: isToday ? 'Appointment Today' : 'Upcoming Appointment',
+              description: `${patientName} - ${appointment.appointmentTime}`,
+              timestamp: appointment.appointmentDate,
+              color: 'orange'
+            });
+          });
+        }
+      } catch (appointmentError) {
+        console.log('Error fetching appointments for notifications:', appointmentError);
+      }
 
       // Sort notifications by priority and timestamp
       notifications.sort((a, b) => {
@@ -6689,7 +6647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json({
-        notifications: notifications.slice(0, 10), // Return top 10 notifications
+        notifications: notifications.slice(0, 6),
         totalCount: notifications.length,
         unreadCount: notifications.filter(n => n.priority === 'high').length
       });

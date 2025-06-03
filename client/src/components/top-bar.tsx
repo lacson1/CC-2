@@ -47,6 +47,16 @@ export default function TopBar() {
   const [location] = useLocation();
   const { user } = useRole();
 
+  // Fetch real-time notifications
+  const { data: notificationsData, isLoading: notificationsLoading } = useQuery({
+    queryKey: ['/api/notifications'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+    retry: false,
+  });
+
+  const notifications = notificationsData?.notifications || [];
+  const unreadCount = notificationsData?.unreadCount || 0;
+
   const navigation = getNavigationForRole(user?.role || '');
 
   const isActive = (href: string) => {
@@ -194,9 +204,11 @@ export default function TopBar() {
                     className="relative h-9 w-9 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <Bell className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                    <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-red-500 rounded-full border border-white dark:border-slate-900">
-                      <span className="sr-only">3 notifications</span>
-                    </span>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-red-500 rounded-full border border-white dark:border-slate-900">
+                        <span className="sr-only">{unreadCount} notifications</span>
+                      </span>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
