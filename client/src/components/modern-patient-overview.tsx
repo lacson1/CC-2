@@ -870,29 +870,6 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
   return (
     <div className="space-y-4 min-h-screen w-full">
-      {/* Quick Actions and Safety Indicator */}
-      <Card className="w-full">
-        <CardContent className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <PatientDropdownMenu
-                patient={patient}
-                onEditPatient={onEditPatient}
-                onRecordVisit={onRecordVisit}
-                onAddPrescription={onAddPrescription}
-                onPrintRecord={onPrintRecord}
-              >
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Quick Actions
-                </Button>
-              </PatientDropdownMenu>
-            </div>
-            <QuickSafetyIndicator patient={patient} />
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Enhanced Tabbed Interface - Full Width */}
       <Tabs defaultValue="overview" className="w-full h-full">
         <TabsList className="grid w-full grid-cols-9 mb-6 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300 rounded-xl p-2 shadow-lg backdrop-blur-sm">
