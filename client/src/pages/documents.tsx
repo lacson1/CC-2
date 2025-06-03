@@ -204,18 +204,22 @@ export default function DocumentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Documents</h1>
-          <p className="text-gray-600">Upload and manage patient documents</p>
+    <div className="h-full flex flex-col">
+      {/* Enhanced Fixed Header */}
+      <header className="healthcare-header px-6 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white drop-shadow-sm">Document Management</h2>
+            <p className="text-white/90 font-medium">Upload and manage patient documents</p>
+          </div>
+          <Button onClick={() => setIsUploading(true)} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 border-white/20 text-white backdrop-blur-sm">
+            <Upload className="h-4 w-4" />
+            Upload Document
+          </Button>
         </div>
-        <Button onClick={() => setIsUploading(true)} className="flex items-center gap-2">
-          <Upload className="h-4 w-4" />
-          Upload Document
-        </Button>
-      </div>
+      </header>
 
+      <div className="flex-1 overflow-auto p-6 space-y-6">
       {/* Search and Filters */}
       <Card>
         <CardContent className="p-6">
@@ -393,6 +397,7 @@ export default function DocumentsPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

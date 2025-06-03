@@ -149,15 +149,19 @@ export default function Settings() {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Manage your application preferences and security settings</p>
+    <div className="h-full flex flex-col">
+      {/* Enhanced Fixed Header */}
+      <header className="healthcare-header px-6 py-4 flex-shrink-0">
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h2 className="text-2xl font-bold text-white drop-shadow-sm">System Settings</h2>
+            <p className="text-white/90 font-medium">Manage preferences and security settings</p>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="flex-1 overflow-auto p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Settings Navigation */}
         <Card className="lg:col-span-1">
           <CardHeader>
@@ -612,6 +616,7 @@ export default function Settings() {
             </form>
           </Form>
         </Card>
+        </div>
       </div>
     </div>
   );
