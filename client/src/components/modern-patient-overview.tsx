@@ -1059,7 +1059,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <h3 className="text-lg font-medium text-gray-700 mb-2">No Active Prescriptions</h3>
                     <p className="text-sm text-gray-500 mb-4">Start by adding the first prescription for this patient</p>
                     <Button onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700">
-                      <Plus className="w-4 h-4 mr-2" />
+                      <MedicalIcons.add className="w-4 h-4 mr-2" />
                       Add First Prescription
                     </Button>
                   </div>
@@ -1469,7 +1469,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             size="sm" 
                             className="w-full bg-purple-600 hover:bg-purple-700"
                           >
-                            <Plus className="w-4 h-4 mr-2" />
+                            <MedicalIcons.add className="w-4 h-4 mr-2" />
                             Add New Medication
                           </Button>
                           {activeMedications.length > 0 && (
@@ -1931,7 +1931,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     onClick={() => navigate(`/patients/${patient.id}/record-visit`)}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <MedicalIcons.add className="w-4 h-4 mr-2" />
                     Start New Visit Recording
                   </Button>
                 </div>
