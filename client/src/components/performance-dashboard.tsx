@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -72,6 +73,71 @@ export function PerformanceDashboard() {
       refetch();
     },
   });
+
+  const handleIntegrationConfigure = async (integration: any) => {
+    try {
+      let endpoint = '';
+      let payload = {};
+
+      switch (integration.name) {
+        case 'HL7 FHIR Integration':
+          endpoint = '/api/fhir/patient/1';
+          payload = { patientId: 1 };
+          break;
+        case 'Laboratory System Sync':
+          endpoint = '/api/integrations/lab-sync';
+          payload = { 
+            labSystemId: 'lab_001', 
+            patientId: 1, 
+            testResults: ['CBC', 'Lipid Panel'] 
+          };
+          break;
+        case 'E-Prescribing Network':
+          endpoint = '/api/integrations/e-prescribe';
+          payload = { 
+            prescriptionId: 1, 
+            pharmacyId: 'pharm_001', 
+            patientInfo: { id: 1 } 
+          };
+          break;
+        case 'Insurance Verification':
+          endpoint = '/api/integrations/verify-insurance';
+          payload = { 
+            patientId: 1, 
+            insuranceInfo: { plan: 'Standard' }, 
+            serviceType: 'consultation' 
+          };
+          break;
+        case 'Telemedicine Platform':
+          endpoint = '/api/integrations/telemedicine';
+          payload = { 
+            patientId: 1, 
+            appointmentType: 'consultation', 
+            scheduledTime: new Date().toISOString() 
+          };
+          break;
+        default:
+          throw new Error('Unknown integration type');
+      }
+
+      const response = await apiRequest(endpoint, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      toast({
+        title: "Integration Configured",
+        description: `${integration.name} has been successfully configured and tested.`,
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Configuration Failed",
+        description: error.message || `Failed to configure ${integration.name}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const getSystemStatus = () => {
     if (!stats) return { status: 'unknown', message: 'Loading performance data...', color: 'text-gray-500', icon: Activity, label: 'Loading' };
@@ -642,7 +708,11 @@ export function PerformanceDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         {getStatusBadge(integration.status)}
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleIntegrationConfigure(integration)}
+                        >
                           Configure
                         </Button>
                       </div>

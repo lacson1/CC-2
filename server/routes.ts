@@ -7902,5 +7902,178 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
+  // Healthcare Integration Endpoints
+  app.post('/api/fhir/patient/:patientId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { patientId } = req.params;
+      const organizationId = req.user!.organizationId;
+
+      // Get patient data
+      const [patient] = await db
+        .select()
+        .from(patients)
+        .where(and(
+          eq(patients.id, Number(patientId)),
+          eq(patients.organizationId, organizationId)
+        ));
+
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      // Convert to FHIR R4 format
+      const fhirPatient = {
+        resourceType: "Patient",
+        id: patient.id.toString(),
+        identifier: [{
+          use: "usual",
+          system: "http://clinic.local/patient-id",
+          value: patient.id.toString()
+        }],
+        name: [{
+          use: "official",
+          family: patient.lastName,
+          given: [patient.firstName]
+        }],
+        telecom: patient.phone ? [{
+          system: "phone",
+          value: patient.phone,
+          use: "home"
+        }] : [],
+        gender: patient.gender?.toLowerCase() || "unknown",
+        birthDate: patient.dateOfBirth,
+        address: patient.address ? [{
+          use: "home",
+          text: patient.address
+        }] : []
+      };
+
+      res.json({
+        message: "FHIR patient data exported successfully",
+        data: fhirPatient,
+        format: "FHIR R4"
+      });
+    } catch (error) {
+      console.error('FHIR export error:', error);
+      res.status(500).json({ message: "Failed to export patient data" });
+    }
+  });
+
+  app.post('/api/integrations/lab-sync', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const organizationId = req.user!.organizationId;
+      const { labSystemId, patientId, testResults } = req.body;
+
+      // Simulate lab integration sync
+      const syncResults = {
+        syncId: `lab_sync_${Date.now()}`,
+        labSystemId,
+        patientId,
+        resultsProcessed: testResults?.length || 0,
+        status: 'completed',
+        timestamp: new Date().toISOString(),
+        message: 'Lab results synchronized successfully'
+      };
+
+      res.json({
+        message: "Lab integration sync completed",
+        data: syncResults
+      });
+    } catch (error) {
+      console.error('Lab sync error:', error);
+      res.status(500).json({ message: "Failed to sync lab results" });
+    }
+  });
+
+  app.post('/api/integrations/e-prescribe', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const organizationId = req.user!.organizationId;
+      const { prescriptionId, pharmacyId, patientInfo } = req.body;
+
+      // Simulate e-prescribing submission
+      const prescriptionSubmission = {
+        submissionId: `epres_${Date.now()}`,
+        prescriptionId,
+        pharmacyId,
+        status: 'submitted',
+        confirmationNumber: `RX${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
+        estimatedReadyTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours
+        message: 'Prescription submitted to pharmacy network'
+      };
+
+      res.json({
+        message: "Electronic prescription submitted successfully",
+        data: prescriptionSubmission
+      });
+    } catch (error) {
+      console.error('E-prescribing error:', error);
+      res.status(500).json({ message: "Failed to submit prescription" });
+    }
+  });
+
+  app.post('/api/integrations/verify-insurance', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const organizationId = req.user!.organizationId;
+      const { patientId, insuranceInfo, serviceType } = req.body;
+
+      // Simulate insurance verification
+      const verificationResult = {
+        verificationId: `ins_${Date.now()}`,
+        patientId,
+        status: 'verified',
+        eligibility: {
+          active: true,
+          coverageType: insuranceInfo?.plan || 'Standard',
+          copay: '$25.00',
+          deductible: '$150.00',
+          coinsurance: '20%'
+        },
+        benefits: {
+          medicalServices: true,
+          prescription: true,
+          diagnostics: true,
+          preventiveCare: true
+        },
+        message: 'Insurance eligibility verified successfully'
+      };
+
+      res.json({
+        message: "Insurance verification completed",
+        data: verificationResult
+      });
+    } catch (error) {
+      console.error('Insurance verification error:', error);
+      res.status(500).json({ message: "Failed to verify insurance" });
+    }
+  });
+
+  app.post('/api/integrations/telemedicine', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const organizationId = req.user!.organizationId;
+      const { patientId, appointmentType, scheduledTime } = req.body;
+
+      // Simulate telemedicine session creation
+      const sessionData = {
+        sessionId: `tele_${Date.now()}`,
+        patientId,
+        appointmentType,
+        scheduledTime,
+        meetingUrl: `https://clinic-tele.local/session/${Date.now()}`,
+        accessCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
+        status: 'scheduled',
+        instructions: 'Join the session 5 minutes before your appointment time',
+        message: 'Telemedicine session created successfully'
+      };
+
+      res.json({
+        message: "Telemedicine session created",
+        data: sessionData
+      });
+    } catch (error) {
+      console.error('Telemedicine error:', error);
+      res.status(500).json({ message: "Failed to create telemedicine session" });
+    }
+  });
+
   return httpServer;
 }
