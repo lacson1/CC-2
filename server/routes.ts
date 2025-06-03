@@ -1369,6 +1369,8 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       const patientId = parseInt(req.params.id);
       const organizationId = req.user?.organizationId;
 
+      console.log('Lab Results Query Debug:', { patientId, organizationId, userId: req.user?.id });
+
       if (!organizationId) {
         return res.status(403).json({ message: "Organization access required" });
       }
@@ -1399,6 +1401,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         )
         .orderBy(desc(labOrderItems.completedAt));
 
+      console.log('Lab Results Found:', labResults.length, labResults);
       res.json(labResults);
     } catch (error) {
       console.error("Error fetching lab results:", error);
