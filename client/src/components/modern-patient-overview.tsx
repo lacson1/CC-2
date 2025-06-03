@@ -1735,8 +1735,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       MedicalIcons.edit Visit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleCopyVisit(item)}>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Copy Details
+                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
+                                      MedicalIcons.copy Details
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
@@ -1754,8 +1754,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       View Consultation
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => navigator.clipboard.writeText(JSON.stringify(item.responses, null, 2))}>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Copy Responses
+                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
+                                      MedicalIcons.copy Responses
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -1987,8 +1987,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       MedicalIcons.edit Visit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleCopyVisit(item)}>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Copy Details
+                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
+                                      MedicalIcons.copy Details
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
@@ -2006,8 +2006,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       View Consultation
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => navigator.clipboard.writeText(JSON.stringify(item.responses, null, 2))}>
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      Copy Responses
+                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
+                                      MedicalIcons.copy Responses
                                     </DropdownMenuItem>
                                   </>
                                 )}
