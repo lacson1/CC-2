@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, date, timestamp, decimal, boolean, varchar, json } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, date, timestamp, decimal, boolean, varchar, json, numeric } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -788,6 +788,28 @@ export const insertMedicalDocumentSchema = createInsertSchema(medicalDocuments).
 
 export type MedicalDocument = typeof medicalDocuments.$inferSelect;
 export type InsertMedicalDocument = z.infer<typeof insertMedicalDocumentSchema>;
+
+// Performance Metrics Table
+export const performanceMetrics = pgTable('performance_metrics', {
+  id: serial('id').primaryKey(),
+  endpoint: varchar('endpoint', { length: 255 }).notNull(),
+  method: varchar('method', { length: 10 }).notNull(),
+  responseTime: integer('response_time').notNull(), // milliseconds
+  statusCode: integer('status_code').notNull(),
+  memoryUsage: numeric('memory_usage').notNull(), // MB
+  cpuUsage: numeric('cpu_usage').notNull(), // milliseconds
+  userId: integer('user_id').references(() => users.id),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  timestamp: timestamp('timestamp').defaultNow().notNull(),
+});
+
+export const insertPerformanceMetricSchema = createInsertSchema(performanceMetrics).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
+export type InsertPerformanceMetric = z.infer<typeof insertPerformanceMetricSchema>;
 
 // Procedural Reports
 export const proceduralReports = pgTable('procedural_reports', {

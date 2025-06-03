@@ -472,6 +472,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/errors/ai-insights', authenticateToken, generateAIInsights);
   app.get('/api/ai-analysis', testAIAnalysisWorking);
   app.post('/api/error-chatbot', handleErrorChatbot);
+
+  // Performance Monitoring and Healthcare Integrations
+  const { monitor } = await import('./performance-monitor');
+  const { 
+    handleFHIRExport, 
+    handleLabSync, 
+    handleEPrescribing, 
+    handleInsuranceVerification, 
+    handleTelemedicineSession 
+  } = await import('./healthcare-integrations');
+
+  // Performance monitoring endpoints
+  app.get('/api/performance/stats', authenticateToken, async (req, res) => {
+    try {
+      const timeframe = req.query.timeframe as string || '24h';
+      const stats = await monitor.getPerformanceStats(timeframe);
+      res.json(stats || { message: 'No performance data available' });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch performance stats' });
+    }
+  });
+
+  // Healthcare integration endpoints
+  app.get('/api/fhir/patient/:patientId', authenticateToken, handleFHIRExport);
+  app.post('/api/integrations/lab-sync', authenticateToken, handleLabSync);
+  app.post('/api/integrations/e-prescribe/:prescriptionId', authenticateToken, handleEPrescribing);
+  app.post('/api/integrations/verify-insurance/:patientId', authenticateToken, handleInsuranceVerification);
+  app.post('/api/integrations/telemedicine/:appointmentId', authenticateToken, handleTelemedicineSession);
   
   // Direct AI test endpoint
   app.get('/api/ai-test', async (req, res) => {
