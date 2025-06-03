@@ -992,12 +992,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                                 <div className="flex items-center space-x-4 text-xs text-slate-500">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
+                                    <MedicalIcons.calendar className="w-3 h-3" />
                                     <span>Started: {new Date(prescription.startDate).toLocaleDateString()}</span>
                                   </div>
                                   {prescription.endDate && (
                                     <div className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
+                                      <MedicalIcons.calendar className="w-3 h-3" />
                                       <span>Ends: {new Date(prescription.endDate).toLocaleDateString()}</span>
                                     </div>
                                   )}
@@ -1142,7 +1142,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      <Clock className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <MedicalIcons.calendar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">No Past Medications</h3>
                       <p className="text-sm text-gray-500">Historical medications will appear here when available</p>
                     </div>
@@ -1237,7 +1237,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   </div>
                                   {prescription.lastReviewDate && (
                                     <div className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
+                                      <MedicalIcons.calendar className="w-3 h-3" />
                                       <span>Last Review: {new Date(prescription.lastReviewDate).toLocaleDateString()}</span>
                                     </div>
                                   )}
