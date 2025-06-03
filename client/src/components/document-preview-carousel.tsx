@@ -130,23 +130,66 @@ export function DocumentPreviewCarousel({
         <div className="flex flex-col h-full bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center p-3 border-b bg-white rounded-t-lg">
             <span className="text-sm font-medium text-gray-700">{doc.originalName}</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => window.open(fileUrl, '_blank')}
-              className="text-xs"
-            >
-              Open in New Tab
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = fileUrl;
+                  link.download = doc.originalName;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="text-xs"
+              >
+                Download
+              </Button>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => window.open(fileUrl, '_blank')}
+                className="text-xs"
+              >
+                View PDF
+              </Button>
+            </div>
           </div>
           <div className="flex-1 p-2">
-            <iframe
-              src={`${fileUrl}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
-              className="w-full h-full rounded border-0"
-              style={{ minHeight: isFullscreen ? '70vh' : '350px' }}
-              title={doc.originalName}
-              allowFullScreen
-            />
+            <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded border-2 border-dashed border-gray-300">
+              <div className="text-center p-8">
+                <MedicalIcons.FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{doc.originalName}</h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  PDF Document • {(doc.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+                <p className="text-xs text-gray-400 mb-6">
+                  Uploaded {format(new Date(doc.uploadedAt), 'MMM d, yyyy')}
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => window.open(fileUrl, '_blank')}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Open PDF in New Tab
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = fileUrl;
+                      link.download = doc.originalName;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                  >
+                    Download PDF
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       );
