@@ -860,10 +860,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ilike(patients.lastName, `%${search}%`),
           ilike(patients.phone, `%${search}%`)
         ];
-        whereClause = and(
+        const combinedClause = and(
           eq(patients.organizationId, userOrgId),
           or(...searchConditions)
         );
+        whereClause = combinedClause ?? eq(patients.organizationId, userOrgId);
       }
       
       const patientsResult = await db.select()
@@ -4080,6 +4081,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Appointments endpoints
   app.get("/api/appointments", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+      
       const { date } = req.query;
       
       const allAppointments = await db.select({
@@ -4100,6 +4106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       .from(appointments)
       .leftJoin(patients, eq(appointments.patientId, patients.id))
       .leftJoin(users, eq(appointments.doctorId, users.id))
+      .where(eq(appointments.organizationId, userOrgId))
       .orderBy(appointments.appointmentDate, appointments.appointmentTime);
       
       // Filter by date if provided

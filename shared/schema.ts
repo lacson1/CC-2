@@ -216,6 +216,7 @@ export const labOrders = pgTable('lab_orders', {
   patientId: integer('patient_id').notNull().references(() => patients.id),
   orderedBy: integer('ordered_by').notNull().references(() => users.id),
   status: varchar('status', { length: 20 }).default('pending'), // pending, in_progress, completed
+  organizationId: integer('organization_id').references(() => organizations.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at')
 });
