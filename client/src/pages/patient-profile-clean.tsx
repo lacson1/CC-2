@@ -18,13 +18,13 @@ import {
   Plus,
   Pill,
   Activity,
+  Send,
   ChevronDown,
   Edit,
   MoreHorizontal,
   Heart,
   Clock,
   UserCheck,
-  FileText,
   Monitor,
   Share
 } from "lucide-react";
@@ -392,14 +392,7 @@ export default function PatientProfile() {
                     Record New Visit
                   </Button>
                   
-                  <Button 
-                    onClick={() => setShowPrescriptionModal(true)}
-                    className="w-full justify-start bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-                    variant="outline"
-                  >
-                    <Pill className="h-4 w-4 mr-2" />
-                    Add Prescription
-                  </Button>
+
                   
                   <Button 
                     onClick={() => navigate(`/lab-orders?patientId=${patientId}`)}
@@ -408,6 +401,42 @@ export default function PatientProfile() {
                   >
                     <FlaskRound className="h-4 w-4 mr-2" />
                     Order Lab Tests
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => setShowPrescriptionModal(true)}
+                    className="w-full justify-start bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+                    variant="outline"
+                  >
+                    <Pill className="h-4 w-4 mr-2" />
+                    Prescribe Medication
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate('/documents')}
+                    className="w-full justify-start bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate('/referral-letters')}
+                    className="w-full justify-start bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Referral
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => navigate(`/patients/${patientId}/record-visit`)}
+                    className="w-full justify-start bg-teal-50 hover:bg-teal-100 text-teal-700 border-teal-200"
+                    variant="outline"
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Schedule Follow-up
                   </Button>
                   
                   <Button 
