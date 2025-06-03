@@ -27,6 +27,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
 import { DocumentPreviewCarousel } from './document-preview-carousel';
+import CustomPrescriptionPrint from './custom-prescription-print';
+import CustomLabOrderPrint from './custom-lab-order-print';
 // All icons now imported via MedicalIcons system
 
 // Documents List Component
@@ -366,6 +368,10 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   // Document carousel state
   const [showDocumentCarousel, setShowDocumentCarousel] = useState(false);
   const [selectedDocumentIndex, setSelectedDocumentIndex] = useState(0);
+  
+  // Custom print dialog states
+  const [showPrescriptionPrint, setShowPrescriptionPrint] = useState(false);
+  const [showLabOrderPrint, setShowLabOrderPrint] = useState(false);
 
   // Document upload mutation
   const uploadDocumentMutation = useMutation({
