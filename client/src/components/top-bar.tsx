@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, Globe, Moon, Sun, User, Settings, Menu, X, Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, UserCheck, Calculator, TrendingUp, FileText, UserCog, Building2, Shield, Video, DollarSign, BookOpen, Download, MapPin, MessageSquare, Plus, UserPlus, CalendarPlus, TestTube } from "lucide-react";
+import { Bell, Globe, Moon, Sun, User, Settings, Menu, X, Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, UserCheck, Calculator, TrendingUp, FileText, UserCog, Building2, Shield, Video, DollarSign, BookOpen, Download, MapPin, MessageSquare, Plus, UserPlus, CalendarPlus, TestTube, Clipboard, ClipboardList, HeartHandshake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -178,33 +178,81 @@ export default function TopBar() {
                     <span className="sr-only">Quick Actions</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuLabel className="text-sm font-semibold">Quick Actions</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-72">
+                  <DropdownMenuLabel className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Organization Functions
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  
+                  {/* Patient Management */}
                   <DropdownMenuItem asChild>
-                    <Link href="/patients/new" className="flex items-center w-full py-2">
+                    <Link href="/patients/new" className="flex items-center w-full py-2.5">
                       <UserPlus className="mr-3 h-4 w-4 text-blue-600" />
-                      <span>Add New Patient</span>
+                      <div className="flex flex-col">
+                        <span className="font-medium">Add New Patient</span>
+                        <span className="text-xs text-slate-500">Register new patient to system</span>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {/* Staff Management */}
                   <DropdownMenuItem asChild>
-                    <Link href="/appointments/new" className="flex items-center w-full py-2">
-                      <CalendarPlus className="mr-3 h-4 w-4 text-green-600" />
-                      <span>Schedule Appointment</span>
+                    <Link href="/user-management" className="flex items-center w-full py-2.5">
+                      <UserCog className="mr-3 h-4 w-4 text-emerald-600" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Manage Staff</span>
+                        <span className="text-xs text-slate-500">Add, edit, and assign staff roles</span>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {/* Clinical Workflows */}
                   <DropdownMenuItem asChild>
-                    <Link href="/prescriptions/new" className="flex items-center w-full py-2">
-                      <FileText className="mr-3 h-4 w-4 text-purple-600" />
-                      <span>New Prescription</span>
+                    <Link href="/clinical-activity" className="flex items-center w-full py-2.5">
+                      <HeartHandshake className="mr-3 h-4 w-4 text-red-600" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Clinical Workflows</span>
+                        <span className="text-xs text-slate-500">Patient queue and consultation management</span>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {/* Forms & Templates */}
                   <DropdownMenuItem asChild>
-                    <Link href="/lab-orders/new" className="flex items-center w-full py-2">
-                      <TestTube className="mr-3 h-4 w-4 text-orange-600" />
-                      <span>Order Lab Test</span>
+                    <Link href="/form-builder" className="flex items-center w-full py-2.5">
+                      <ClipboardList className="mr-3 h-4 w-4 text-purple-600" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">Custom Forms</span>
+                        <span className="text-xs text-slate-500">Build consultation and assessment forms</span>
+                      </div>
                     </Link>
                   </DropdownMenuItem>
+                  
+                  {/* Organization Settings */}
+                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link href="/organization-management" className="flex items-center w-full py-2.5">
+                          <Building2 className="mr-3 h-4 w-4 text-indigo-600" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Organization Setup</span>
+                            <span className="text-xs text-slate-500">Configure clinic settings and branding</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem asChild>
+                        <Link href="/analytics" className="flex items-center w-full py-2.5">
+                          <TrendingUp className="mr-3 h-4 w-4 text-orange-600" />
+                          <div className="flex flex-col">
+                            <span className="font-medium">Performance Analytics</span>
+                            <span className="text-xs text-slate-500">Revenue, efficiency, and clinical metrics</span>
+                          </div>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
