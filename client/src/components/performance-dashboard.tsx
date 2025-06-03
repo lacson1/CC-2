@@ -51,6 +51,7 @@ interface HealthcareIntegration {
 export function PerformanceDashboard() {
   const [timeframe, setTimeframe] = useState('24h');
   const [isOptimizing, setIsOptimizing] = useState(false);
+  const { toast } = useToast();
 
   const { data: stats, isLoading, refetch } = useQuery<PerformanceStats>({
     queryKey: ['/api/performance/stats', timeframe],
@@ -120,10 +121,7 @@ export function PerformanceDashboard() {
           throw new Error('Unknown integration type');
       }
 
-      const response = await apiRequest(endpoint, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
+      const response = await apiRequest(endpoint, 'POST', payload);
 
       toast({
         title: "Integration Configured",
