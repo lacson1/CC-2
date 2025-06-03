@@ -173,12 +173,90 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                 <Clock className="h-5 w-5" />
                 Consultation History ({(consultationHistory as any[]).length})
               </div>
-              {isOpen ? (
-                <ChevronDown className="h-4 w-4 text-gray-500" />
-              ) : (
-                <ChevronRight className="h-4 w-4 text-gray-500" />
-              )}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Toggle filter visibility
+                  }}
+                  className="flex items-center gap-1 h-8"
+                >
+                  <Filter className="h-3 w-3" />
+                  Filter
+                </Button>
+                {isOpen ? (
+                  <ChevronDown className="h-4 w-4 text-gray-500" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 text-gray-500" />
+                )}
+              </div>
             </CardTitle>
+            
+            {/* Filter Controls */}
+            <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Role:</label>
+                <Select value={filters.role} onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}>
+                  <SelectTrigger className="w-32 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="doctor">Doctors</SelectItem>
+                    <SelectItem value="nurse">Nurses</SelectItem>
+                    <SelectItem value="pharmacist">Pharmacists</SelectItem>
+                    <SelectItem value="physiotherapist">Physiotherapists</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Period:</label>
+                <Select value={filters.dateRange} onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}>
+                  <SelectTrigger className="w-28 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-600">Type:</label>
+                <Select value={filters.formType} onValueChange={(value) => setFilters(prev => ({ ...prev, formType: value }))}>
+                  <SelectTrigger className="w-40 h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="General Assessment">General</SelectItem>
+                    <SelectItem value="ENT Assessment">ENT</SelectItem>
+                    <SelectItem value="Cardiology Assessment">Cardiology</SelectItem>
+                    <SelectItem value="Nursing Assessment">Nursing</SelectItem>
+                    <SelectItem value="Pharmacy Consultation">Pharmacy</SelectItem>
+                    <SelectItem value="Physiotherapy Assessment">Physiotherapy</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {(filters.role !== 'all' || filters.dateRange !== 'all' || filters.formType !== 'all') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFilters({ role: 'all', dateRange: 'all', formType: 'all' })}
+                  className="h-8 px-2 text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-3 w-3 mr-1" />
+                  Clear
+                </Button>
+              )}
+            </div>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
