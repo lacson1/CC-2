@@ -881,7 +881,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Pill className="h-5 w-5 text-purple-500" />
+                <MedicalIcons.medication className="h-5 w-5 text-purple-500" />
                 Medications & Prescriptions
               </CardTitle>
             </CardHeader>
@@ -911,7 +911,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     size="sm" 
                     className="bg-purple-600 hover:bg-purple-700"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
+                    <MedicalIcons.add className="w-4 h-4 mr-2" />
                     Add Medication
                   </Button>
                 </div>
@@ -930,7 +930,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         variant="outline"
                         size="sm"
                       >
-                        <RefreshCw className="w-4 h-4 mr-2" />
+                        <MedicalIcons.refresh className="w-4 h-4 mr-2" />
                         Retry Loading
                       </Button>
                     </div>
@@ -982,7 +982,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               {prescription.instructions && (
                                 <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
                                   <span className="font-medium text-slate-700 flex items-center gap-2">
-                                    <FileText className="w-4 h-4" />
+                                    <MedicalIcons.prescription className="w-4 h-4" />
                                     Special Instructions
                                   </span>
                                   <p className="text-slate-800 mt-2">{prescription.instructions}</p>
