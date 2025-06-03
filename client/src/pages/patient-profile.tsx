@@ -56,23 +56,37 @@ export default function PatientProfile() {
     queryKey: ["/api/organizations/current"],
   });
 
-  // Lab results with React Query - force execution
-  const { data: labResults = [], isLoading: labsLoading, error: labsError } = useQuery<LabResultFromOrder[]>({
-    queryKey: [`/api/patients/${patientId}/labs`],
-    enabled: !!patientId,
-    retry: false,
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-  });
+  // Lab results state with direct fetch
+  const [labResults, setLabResults] = useState<LabResultFromOrder[]>([]);
+  const [labsLoading, setLabsLoading] = useState(false);
+  const [labsError, setLabsError] = useState<string | null>(null);
 
-  // Debug log to verify query execution
-  console.log('Lab Results Query State:', { 
-    patientId, 
-    labResults: labResults?.length, 
-    labsLoading, 
-    labsError: labsError?.message,
-    queryEnabled: !!patientId 
-  });
+  // Direct API call for lab results
+  useEffect(() => {
+    if (patientId) {
+      setLabsLoading(true);
+      setLabsError(null);
+      
+      fetch(`/api/patients/${patientId}/labs`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to fetch lab results: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Lab Results Fetched:', data);
+          setLabResults(data || []);
+        })
+        .catch(error => {
+          console.error('Lab Results Error:', error);
+          setLabsError(error.message);
+        })
+        .finally(() => {
+          setLabsLoading(false);
+        });
+    }
+  }, [patientId]);
 
 
 
