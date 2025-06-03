@@ -96,7 +96,7 @@ export default function PrescriptionModal({
   const createPrescriptionMutation = useMutation({
     mutationFn: async (data: InsertPrescription) => {
       try {
-        const response = await apiRequest("POST", `/api/patients/${data.patientId}/prescriptions`, data);
+        const response = await apiRequest(`/api/patients/${data.patientId}/prescriptions`, "POST", data);
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
           throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
