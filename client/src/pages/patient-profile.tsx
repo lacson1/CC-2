@@ -14,7 +14,7 @@ import { ModernPatientOverview } from "@/components/modern-patient-overview";
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
 import { formatPatientName, getPatientInitials } from "@/lib/patient-utils";
-import type { Patient, Visit, LabResult, Prescription, Organization } from "@shared/schema";
+import type { Patient, Visit, LabResultFromOrder, Prescription, Organization } from "@shared/schema";
 
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
@@ -57,7 +57,7 @@ export default function PatientProfile() {
   });
 
   // Lab results with React Query
-  const { data: labResults = [], isLoading: labsLoading, error: labsError } = useQuery<LabResult[]>({
+  const { data: labResults = [], isLoading: labsLoading, error: labsError } = useQuery<LabResultFromOrder[]>({
     queryKey: [`/api/patients/${patientId}/labs`],
     enabled: !!patientId,
     retry: false,

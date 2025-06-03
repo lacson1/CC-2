@@ -698,6 +698,20 @@ export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type Visit = typeof visits.$inferSelect;
 export type InsertVisit = z.infer<typeof insertVisitSchema>;
 export type LabResult = typeof labResults.$inferSelect;
+
+// Type for lab results from lab order items (for completed results)
+export type LabResultFromOrder = {
+  id: number;
+  patientId: number;
+  testName: string;
+  testDate: Date | null;
+  result: string | null;
+  normalRange: string | null;
+  status: string;
+  notes: string | null;
+  organizationId: number | null;
+  createdAt: Date | null;
+};
 export type InsertLabResult = z.infer<typeof insertLabResultSchema>;
 export type Medicine = typeof medicines.$inferSelect;
 export type InsertMedicine = z.infer<typeof insertMedicineSchema>;
