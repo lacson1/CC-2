@@ -67,41 +67,36 @@ export async function sendUrgentNotification(notification: NotificationData) {
   }
 }
 
-// Specific notification types for your clinic
+// Real-time notification types based on actual database events
 export const NotificationTypes = {
+  // These will be triggered by actual database events and real patient data
   LAB_RESULT_ABNORMAL: (patientName: string, testName: string) => ({
-    title: '🚨 Abnormal Lab Result',
+    title: 'Abnormal Lab Result',
     body: `${patientName} has abnormal ${testName} results requiring immediate attention`,
     data: { type: 'lab_abnormal', priority: 'high' }
   }),
 
   LAB_RESULT_READY: (patientName: string, testName: string) => ({
-    title: '📋 Lab Results Ready',
+    title: 'Lab Results Ready',
     body: `${testName} results are ready for ${patientName}`,
     data: { type: 'lab_ready', priority: 'normal' }
   }),
 
-  REFERRAL_RECEIVED: (patientName: string, fromRole: string) => ({
-    title: '👨‍⚕️ New Patient Referral',
-    body: `${patientName} referred by ${fromRole} requires your attention`,
-    data: { type: 'referral', priority: 'normal' }
+  PRESCRIPTION_EXPIRING: (patientName: string, medicationName: string) => ({
+    title: 'Prescription Expiring Soon',
+    body: `${patientName}'s prescription for ${medicationName} expires soon`,
+    data: { type: 'prescription_expiring', priority: 'normal' }
   }),
 
-  MEDICATION_LOW_STOCK: (medicationName: string, quantity: number) => ({
-    title: '💊 Low Medication Stock',
-    body: `${medicationName} is running low (${quantity} remaining)`,
-    data: { type: 'low_stock', priority: 'normal' }
+  APPOINTMENT_TODAY: (patientName: string, time: string) => ({
+    title: 'Appointment Today',
+    body: `${patientName} has an appointment at ${time}`,
+    data: { type: 'appointment_today', priority: 'high' }
   }),
 
-  MEDICATION_OUT_OF_STOCK: (medicationName: string) => ({
-    title: '🚫 Medication Out of Stock',
-    body: `${medicationName} is completely out of stock`,
-    data: { type: 'out_of_stock', priority: 'high' }
-  }),
-
-  PATIENT_EMERGENCY: (patientName: string) => ({
-    title: '🚨 Patient Emergency',
-    body: `Emergency situation with ${patientName} - immediate assistance required`,
-    data: { type: 'emergency', priority: 'critical' }
+  RECENT_VISIT: (patientName: string, purpose: string) => ({
+    title: 'Recent Patient Visit',
+    body: `${patientName} visited for ${purpose}`,
+    data: { type: 'recent_visit', priority: 'normal' }
   })
 };

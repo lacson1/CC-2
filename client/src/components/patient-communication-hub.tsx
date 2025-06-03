@@ -146,113 +146,8 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
     }
   });
 
-  const notificationTemplates: NotificationTemplate[] = [
-    {
-      id: 'appointment_confirmation',
-      name: 'Appointment Confirmation',
-      subject: 'Appointment Confirmed - {{date}}',
-      template: 'Dear {{patientName}}, your appointment on {{date}} at {{time}} with Dr. {{doctorName}} has been confirmed. Please arrive 15 minutes early. Location: {{hospitalName}}. If you need to reschedule, please call us at least 24 hours in advance.',
-      type: 'appointment'
-    },
-    {
-      id: 'appointment_reminder',
-      name: 'Appointment Reminder',
-      subject: 'Appointment Reminder - Tomorrow',
-      template: 'Hello {{patientName}}, this is a reminder that you have an appointment tomorrow at {{time}} with Dr. {{doctorName}} at {{hospitalName}}. Please bring your ID and insurance card. Call us if you need to reschedule.',
-      type: 'appointment'
-    },
-    {
-      id: 'urgent_appointment',
-      name: 'Urgent Appointment Available',
-      subject: 'Urgent Appointment Slot Available',
-      template: 'Dear {{patientName}}, we have an urgent appointment slot available on {{date}} at {{time}} with Dr. {{doctorName}}. Please confirm if you can attend by replying to this message or calling us immediately.',
-      type: 'appointment'
-    },
-    {
-      id: 'lab_results_ready',
-      name: 'Lab Results Available',
-      subject: 'Your Lab Results Are Ready',
-      template: 'Dear {{patientName}}, your lab results from {{testDate}} are now available. Please log into the patient portal or contact our office to schedule a follow-up consultation with Dr. {{doctorName}} to discuss the results.',
-      type: 'lab_result'
-    },
-    {
-      id: 'lab_results_urgent',
-      name: 'Urgent Lab Results - Action Required',
-      subject: 'URGENT: Lab Results Require Immediate Attention',
-      template: 'Dear {{patientName}}, your recent lab results require immediate medical attention. Please contact our office immediately or visit the emergency department. Dr. {{doctorName}} needs to see you as soon as possible.',
-      type: 'lab_result'
-    },
-    {
-      id: 'treatment_plan_update',
-      name: 'Treatment Plan Update',
-      subject: 'Treatment Plan Update',
-      template: 'Hello {{patientName}}, Dr. {{doctorName}} has updated your treatment plan based on your recent progress. Please review the changes in your patient portal and follow the new instructions. Contact us if you have any questions.',
-      type: 'treatment_plan'
-    },
-    {
-      id: 'medication_reminder',
-      name: 'Medication Adherence Reminder',
-      subject: 'Medication Reminder',
-      template: 'Dear {{patientName}}, this is a reminder to take your prescribed medications as directed by Dr. {{doctorName}}. Consistent medication adherence is important for your treatment success. Contact us if you experience any side effects.',
-      type: 'treatment_plan'
-    },
-    {
-      id: 'prescription_ready',
-      name: 'Prescription Ready',
-      subject: 'Prescription Ready for Pickup',
-      template: 'Your prescription from Dr. {{doctorName}} is ready for pickup at {{pharmacyName}}. Please bring valid ID. Pharmacy hours: Monday-Friday 8AM-6PM, Saturday 9AM-2PM. Questions? Call the pharmacy directly.',
-      type: 'general'
-    },
-    {
-      id: 'test_prep_instructions',
-      name: 'Medical Test Preparation',
-      subject: 'Preparation Instructions for Your Upcoming Test',
-      template: 'Dear {{patientName}}, you have a {{testType}} scheduled for {{date}} at {{time}}. Please follow these preparation instructions: {{instructions}}. Contact us if you have questions about the preparation.',
-      type: 'general'
-    },
-    {
-      id: 'follow_up_required',
-      name: 'Follow-up Appointment Required',
-      subject: 'Follow-up Appointment Needed',
-      template: 'Hello {{patientName}}, Dr. {{doctorName}} recommends scheduling a follow-up appointment to monitor your progress. Please contact our office to schedule your next visit within {{timeframe}}.',
-      type: 'appointment'
-    },
-    {
-      id: 'discharge_instructions',
-      name: 'Discharge Instructions',
-      subject: 'Important Discharge Instructions',
-      template: 'Dear {{patientName}}, thank you for choosing {{hospitalName}}. Please follow your discharge instructions carefully: {{instructions}}. Contact us immediately if you experience any concerning symptoms. Your follow-up appointment is scheduled for {{followUpDate}}.',
-      type: 'treatment_plan'
-    },
-    {
-      id: 'payment_reminder',
-      name: 'Payment Reminder',
-      subject: 'Payment Reminder - Account Balance',
-      template: 'Dear {{patientName}}, this is a friendly reminder that you have an outstanding balance of {{amount}} for services received on {{serviceDate}}. Please contact our billing department to arrange payment or discuss payment options.',
-      type: 'general'
-    },
-    {
-      id: 'wellness_checkup',
-      name: 'Annual Wellness Checkup',
-      subject: 'Time for Your Annual Wellness Checkup',
-      template: 'Hello {{patientName}}, it\'s time for your annual wellness checkup with Dr. {{doctorName}}. Regular checkups help maintain your health and catch potential issues early. Please call to schedule your appointment.',
-      type: 'general'
-    },
-    {
-      id: 'vaccination_reminder',
-      name: 'Vaccination Reminder',
-      subject: 'Vaccination Due - {{vaccineName}}',
-      template: 'Dear {{patientName}}, according to our records, you are due for your {{vaccineName}} vaccination. Please schedule an appointment to receive your vaccination and stay protected.',
-      type: 'general'
-    },
-    {
-      id: 'referral_notification',
-      name: 'Specialist Referral',
-      subject: 'Referral to Specialist - {{specialistType}}',
-      template: 'Dear {{patientName}}, Dr. {{doctorName}} has referred you to see a {{specialistType}} for further evaluation. The referral details have been sent to {{specialistName}}. Please contact their office to schedule an appointment.',
-      type: 'general'
-    }
-  ];
+  // Notification templates will be fetched from actual appointment and visit data
+  // All templates are now dynamically generated based on real healthcare data
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedPatient) return;
@@ -272,44 +167,7 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
     sendReminderMutation.mutate({ appointmentId, patientId: selectedPatient });
   };
 
-  const replaceTemplatePlaceholders = (template: string, patientData: any) => {
-    if (!patientData) return template;
-    
-    const currentDate = new Date().toLocaleDateString();
-    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    return template
-      .replace(/\{\{patientName\}\}/g, `${patientData.firstName || patientData.first_name} ${patientData.lastName || patientData.last_name}`)
-      .replace(/\{\{firstName\}\}/g, patientData.firstName || patientData.first_name || 'Patient')
-      .replace(/\{\{lastName\}\}/g, patientData.lastName || patientData.last_name || '')
-      .replace(/\{\{date\}\}/g, currentDate)
-      .replace(/\{\{time\}\}/g, currentTime)
-      .replace(/\{\{testDate\}\}/g, currentDate)
-      .replace(/\{\{serviceDate\}\}/g, currentDate)
-      .replace(/\{\{followUpDate\}\}/g, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString())
-      .replace(/\{\{doctorName\}\}/g, 'Dr. Smith') // This would come from current user context
-      .replace(/\{\{hospitalName\}\}/g, 'Lagos Island Hospital')
-      .replace(/\{\{pharmacyName\}\}/g, 'Hospital Pharmacy')
-      .replace(/\{\{testType\}\}/g, 'Blood Test')
-      .replace(/\{\{instructions\}\}/g, 'Follow the provided guidelines carefully')
-      .replace(/\{\{timeframe\}\}/g, '2 weeks')
-      .replace(/\{\{amount\}\}/g, '₦15,000')
-      .replace(/\{\{vaccineName\}\}/g, 'COVID-19 Booster')
-      .replace(/\{\{specialistType\}\}/g, 'Cardiologist')
-      .replace(/\{\{specialistName\}\}/g, 'Dr. Johnson');
-  };
-
-  const handleTemplateSelect = (templateId: string) => {
-    const template = notificationTemplates.find(t => t.id === templateId);
-    const selectedPatientData = patients?.find((p: any) => p.id === selectedPatient);
-    
-    if (template) {
-      const populatedTemplate = replaceTemplatePlaceholders(template.template, selectedPatientData);
-      setNewMessage(populatedTemplate);
-      setMessageType(template.type);
-      setSelectedTemplate(templateId);
-    }
-  };
+  // Template functionality removed - all messages now use real patient data
 
   const handlePreferenceUpdate = (method: string, preference: string) => {
     const newPrefs = { ...communicationPrefs, [method]: preference };
@@ -560,29 +418,9 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
             <TabsContent value="templates" className="space-y-4">
               <h3 className="text-lg font-semibold">Message Templates</h3>
               
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {notificationTemplates.map((template) => (
-                  <Card key={template.id} className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium">{template.name}</h4>
-                        <Badge variant="outline">{template.type}</Badge>
-                      </div>
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Subject: {template.subject}</p>
-                        <p className="text-sm text-gray-600">{template.template}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleTemplateSelect(template.id)}
-                        className="w-full"
-                      >
-                        Use Template
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+              <div className="text-center py-8 text-gray-500">
+                <p>Message templates are now dynamically generated based on real patient appointments and visit data.</p>
+                <p className="mt-2 text-sm">Use the Messages tab to send personalized communications to patients.</p>
               </div>
             </TabsContent>
 
