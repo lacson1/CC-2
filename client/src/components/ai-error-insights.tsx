@@ -66,12 +66,65 @@ export default function AIErrorInsights({ timeframe }: AIErrorInsightsProps) {
 
   const { data: insights, isLoading: insightsLoading, error: insightsError } = useQuery<AIInsight>({
     queryKey: ["/api/errors/ai-insights", timeframe],
-    queryFn: () => fetch(`/api/errors/ai-insights?timeframe=${timeframe}`).then(res => res.json())
+    queryFn: async () => {
+      const response = await fetch(`/api/errors/ai-insights?timeframe=${timeframe}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch AI insights');
+      }
+      return response.json();
+    },
+    retry: false
   });
 
   const { data: predictions, isLoading: predictionsLoading } = useQuery<{ predictions: PredictiveInsight[] }>({
-    queryKey: ["/api/errors/predictions"]
+    queryKey: ["/api/errors/predictions"],
+    queryFn: async () => {
+      const response = await fetch('/api/errors/predictions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch predictions');
+      }
+      return response.json();
+    },
+    retry: false
   });
+
+  // Fallback data when AI insights are unavailable
+  const fallbackInsights: AIInsight = {
+    summary: "Basic system monitoring active. AI insights require configuration.",
+    patterns: [
+      {
+        type: "System Performance",
+        riskLevel: "MEDIUM",
+        trend: "stable",
+        impact: "Monitor system resources and performance metrics",
+        frequency: 0,
+        severity: "medium",
+        commonMessages: ["System monitoring active"],
+        timePattern: "continuous",
+        affectedComponents: ["monitoring"]
+      }
+    ],
+    predictions: [
+      {
+        riskLevel: "LOW",
+        likelihood: 15,
+        timeframe: "next 24 hours",
+        description: "System performance within normal parameters",
+        recommendations: ["Continue monitoring", "Regular system maintenance"],
+        affectedSystems: ["monitoring"]
+      }
+    ],
+    recommendations: {
+      immediate: ["Verify system monitoring is active", "Check error tracking configuration"],
+      shortTerm: ["Configure AI insights with proper API keys", "Review system performance metrics"],
+      longTerm: ["Implement predictive maintenance", "Enhance monitoring capabilities"]
+    },
+    systemHealth: {
+      score: 75,
+      trend: "stable",
+      riskFactors: ["AI insights not configured"]
+    }
+  };
 
   const getRiskColor = (riskLevel: string) => {
     switch (riskLevel.toLowerCase()) {
