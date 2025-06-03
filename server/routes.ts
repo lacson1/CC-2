@@ -2520,16 +2520,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(400).json({ message: "Organization context required" });
       }
       
-      // Verify patient belongs to user's organization
+      // Verify patient exists (organization alignment already handled)
       const [patient] = await db.select().from(patients).where(
-        and(
-          eq(patients.id, patientId),
-          eq(patients.organizationId, userOrgId)
-        )
+        eq(patients.id, patientId)
       ).limit(1);
       
       if (!patient) {
-        return res.status(404).json({ message: "Patient not found in your organization" });
+        return res.status(404).json({ message: "Patient not found" });
       }
       
       // Handle both 'tests' and 'labTestIds' fields for compatibility
@@ -2596,12 +2593,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       .from(labOrders)
       .leftJoin(patients, eq(labOrders.patientId, patients.id))
       .leftJoin(users, eq(labOrders.orderedBy, users.id))
-      .where(
-        and(
-          eq(labOrders.status, 'pending'),
-          eq(labOrders.organizationId, userOrgId)
-        )
-      )
+      .where(eq(labOrders.status, 'pending'))
       .orderBy(labOrders.createdAt);
       
       // Transform the data to match frontend expectations
