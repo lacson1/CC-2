@@ -1006,7 +1006,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
-                                        <MoreVertical className="w-3 h-3" />
+                                        <MedicalIcons.menu className="w-3 h-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[180px]">
@@ -1024,7 +1024,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem onClick={() => handleSendToRepeatMedications(prescription)}>
-                                        <RefreshCw className="w-3 h-3 mr-2 text-blue-600" />
+                                        <MedicalIcons.refresh className="w-3 h-3 mr-2 text-blue-600" />
                                         Add to Repeat Medications
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendToDispensary(prescription)}>
@@ -1041,7 +1041,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                         Discontinue
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'active')}>
-                                        <RefreshCw className="w-3 h-3 mr-2 text-green-600" />
+                                        <MedicalIcons.refresh className="w-3 h-3 mr-2 text-green-600" />
                                         Reactivate
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -1121,7 +1121,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-blue-600 hover:text-blue-800 border-blue-200"
                                     onClick={() => handleReorderMedication(prescription)}
                                   >
-                                    <RefreshCw className="w-3 h-3 mr-1" />
+                                    <MedicalIcons.refresh className="w-3 h-3 mr-1" />
                                     Reorder
                                   </Button>
                                   <Button 
@@ -1258,13 +1258,13 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-green-600 hover:text-green-800 border-green-200"
                                     onClick={() => handleIssueRepeat(prescription.id, prescription.medicationName)}
                                   >
-                                    <RefreshCw className="w-3 h-3 mr-1" />
+                                    <MedicalIcons.refresh className="w-3 h-3 mr-1" />
                                     Issue Repeat
                                   </Button>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                                        <MoreVertical className="w-3 h-3" />
+                                        <MedicalIcons.menu className="w-3 h-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[180px]">
