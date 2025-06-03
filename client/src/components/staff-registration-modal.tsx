@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { UserPlus, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRole } from "@/components/role-guard";
 
 const staffRegistrationSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -50,11 +51,19 @@ export function StaffRegistrationModal({ open, onOpenChange }: StaffRegistration
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useRole();
 
-  // Fetch organizations for selection
-  const { data: organizations = [] } = useQuery({
+  // Fetch organizations for selection (admin only)
+  const { data: organizations = [], isError: orgError } = useQuery({
     queryKey: ["/api/organizations"],
+    retry: false,
+    enabled: user?.role === 'admin' || user?.role === 'superadmin'
   });
+
+  // Determine available organizations
+  const availableOrganizations = orgError || (organizations as any[]).length === 0 
+    ? (user?.organization ? [user.organization] : [])
+    : (organizations as any[]);
 
   const form = useForm<StaffRegistrationData>({
     resolver: zodResolver(staffRegistrationSchema),
@@ -68,9 +77,16 @@ export function StaffRegistrationModal({ open, onOpenChange }: StaffRegistration
       email: "",
       phone: "",
       title: "",
-      organizationId: undefined
+      organizationId: user?.organization?.id || undefined
     }
   });
+
+  // Auto-set organization if user has limited access
+  useEffect(() => {
+    if (user?.organization && availableOrganizations.length === 1) {
+      form.setValue('organizationId', user.organization.id);
+    }
+  }, [user, availableOrganizations, form]);
 
   const registerStaffMutation = useMutation({
     mutationFn: async (data: StaffRegistrationData) => {
@@ -186,14 +202,19 @@ export function StaffRegistrationModal({ open, onOpenChange }: StaffRegistration
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {organizations.map((org: any) => (
+                          {availableOrganizations.map((org: any) => (
                             <SelectItem key={org.id} value={org.id.toString()}>
                               <div>
                                 <div className="font-medium">{org.name}</div>
-                                <div className="text-sm text-muted-foreground">{org.type}</div>
+                                <div className="text-sm text-muted-foreground">{org.type || 'Healthcare Organization'}</div>
                               </div>
                             </SelectItem>
                           ))}
+                          {availableOrganizations.length === 0 && (
+                            <SelectItem value="" disabled>
+                              No organizations available
+                            </SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
