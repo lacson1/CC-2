@@ -94,7 +94,7 @@ function AuthenticatedApp() {
         <main className="flex-1 flex flex-col overflow-hidden bg-gradient-to-br from-slate-50/50 via-white to-blue-50/30">
           {/* Enhanced Container with Better Responsive Design */}
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6 max-w-7xl">
+            <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8 py-3 lg:py-4">
               {/* Page Content with Smooth Transitions */}
               <div className="animate-in fade-in-0 slide-in-from-bottom-2 duration-500 ease-out">
                 <Switch>
