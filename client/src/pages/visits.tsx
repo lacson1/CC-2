@@ -20,34 +20,47 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { format, isToday, isYesterday, startOfDay, endOfDay } from "date-fns";
+import type { Appointment, Prescription } from "@shared/schema";
+
+interface ExtendedAppointment extends Appointment {
+  patientName?: string;
+  appointmentType?: string;
+}
+
+interface LabOrderData {
+  id: number;
+  patientId: number;
+  status: string;
+  createdAt: string;
+}
 
 export default function ClinicalActivityCenter() {
   // Fetch today's appointments
-  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery({
+  const { data: appointments = [], isLoading: appointmentsLoading } = useQuery<ExtendedAppointment[]>({
     queryKey: ["/api/appointments"],
   });
 
   // Fetch recent prescriptions
-  const { data: prescriptions = [], isLoading: prescriptionsLoading } = useQuery({
+  const { data: prescriptions = [], isLoading: prescriptionsLoading } = useQuery<Prescription[]>({
     queryKey: ["/api/prescriptions"],
   });
 
   // Fetch recent lab orders
-  const { data: labOrders = [], isLoading: labOrdersLoading } = useQuery({
+  const { data: labOrders = [], isLoading: labOrdersLoading } = useQuery<LabOrderData[]>({
     queryKey: ["/api/lab-orders"],
   });
 
   // Filter data for different time periods
-  const todayAppointments = appointments.filter(apt => 
+  const todayAppointments = appointments.filter((apt: ExtendedAppointment) => 
     isToday(new Date(apt.appointmentDate))
   );
 
-  const completedToday = todayAppointments.filter(apt => apt.status === 'completed');
-  const pendingToday = todayAppointments.filter(apt => apt.status === 'scheduled');
-  const inProgressToday = todayAppointments.filter(apt => apt.status === 'in-progress');
+  const completedToday = todayAppointments.filter((apt: ExtendedAppointment) => apt.status === 'completed');
+  const pendingToday = todayAppointments.filter((apt: ExtendedAppointment) => apt.status === 'scheduled');
+  const inProgressToday = todayAppointments.filter((apt: ExtendedAppointment) => apt.status === 'in-progress');
 
   const recentPrescriptions = prescriptions.slice(0, 5);
-  const pendingLabOrders = labOrders.filter(order => order.status === 'pending').slice(0, 5);
+  const pendingLabOrders = labOrders.filter((order: LabOrderData) => order.status === 'pending').slice(0, 5);
 
   // Calculate statistics
   const todayStats = {
@@ -175,15 +188,15 @@ export default function ClinicalActivityCenter() {
                   {completedToday.length === 0 ? (
                     <p className="text-slate-500 text-sm text-center py-4">No completed consultations yet</p>
                   ) : (
-                    completedToday.map((appointment) => (
+                    completedToday.map((appointment: ExtendedAppointment) => (
                       <div key={appointment.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                         <div className="flex-1">
-                          <p className="font-medium text-slate-900">{appointment.patientName}</p>
+                          <p className="font-medium text-slate-900">{appointment.patientName || `Patient #${appointment.patientId}`}</p>
                           <p className="text-sm text-slate-600">{formatTime(appointment.appointmentDate)}</p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            {appointment.appointmentType}
+                            {appointment.type || 'Consultation'}
                           </Badge>
                           <Link href={`/patients/${appointment.patientId}`}>
                             <Button variant="ghost" size="sm">
@@ -209,10 +222,10 @@ export default function ClinicalActivityCenter() {
                   {[...inProgressToday, ...pendingToday].length === 0 ? (
                     <p className="text-slate-500 text-sm text-center py-4">No pending appointments</p>
                   ) : (
-                    [...inProgressToday, ...pendingToday].map((appointment) => (
+                    [...inProgressToday, ...pendingToday].map((appointment: ExtendedAppointment) => (
                       <div key={appointment.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
                         <div className="flex-1">
-                          <p className="font-medium text-slate-900">{appointment.patientName}</p>
+                          <p className="font-medium text-slate-900">{appointment.patientName || `Patient #${appointment.patientId}`}</p>
                           <p className="text-sm text-slate-600">{formatTime(appointment.appointmentDate)}</p>
                         </div>
                         <div className="flex items-center space-x-2">
