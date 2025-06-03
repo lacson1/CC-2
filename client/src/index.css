@@ -4,31 +4,68 @@
 
 @layer base {
   :root {
-    --background: 220 14% 96%; /* Light blue-gray background like your screenshot */
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Enhanced Healthcare Color System */
+    --background: 210 11% 98%; /* Clean medical background */
+    --foreground: 215 25% 27%; /* Professional dark text */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 215 25% 27%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 217 91% 60%; /* Beautiful blue primary color */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 217 32% 96%; /* Light blue secondary */
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 217 32% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 217 91% 60%; /* Matching blue accent */
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 32% 89%; /* Subtle blue borders */
-    --input: 217 32% 89%;
-    --ring: 217 91% 60%; /* Blue focus rings */
-    --radius: 0.75rem; /* Slightly more rounded for modern look */
-    --chart-1: 217 91% 60%; /* Blue chart colors */
-    --chart-2: 142 76% 36%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --popover-foreground: 215 25% 27%;
+    
+    /* Professional Healthcare Blue */
+    --primary: 210 100% 50%; /* Medical blue #0080FF */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 210 100% 45%;
+    
+    /* Secondary Medical Tones */
+    --secondary: 210 16% 93%; /* Light gray-blue */
+    --secondary-foreground: 215 25% 27%;
+    --secondary-hover: 210 16% 88%;
+    
+    /* Muted Medical Interface */
+    --muted: 210 14% 96%; /* Very light background */
+    --muted-foreground: 215 15% 55%; /* Readable gray text */
+    
+    /* Medical Green Accent */
+    --accent: 156 73% 55%; /* Medical teal #2DD4BF */
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 156 73% 50%;
+    
+    /* Healthcare Status Colors */
+    --success: 142 76% 36%; /* Medical green */
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 47%; /* Medical orange */
+    --warning-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%; /* Medical red */
+    --destructive-foreground: 0 0% 100%;
+    --info: 199 89% 48%; /* Medical info blue */
+    --info-foreground: 0 0% 100%;
+    
+    /* Professional Borders */
+    --border: 210 20% 88%; /* Subtle borders */
+    --input: 210 20% 88%;
+    --input-focus: 210 100% 50%;
+    --ring: 210 100% 50%;
+    
+    /* Medical Interface Radius */
+    --radius: 0.5rem; /* Professional 8px radius */
+    
+    /* Healthcare Chart Colors */
+    --chart-1: 210 100% 50%; /* Primary blue */
+    --chart-2: 156 73% 55%; /* Medical green */
+    --chart-3: 45 93% 47%; /* Warning orange */
+    --chart-4: 0 84% 60%; /* Alert red */
+    --chart-5: 271 81% 56%; /* Purple accent */
+    
+    /* Healthcare Specific Status */
+    --urgent: 0 100% 67%; /* Urgent red */
+    --urgent-foreground: 0 0% 100%;
+    --critical: 348 83% 47%; /* Critical red */
+    --critical-foreground: 0 0% 100%;
+    --normal: 142 71% 45%; /* Normal green */
+    --normal-foreground: 0 0% 100%;
+    --pending: 43 96% 56%; /* Pending yellow */
+    --pending-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -63,8 +100,317 @@
   * {
     @apply border-border;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+  }
+  
+  /* Professional Healthcare Typography */
+  h1, .medical-heading-1 {
+    @apply text-3xl font-bold tracking-tight text-foreground leading-tight;
+  }
+  
+  h2, .medical-heading-2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground leading-tight;
+  }
+  
+  h3, .medical-heading-3 {
+    @apply text-xl font-semibold tracking-tight text-foreground leading-snug;
+  }
+  
+  h4, .medical-heading-4 {
+    @apply text-lg font-medium tracking-tight text-foreground leading-snug;
+  }
+  
+  p, .medical-body {
+    @apply text-base leading-relaxed text-foreground;
+  }
+  
+  .medical-body-sm {
+    @apply text-sm leading-relaxed text-muted-foreground;
+  }
+  
+  .medical-caption {
+    @apply text-xs font-medium tracking-wide text-muted-foreground uppercase;
+  }
+  
+  .medical-label {
+    @apply text-sm font-medium text-foreground;
+  }
+  
+  /* Healthcare Focus Ring */
+  .focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+/* Healthcare Component Library */
+@layer components {
+  /* Professional Medical Cards */
+  .medical-card {
+    @apply bg-card text-card-foreground rounded-lg border border-border shadow-sm;
+    @apply transition-all duration-200 ease-in-out;
+  }
+  
+  .medical-card:hover {
+    @apply shadow-md border-primary/20 transform translate-y-[-1px];
+  }
+  
+  .medical-card-header {
+    @apply p-4 lg:p-6 pb-2 lg:pb-3;
+  }
+  
+  .medical-card-content {
+    @apply p-4 lg:p-6 pt-0;
+  }
+  
+  /* Healthcare Button System */
+  .btn-medical {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium;
+    @apply transition-all duration-200 ease-in-out;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    @apply px-4 py-2 min-h-[40px];
+  }
+  
+  .btn-medical-primary {
+    @apply btn-medical bg-primary text-primary-foreground shadow hover:bg-primary/90;
+  }
+  
+  .btn-medical-secondary {
+    @apply btn-medical bg-secondary text-secondary-foreground border border-border;
+    @apply hover:bg-secondary/80 hover:border-primary/30;
+  }
+  
+  .btn-medical-success {
+    @apply btn-medical bg-success text-success-foreground shadow hover:bg-success/90;
+  }
+  
+  .btn-medical-warning {
+    @apply btn-medical bg-warning text-warning-foreground shadow hover:bg-warning/90;
+  }
+  
+  .btn-medical-destructive {
+    @apply btn-medical bg-destructive text-destructive-foreground shadow hover:bg-destructive/90;
+  }
+  
+  .btn-medical-ghost {
+    @apply btn-medical hover:bg-muted hover:text-foreground;
+  }
+  
+  .btn-medical-outline {
+    @apply btn-medical border border-border bg-transparent hover:bg-muted;
+  }
+  
+  /* Healthcare Input System */
+  .input-medical {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2;
+    @apply text-sm ring-offset-background file:border-0 file:bg-transparent;
+    @apply file:text-sm file:font-medium placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+    @apply focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply transition-all duration-200;
+  }
+  
+  .input-medical:focus {
+    @apply border-primary;
+  }
+  
+  /* Medical Badge System */
+  .badge-medical {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    @apply transition-colors focus:outline-none focus:ring-2 focus:ring-ring;
+  }
+  
+  .badge-medical-default {
+    @apply badge-medical border border-border bg-background text-foreground;
+  }
+  
+  .badge-medical-success {
+    @apply badge-medical bg-success/10 text-success border border-success/20;
+  }
+  
+  .badge-medical-warning {
+    @apply badge-medical bg-warning/10 text-warning border border-warning/20;
+  }
+  
+  .badge-medical-destructive {
+    @apply badge-medical bg-destructive/10 text-destructive border border-destructive/20;
+  }
+  
+  .badge-medical-info {
+    @apply badge-medical bg-info/10 text-info border border-info/20;
+  }
+  
+  .badge-medical-urgent {
+    @apply badge-medical bg-urgent text-urgent-foreground;
+  }
+  
+  .badge-medical-critical {
+    @apply badge-medical bg-critical text-critical-foreground;
+  }
+  
+  .badge-medical-normal {
+    @apply badge-medical bg-normal text-normal-foreground;
+  }
+  
+  .badge-medical-pending {
+    @apply badge-medical bg-pending text-pending-foreground;
+  }
+  
+  /* Healthcare Table System */
+  .table-medical {
+    @apply w-full caption-bottom text-sm;
+  }
+  
+  .table-medical thead {
+    @apply [&_tr]:border-b;
+  }
+  
+  .table-medical tbody {
+    @apply [&_tr:last-child]:border-0;
+  }
+  
+  .table-medical th {
+    @apply h-12 px-4 text-left align-middle font-semibold text-muted-foreground;
+    @apply border-b border-border bg-muted/50;
+    @apply [&:has([role=checkbox])]:pr-0;
+  }
+  
+  .table-medical td {
+    @apply p-4 align-middle border-b border-border [&:has([role=checkbox])]:pr-0;
+    @apply transition-colors;
+  }
+  
+  .table-medical tr {
+    @apply border-b border-border transition-colors hover:bg-muted/50;
+    @apply data-[state=selected]:bg-muted;
+  }
+  
+  /* Healthcare Select/Dropdown */
+  .select-medical {
+    @apply flex h-10 w-full items-center justify-between rounded-md border border-input;
+    @apply bg-background px-3 py-2 text-sm ring-offset-background;
+    @apply placeholder:text-muted-foreground focus:outline-none focus:ring-2;
+    @apply focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed;
+    @apply disabled:opacity-50 transition-all duration-200;
+  }
+  
+  /* Medical Dialog/Modal */
+  .dialog-medical {
+    @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%];
+    @apply translate-y-[-50%] gap-4 border border-border bg-background p-6;
+    @apply shadow-lg duration-200 sm:rounded-lg;
+  }
+  
+  /* Healthcare Toast/Alert */
+  .toast-medical {
+    @apply group pointer-events-auto relative flex w-full items-center justify-between;
+    @apply space-x-4 overflow-hidden rounded-md border border-border p-6 pr-8;
+    @apply shadow-lg transition-all;
+  }
+  
+  .toast-medical-success {
+    @apply toast-medical border-success/20 bg-success/5 text-success;
+  }
+  
+  .toast-medical-warning {
+    @apply toast-medical border-warning/20 bg-warning/5 text-warning;
+  }
+  
+  .toast-medical-destructive {
+    @apply toast-medical border-destructive/20 bg-destructive/5 text-destructive;
+  }
+  
+  .toast-medical-info {
+    @apply toast-medical border-info/20 bg-info/5 text-info;
+  }
+  
+  /* Healthcare Loading States */
+  .loading-medical {
+    @apply animate-pulse;
+  }
+  
+  .skeleton-medical {
+    @apply animate-pulse rounded-md bg-muted;
+  }
+  
+  /* Professional Hover Effects */
+  .hover-medical {
+    @apply transition-all duration-200 ease-in-out;
+    @apply hover:shadow-md hover:scale-[1.02] hover:bg-muted/30;
+  }
+  
+  .hover-medical-card {
+    @apply transition-all duration-200 ease-in-out cursor-pointer;
+    @apply hover:shadow-lg hover:border-primary/30 hover:bg-gradient-to-br;
+    @apply hover:from-background hover:to-muted/20;
+  }
+  
+  /* Healthcare Status Indicators */
+  .status-indicator {
+    @apply inline-flex items-center gap-2 px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .status-active {
+    @apply status-indicator bg-success/10 text-success border border-success/20;
+  }
+  
+  .status-pending {
+    @apply status-indicator bg-pending/10 text-pending border border-pending/20;
+  }
+  
+  .status-inactive {
+    @apply status-indicator bg-muted text-muted-foreground border border-border;
+  }
+  
+  .status-urgent {
+    @apply status-indicator bg-urgent text-urgent-foreground;
+  }
+  
+  .status-critical {
+    @apply status-indicator bg-critical text-critical-foreground;
+  }
+  
+  /* Medical Form Groups */
+  .form-group-medical {
+    @apply space-y-2;
+  }
+  
+  .form-label-medical {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed;
+    @apply peer-disabled:opacity-70 text-foreground;
+  }
+  
+  .form-description-medical {
+    @apply text-sm text-muted-foreground;
+  }
+  
+  .form-message-medical {
+    @apply text-sm font-medium text-destructive;
+  }
+  
+  /* Healthcare Navigation */
+  .nav-medical {
+    @apply flex items-center space-x-4 lg:space-x-6;
+  }
+  
+  .nav-link-medical {
+    @apply text-sm font-medium transition-colors hover:text-primary;
+    @apply relative after:absolute after:left-0 after:right-0 after:bottom-[-4px];
+    @apply after:h-0.5 after:bg-primary after:rounded-full;
+    @apply after:transform after:scale-x-0 after:transition-transform;
+    @apply hover:after:scale-x-100;
+  }
+  
+  .nav-link-medical.active {
+    @apply text-primary after:scale-x-100;
   }
 }
 
@@ -432,7 +778,205 @@
   color: hsl(var(--foreground));
 }
 
-/* Responsive Enhancements */
+/* Healthcare Utilities */
+@layer utilities {
+  /* Professional Medical Scrollbars */
+  .scrollbar-medical {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) transparent;
+  }
+  
+  .scrollbar-medical::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-medical::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-medical::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--border));
+    border-radius: 3px;
+    transition: background-color 0.2s;
+  }
+  
+  .scrollbar-medical::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary));
+  }
+  
+  /* Healthcare Spacing System */
+  .space-medical-xs > * + * {
+    margin-top: 0.25rem;
+  }
+  
+  .space-medical-sm > * + * {
+    margin-top: 0.5rem;
+  }
+  
+  .space-medical-md > * + * {
+    margin-top: 1rem;
+  }
+  
+  .space-medical-lg > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  .space-medical-xl > * + * {
+    margin-top: 2rem;
+  }
+  
+  /* Medical Interface Focus States */
+  .focus-medical {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  /* Healthcare Animation Classes */
+  .animate-medical-slide-in {
+    animation: medical-slide-in 0.3s ease-out forwards;
+  }
+  
+  .animate-medical-fade-in {
+    animation: medical-fade-in 0.2s ease-out forwards;
+  }
+  
+  .animate-medical-scale {
+    animation: medical-scale 0.2s ease-out forwards;
+  }
+  
+  /* Medical Content Layouts */
+  .layout-medical-header {
+    @apply sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b border-border;
+  }
+  
+  .layout-medical-sidebar {
+    @apply w-64 bg-card border-r border-border shadow-sm;
+  }
+  
+  .layout-medical-content {
+    @apply flex-1 overflow-y-auto scrollbar-medical bg-gradient-to-br from-background to-muted/20;
+  }
+  
+  /* Healthcare Text Utilities */
+  .text-medical-primary {
+    @apply text-primary;
+  }
+  
+  .text-medical-success {
+    @apply text-success;
+  }
+  
+  .text-medical-warning {
+    @apply text-warning;
+  }
+  
+  .text-medical-destructive {
+    @apply text-destructive;
+  }
+  
+  .text-medical-muted {
+    @apply text-muted-foreground;
+  }
+  
+  /* Healthcare Background Utilities */
+  .bg-medical-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .bg-medical-success {
+    @apply bg-success text-success-foreground;
+  }
+  
+  .bg-medical-warning {
+    @apply bg-warning text-warning-foreground;
+  }
+  
+  .bg-medical-destructive {
+    @apply bg-destructive text-destructive-foreground;
+  }
+  
+  .bg-medical-muted {
+    @apply bg-muted text-muted-foreground;
+  }
+  
+  /* Healthcare Border Utilities */
+  .border-medical-primary {
+    @apply border-primary;
+  }
+  
+  .border-medical-success {
+    @apply border-success;
+  }
+  
+  .border-medical-warning {
+    @apply border-warning;
+  }
+  
+  .border-medical-destructive {
+    @apply border-destructive;
+  }
+  
+  /* Medical Interface Interactions */
+  .interactive-medical {
+    @apply transition-all duration-200 ease-in-out cursor-pointer;
+    @apply hover:shadow-md hover:scale-[1.02] focus:outline-none;
+    @apply focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  }
+  
+  .clickable-medical {
+    @apply cursor-pointer transition-colors duration-200;
+    @apply hover:bg-muted/50 focus:bg-muted focus:outline-none;
+    @apply focus:ring-2 focus:ring-primary focus:ring-offset-1;
+  }
+  
+  /* Healthcare Grid Systems */
+  .grid-medical-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6;
+  }
+  
+  .grid-medical-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6;
+  }
+  
+  .grid-medical-4 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6;
+  }
+  
+  /* Medical Touch Targets */
+  .touch-medical {
+    @apply min-h-[44px] min-w-[44px] p-2;
+  }
+}
+
+/* Healthcare Animations */
+@keyframes medical-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes medical-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes medical-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Healthcare Responsive Design */
 @media (max-width: 768px) {
   .mobile-stack {
     @apply flex-col space-y-4;
@@ -440,5 +984,29 @@
   
   .mobile-hide {
     @apply hidden;
+  }
+  
+  .mobile-medical-padding {
+    @apply p-4;
+  }
+  
+  .mobile-medical-text {
+    @apply text-sm;
+  }
+  
+  .mobile-medical-button {
+    @apply min-h-[48px] text-base;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet-medical-layout {
+    @apply grid-cols-2 gap-6;
+  }
+}
+
+@media (min-width: 1024px) {
+  .desktop-medical-layout {
+    @apply grid-cols-3 gap-8;
   }
 }
