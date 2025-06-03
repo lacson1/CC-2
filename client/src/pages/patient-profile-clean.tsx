@@ -373,16 +373,16 @@ export default function PatientProfile() {
             </div>
 
             {/* Right Column - Quick Actions & Summary */}
-            <div className="space-y-6">
+            <div className="space-y-3">
               {/* Quick Actions Card */}
               <Card className="bg-white shadow-sm border-0">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center">
-                    <Plus className="h-5 w-5 mr-2 text-blue-600" />
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base font-semibold text-gray-900 flex items-center">
+                    <Plus className="h-4 w-4 mr-2 text-blue-600" />
                     Quick Actions
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2">
                   <Button 
                     onClick={() => setShowVisitModal(true)}
                     className="w-full justify-start bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
