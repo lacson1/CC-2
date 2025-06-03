@@ -49,6 +49,7 @@ import ConsultationDashboard from "@/pages/consultation-dashboard";
 import PatientAccessCards from "@/pages/patient-access-cards";
 import Settings from "@/pages/settings";
 import ErrorMonitoring from "@/pages/error-monitoring";
+import { PerformancePage } from "@/pages/performance-page";
 import Profile from "@/pages/profile";
 import SuperAdminAnalytics from "@/pages/superadmin-analytics";
 import SuperAdminControlPanel from "@/pages/super-admin-control-panel";
@@ -134,6 +135,7 @@ function AuthenticatedApp() {
                   <Route path="/user-management" component={UserManagementEnhanced} />
                   <Route path="/audit-logs" component={AuditLogs} />
                   <Route path="/error-monitoring" component={ErrorMonitoring} />
+                  <Route path="/performance" component={PerformancePage} />
                   <Route path="/organization-management" component={OrganizationManagement} />
                   <Route path="/patient-access-cards" component={PatientAccessCards} />
                   <Route path="/procedural-reports" component={ProceduralReports} />

@@ -104,6 +104,7 @@ const getNavigationGroupsForRole = (role: string) => {
         { name: "Staff Messages", href: "/staff-messages", icon: Mail, roles: ["superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
         { name: "Audit Logs", href: "/audit-logs", icon: Shield, roles: ["superadmin", "admin"] },
         { name: "Error Monitoring", href: "/error-monitoring", icon: AlertTriangle, roles: ["superadmin", "admin"] },
+        { name: "Performance Dashboard", href: "/performance", icon: TrendingUp, roles: ["superadmin", "admin"] },
       ]
     },
     {
