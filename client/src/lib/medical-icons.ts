@@ -22,7 +22,8 @@ import {
   PlayCircle, PauseCircle, StopCircle, SkipForward, SkipBack,
   Volume2, VolumeX, MicOff, Headphones,
   CreditCard, DollarSign, Receipt, Wallet, PiggyBank,
-  Package, ShoppingCart, Tag, Tags, Percent
+  Package, ShoppingCart, Tag, Tags, Percent,
+  History, ScrollText
 } from "lucide-react";
 
 // Healthcare Professional Icons
@@ -181,6 +182,13 @@ export const MedicalIcons = {
   wifi: Wifi,
   offline: WifiOff,
   signal: Signal,
+  
+  // Lab & Testing
+  labOrder: ScrollText,
+  history: History,
+  
+  // Administrative
+  referral: ExternalLink,
   
   // Layout & UI
   layout: Layout,
