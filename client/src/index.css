@@ -251,4 +251,25 @@
   .floating-action {
     @apply fixed bottom-6 right-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-200 z-50;
   }
+  
+  /* Fixed Layout Structure */
+  .fixed-layout-container {
+    @apply h-screen flex flex-col overflow-hidden;
+  }
+  
+  .fixed-header-section {
+    @apply flex-shrink-0 border-b border-border/30;
+  }
+  
+  .fixed-header-content {
+    @apply px-6 py-4;
+  }
+  
+  .fixed-tabs-container {
+    @apply flex-shrink-0 border-b border-border/50;
+  }
+  
+  .scrollable-content {
+    @apply flex-1 overflow-y-auto p-6;
+  }
 }
