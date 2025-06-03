@@ -388,11 +388,31 @@ export const pharmacies = pgTable('pharmacies', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+// Medication Review Assignments
+export const medicationReviewAssignments = pgTable('medication_review_assignments', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  prescriptionId: integer('prescription_id').references(() => prescriptions.id),
+  assignedBy: integer('assigned_by').references(() => users.id).notNull(),
+  assignedTo: integer('assigned_to').references(() => users.id).notNull(),
+  reviewType: varchar('review_type', { length: 50 }).default('routine').notNull(), // routine, urgent, medication_safety, dosage_adjustment
+  dueDate: date('due_date').notNull(),
+  notes: text('notes'),
+  status: varchar('status', { length: 20 }).default('pending').notNull(), // pending, in_progress, completed, cancelled
+  priority: varchar('priority', { length: 20 }).default('normal').notNull(), // low, normal, high, urgent
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+  startedAt: timestamp('started_at'),
+  completedAt: timestamp('completed_at')
+});
+
 // Enhanced Medication Reviews
 export const medicationReviews = pgTable('medication_reviews', {
   id: serial('id').primaryKey(),
+  assignmentId: integer('assignment_id').references(() => medicationReviewAssignments.id),
   patientId: integer('patient_id').references(() => patients.id).notNull(),
-  pharmacistId: integer('pharmacist_id').references(() => users.id).notNull(),
+  reviewedBy: integer('reviewed_by').references(() => users.id).notNull(),
   visitId: integer('visit_id').references(() => visits.id),
   reviewType: varchar('review_type', { length: 50 }).default('comprehensive').notNull(), // comprehensive, drug_interaction, allergy_check, adherence
   
@@ -721,6 +741,22 @@ export type Referral = typeof referrals.$inferSelect;
 export type InsertReferral = z.infer<typeof insertReferralSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+
+// Medication Review Assignment Types
+export const insertMedicationReviewAssignmentSchema = createInsertSchema(medicationReviewAssignments).omit({
+  id: true,
+  createdAt: true,
+  assignedAt: true,
+  startedAt: true,
+  completedAt: true,
+});
+
+
+
+export type MedicationReviewAssignment = typeof medicationReviewAssignments.$inferSelect;
+export type InsertMedicationReviewAssignment = z.infer<typeof insertMedicationReviewAssignmentSchema>;
+export type MedicationReview = typeof medicationReviews.$inferSelect;
+export type InsertMedicationReview = z.infer<typeof insertMedicationReviewSchema>;
 
 // Consultation Forms Types
 export const insertConsultationFormSchema = createInsertSchema(consultationForms).omit({
