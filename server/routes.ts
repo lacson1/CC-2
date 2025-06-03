@@ -2815,7 +2815,10 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       
       const orders = await db.select()
         .from(labOrders)
-        .where(eq(labOrders.patientId, patientId))
+        .where(and(
+          eq(labOrders.patientId, patientId),
+          eq(labOrders.organizationId, userOrgId)
+        ))
         .orderBy(labOrders.createdAt);
       
       res.json(orders);
