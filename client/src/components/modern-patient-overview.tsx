@@ -16,6 +16,8 @@ import { PatientCommunicationHub } from './patient-communication-hub';
 import ConsultationFormSelector from './consultation-form-selector';
 import { PatientDropdownMenu } from './patient-dropdown-menu';
 import { EditPatientModal } from './edit-patient-modal';
+import LabOrderForm from './lab-order-form';
+import LabOrdersList from './lab-orders-list';
 import { useLocation } from "wouter";
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
@@ -244,6 +246,22 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
           variant: "destructive",
         });
       }
+    }
+  };
+
+  // Handler for printing lab history
+  const handlePrintLabHistory = () => {
+    const printWindow = window.open(`/api/patients/${patient.id}/lab-history/print`, '_blank');
+    if (printWindow) {
+      printWindow.addEventListener('load', () => {
+        printWindow.print();
+      });
+    } else {
+      toast({
+        title: "Print Error",
+        description: "Unable to open print window. Please check your browser settings.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -2318,50 +2336,54 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   </TabsList>
 
                   <TabsContent value="orders" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.labOrder className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Lab Orders</h3>
-                      <p className="text-sm text-gray-500 mb-4">Create and manage laboratory test orders</p>
-                      <Button className="bg-red-600 hover:bg-red-700">
-                        <MedicalIcons.add className="w-4 h-4 mr-2" />
-                        New Lab Order
-                      </Button>
-                    </div>
+                    <LabOrderForm patientId={patient.id} />
                   </TabsContent>
 
                   <TabsContent value="results" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.bloodTest className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Lab Results</h3>
-                      <p className="text-sm text-gray-500 mb-4">View and review completed laboratory results</p>
-                      <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
-                        <MedicalIcons.refresh className="w-4 h-4 mr-2" />
-                        Refresh Results
-                      </Button>
-                    </div>
+                    <LabOrdersList patientId={patient.id} />
                   </TabsContent>
 
                   <TabsContent value="pending" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.clock className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Pending Tests</h3>
-                      <p className="text-sm text-gray-500 mb-4">Laboratory tests awaiting results</p>
-                      <Button variant="outline" className="border-amber-200 text-amber-600 hover:bg-amber-50">
-                        <MedicalIcons.search className="w-4 h-4 mr-2" />
-                        Check Status
-                      </Button>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900">Pending Lab Tests</h3>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
+                        >
+                          <MedicalIcons.refresh className="w-4 h-4 mr-2" />
+                          Refresh
+                        </Button>
+                      </div>
+                      <LabOrdersList patientId={patient.id} showPendingOnly={true} />
                     </div>
                   </TabsContent>
 
                   <TabsContent value="history" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.history className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Lab History</h3>
-                      <p className="text-sm text-gray-500 mb-4">Complete history of all laboratory tests</p>
-                      <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50">
-                        <MedicalIcons.print className="w-4 h-4 mr-2" />
-                        Print History
-                      </Button>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-medium text-gray-900">Complete Lab History</h3>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
+                          >
+                            <MedicalIcons.refresh className="w-4 h-4 mr-2" />
+                            Refresh
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handlePrintLabHistory()}
+                          >
+                            <MedicalIcons.print className="w-4 h-4 mr-2" />
+                            Print
+                          </Button>
+                        </div>
+                      </div>
+                      <LabOrdersList patientId={patient.id} showAll={true} />
                     </div>
                   </TabsContent>
                 </Tabs>

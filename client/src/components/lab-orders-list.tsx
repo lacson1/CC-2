@@ -9,6 +9,8 @@ import { format } from "date-fns";
 
 interface LabOrdersListProps {
   patientId: number;
+  showPendingOnly?: boolean;
+  showAll?: boolean;
 }
 
 interface LabOrder {
@@ -29,11 +31,23 @@ interface LabOrderItem {
   testName: string;
 }
 
-export default function LabOrdersList({ patientId }: LabOrdersListProps) {
+export default function LabOrdersList({ patientId, showPendingOnly, showAll }: LabOrdersListProps) {
   const [expandedOrders, setExpandedOrders] = useState<number[]>([]);
 
   const { data: labOrders = [], isLoading } = useQuery<LabOrder[]>({
     queryKey: ['/api/patients', patientId, 'lab-orders']
+  });
+
+  // Filter lab orders based on props
+  const filteredLabOrders = labOrders.filter(order => {
+    if (showPendingOnly) {
+      return order.status === 'pending' || order.status === 'in_progress';
+    }
+    if (showAll) {
+      return true; // Show all orders
+    }
+    // Default behavior - show recent orders
+    return true;
   });
 
   const toggleOrder = (orderId: number) => {
