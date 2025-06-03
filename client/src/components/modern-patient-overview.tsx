@@ -1011,15 +1011,15 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[180px]">
                                       <DropdownMenuItem onClick={() => handleEditPrescription(prescription)}>
-                                        <Edit className="w-3 h-3 mr-2" />
+                                        <MedicalIcons.edit className="w-3 h-3 mr-2" />
                                         Edit Details
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
-                                        <Printer className="w-3 h-3 mr-2" />
+                                        <MedicalIcons.print className="w-3 h-3 mr-2" />
                                         Print
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleGenerateQRCode(prescription)}>
-                                        <QrCode className="w-3 h-3 mr-2" />
+                                        <MedicalIcons.qrCode className="w-3 h-3 mr-2" />
                                         Generate QR Code
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
@@ -1292,7 +1292,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      <RefreshCw className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <MedicalIcons.refresh className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">No Repeat Prescriptions</h3>
                       <p className="text-sm text-gray-500 mb-4">
                         Repeat prescriptions are long-term medications that require regular review.
