@@ -325,7 +325,7 @@ export default function ClinicalActivityCenter() {
                       <div key={prescription.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50">
                         <div className="flex-1">
                           <p className="font-medium text-slate-900">{prescription.medicationName || 'Medication'}</p>
-                          <p className="text-sm text-slate-600">Patient ID: {prescription.patientId}</p>
+                          <p className="text-sm text-slate-600">{(prescription as any).patientName || `Patient #${prescription.patientId}`}</p>
                           <p className="text-xs text-slate-500">{prescription.dosage} - {prescription.frequency}</p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -363,7 +363,7 @@ export default function ClinicalActivityCenter() {
                       <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50">
                         <div className="flex-1">
                           <p className="font-medium text-slate-900">Lab Order #{order.id}</p>
-                          <p className="text-sm text-slate-600">Patient ID: {order.patientId}</p>
+                          <p className="text-sm text-slate-600">{(order as any).patientName || `Patient #${order.patientId}`}</p>
                           <p className="text-xs text-slate-500">Ordered: {formatDate(order.createdAt)}</p>
                         </div>
                         <div className="flex items-center space-x-2">

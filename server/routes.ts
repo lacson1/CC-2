@@ -3391,10 +3391,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       )
       .orderBy(appointments.appointmentTime);
 
-      // Get recent prescriptions
+      // Get recent prescriptions with patient names
       const recentPrescriptions = await db.select({
         id: prescriptions.id,
         patientId: prescriptions.patientId,
+        patientName: sql<string>`CONCAT(${patients.firstName}, ' ', ${patients.lastName})`,
         medicationName: prescriptions.medicationName,
         dosage: prescriptions.dosage,
         frequency: prescriptions.frequency,
@@ -3403,6 +3404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prescribedBy: prescriptions.prescribedBy
       })
       .from(prescriptions)
+      .leftJoin(patients, eq(prescriptions.patientId, patients.id))
       .where(gte(prescriptions.createdAt, startOfDay))
       .orderBy(desc(prescriptions.createdAt))
       .limit(10);
