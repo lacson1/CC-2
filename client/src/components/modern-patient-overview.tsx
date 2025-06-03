@@ -870,52 +870,25 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
   return (
     <div className="space-y-4 min-h-screen w-full">
-      {/* Patient Quick Info Header - Compact */}
+      {/* Quick Actions and Safety Indicator */}
       <Card className="w-full">
         <CardContent className="p-3">
-          <div className="flex items-center space-x-4">
-            <PatientDropdownMenu
-              patient={patient}
-              onEditPatient={onEditPatient}
-              onRecordVisit={onRecordVisit}
-              onAddPrescription={onAddPrescription}
-              onPrintRecord={onPrintRecord}
-            >
-              <Button variant="ghost" className="h-auto p-0 rounded-full hover:scale-105 transition-transform">
-                <Avatar className="w-10 h-10 cursor-pointer">
-                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
-                    {getPatientInitials(patient)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </PatientDropdownMenu>
-            <div className="flex-1">
-              <div className="flex items-center space-x-3">
-                <div>
-                  <PatientDropdownMenu
-                    patient={patient}
-                    onEditPatient={onEditPatient}
-                    onRecordVisit={onRecordVisit}
-                    onAddPrescription={onAddPrescription}
-                    onPrintRecord={onPrintRecord}
-                    showHeader={false}
-                  >
-                    <Button variant="ghost" className="h-auto p-0 hover:bg-gray-100 rounded-md px-2 py-1">
-                      <div className="text-left">
-                        <h2 className="text-lg font-bold text-gray-900 whitespace-nowrap flex items-center gap-1">
-                          {formatPatientName(patient)}
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
-                        </h2>
-                        <p className="text-xs text-gray-500">
-                          ID: HC{patient.id?.toString().padStart(6, "0")} • {getPatientAge(patient.dateOfBirth)} years old • {patient.gender}
-                        </p>
-                      </div>
-                    </Button>
-                  </PatientDropdownMenu>
-                </div>
-                <QuickSafetyIndicator patient={patient} />
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <PatientDropdownMenu
+                patient={patient}
+                onEditPatient={onEditPatient}
+                onRecordVisit={onRecordVisit}
+                onAddPrescription={onAddPrescription}
+                onPrintRecord={onPrintRecord}
+              >
+                <Button variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Quick Actions
+                </Button>
+              </PatientDropdownMenu>
             </div>
+            <QuickSafetyIndicator patient={patient} />
           </div>
         </CardContent>
       </Card>
