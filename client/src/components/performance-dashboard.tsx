@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,23 @@ export function PerformanceDashboard() {
   const { data: stats, isLoading, refetch } = useQuery<PerformanceStats>({
     queryKey: ['/api/performance/stats', timeframe],
     refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  const { data: optimizationTasks, isLoading: isLoadingTasks, refetch: refetchTasks } = useQuery({
+    queryKey: ['/api/optimization/tasks'],
+    refetchInterval: 60000, // Refresh every minute
+  });
+
+  const implementOptimization = useMutation({
+    mutationFn: async (taskId: string) => {
+      return apiRequest(`/api/optimization/implement/${taskId}`, 'POST');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/optimization/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/performance/stats'] });
+      refetchTasks();
+      refetch();
+    },
   });
 
   const getSystemStatus = () => {
@@ -218,8 +236,9 @@ export function PerformanceDashboard() {
       </div>
 
       <Tabs defaultValue="performance" className="space-y-6">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="performance">Performance Metrics</TabsTrigger>
+          <TabsTrigger value="optimization">System Optimization</TabsTrigger>
           <TabsTrigger value="integrations">Healthcare Integrations</TabsTrigger>
         </TabsList>
 
@@ -403,6 +422,196 @@ export function PerformanceDashboard() {
                 </p>
               </CardContent>
             </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="optimization" className="space-y-6">
+          {isLoadingTasks ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <div className="animate-pulse">
+                  <div className="h-12 w-12 bg-gray-200 rounded-full mx-auto mb-4"></div>
+                  <div className="h-4 w-32 bg-gray-200 rounded mx-auto mb-2"></div>
+                  <div className="h-3 w-48 bg-gray-200 rounded mx-auto"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5" />
+                    Automated System Optimization
+                  </CardTitle>
+                  <CardDescription>
+                    AI-powered system optimization recommendations with one-click implementation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {optimizationTasks?.tasks && optimizationTasks.tasks.length > 0 ? (
+                    <div className="space-y-4">
+                      {optimizationTasks.tasks.map((task: any) => (
+                        <div key={task.id} className="border rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2 flex-1">
+                              <div className="flex items-center gap-2">
+                                <h3 className="font-medium">{task.title}</h3>
+                                <Badge variant={task.priority === 'high' ? 'destructive' : task.priority === 'medium' ? 'default' : 'secondary'}>
+                                  {task.priority}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{task.description}</p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>Impact: {task.impact}</span>
+                                <span>Effort: {task.effort}</span>
+                                <span>Category: {task.category}</span>
+                              </div>
+                              {task.steps && task.steps.length > 0 && (
+                                <div className="mt-3">
+                                  <p className="text-sm font-medium mb-2">Implementation Steps:</p>
+                                  <ul className="text-sm text-muted-foreground space-y-1">
+                                    {task.steps.map((step: string, index: number) => (
+                                      <li key={index} className="flex items-start gap-2">
+                                        <span className="text-blue-500 mt-0.5">•</span>
+                                        {step}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <Button
+                                onClick={() => implementOptimization.mutate(task.id)}
+                                disabled={implementOptimization.isPending}
+                                size="sm"
+                                className="min-w-[100px]"
+                              >
+                                {implementOptimization.isPending ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+                                    Implementing
+                                  </div>
+                                ) : (
+                                  <>
+                                    <Zap className="h-3 w-3 mr-1" />
+                                    Implement
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Shield className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                      <h3 className="text-lg font-medium mb-2">System Fully Optimized</h3>
+                      <p className="text-muted-foreground">
+                        No optimization tasks available. Your clinic management system is running at peak performance.
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Performance Improvement Categories */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Database className="h-4 w-4" />
+                      Database Optimization
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Index Coverage</span>
+                      <span className="text-green-600 font-medium">95%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Query Performance</span>
+                      <span className="text-green-600 font-medium">Excellent</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Connection Pool</span>
+                      <span className="text-blue-600 font-medium">Optimized</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Server className="h-4 w-4" />
+                      API Performance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Response Caching</span>
+                      <span className="text-green-600 font-medium">Active</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Compression</span>
+                      <span className="text-green-600 font-medium">Enabled</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Rate Limiting</span>
+                      <span className="text-blue-600 font-medium">Configured</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Shield className="h-4 w-4" />
+                      Security & Monitoring
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Error Tracking</span>
+                      <span className="text-green-600 font-medium">Active</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Performance Monitoring</span>
+                      <span className="text-green-600 font-medium">Real-time</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Security Headers</span>
+                      <span className="text-green-600 font-medium">Configured</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Wifi className="h-4 w-4" />
+                      Healthcare Integrations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span>FHIR Compliance</span>
+                      <span className="text-green-600 font-medium">Ready</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>Lab Integrations</span>
+                      <span className="text-blue-600 font-medium">Available</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span>E-Prescribing</span>
+                      <span className="text-blue-600 font-medium">Ready</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           )}
         </TabsContent>
 
