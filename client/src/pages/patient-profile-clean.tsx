@@ -24,7 +24,9 @@ import {
   Heart,
   Clock,
   UserCheck,
-  FileText
+  FileText,
+  Monitor,
+  Share
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
