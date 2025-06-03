@@ -2514,6 +2514,23 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     try {
       const patientId = parseInt(req.params.id);
       const { tests, labTestIds, notes } = req.body;
+      const userOrgId = req.user?.organizationId;
+      
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+      
+      // Verify patient belongs to user's organization
+      const [patient] = await db.select().from(patients).where(
+        and(
+          eq(patients.id, patientId),
+          eq(patients.organizationId, userOrgId)
+        )
+      ).limit(1);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found in your organization" });
+      }
       
       // Handle both 'tests' and 'labTestIds' fields for compatibility
       const testIds = tests || labTestIds;
@@ -2522,11 +2539,12 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(400).json({ message: "Tests array is required" });
       }
       
-      // Create the lab order
+      // Create the lab order with organization context
       const [labOrder] = await db.insert(labOrders)
         .values({
           patientId,
           orderedBy: req.user!.id,
+          organizationId: userOrgId,
           status: 'pending'
         })
         .returning();
