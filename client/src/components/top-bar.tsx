@@ -18,6 +18,7 @@ import OfflineIndicator from "@/components/offline-indicator";
 const getNavigationForRole = (role: string) => {
   const allNavigation = [
     { name: "Dashboard", href: "/dashboard", icon: BarChart3, roles: ["superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
+    { name: "Clinical Activity", href: "/clinical-activity", icon: Heart, roles: ["superadmin", "admin", "doctor", "nurse"] },
     { name: "Patients", href: "/patients", icon: Users, roles: ["superadmin", "admin", "doctor", "nurse"] },
     { name: "Visits", href: "/visits", icon: Stethoscope, roles: ["superadmin", "admin", "doctor", "nurse"] },
     { name: "Lab Results", href: "/lab-results", icon: FlaskRound, roles: ["superadmin", "admin", "doctor", "nurse"] },

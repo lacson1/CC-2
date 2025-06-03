@@ -98,6 +98,7 @@ function AuthenticatedApp() {
                 <Switch>
                   <Route path="/" component={Dashboard} />
                   <Route path="/dashboard" component={Dashboard} />
+                  <Route path="/clinical-activity" component={ConsultationDashboard} />
                   <Route path="/patients" component={Patients} />
                   <Route path="/patients/:id" component={PatientProfile} />
                   <Route path="/patients/:patientId/record-visit" component={RecordVisitPage} />
