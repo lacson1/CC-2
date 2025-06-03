@@ -120,17 +120,30 @@ export default function CustomPrescriptionPrint({ prescriptions, patient, onClos
           </DialogTitle>
         </DialogHeader>
 
-        {/* Print Content */}
-        <div id="prescription-print-content" className="bg-white p-8 print:p-0" style={{ minHeight: '297mm' }}>
+        {/* Print Content - A6 Format with Light Green Background */}
+        <div 
+          id="prescription-print-content" 
+          className="bg-green-50 p-4 print:p-3" 
+          style={{ 
+            width: '148mm',
+            height: '105mm',
+            maxWidth: '148mm',
+            maxHeight: '105mm',
+            backgroundColor: '#f0fdf4',
+            fontSize: '10px',
+            lineHeight: '1.2',
+            overflow: 'hidden'
+          }}
+        >
         {/* Organization Header */}
         {generateClinicHeader(organization)}
 
-        {/* Document Title */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2" style={{ color: organization.themeColor }}>
+        {/* Document Title - Compact for A6 */}
+        <div className="text-center mb-3">
+          <h2 className="text-sm font-bold mb-1" style={{ color: organization.themeColor }}>
             MEDICAL PRESCRIPTION
           </h2>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs text-gray-600">
             Date: {formatDocumentDate(new Date())}
           </p>
         </div>

@@ -110,28 +110,26 @@ export default function CustomLabOrderPrint({ labOrders, patient, onClose }: Cus
   }
 
   return (
-    <div className="space-y-4">
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center mb-4 no-print">
-        <h2 className="text-xl font-semibold">Laboratory Order Print Preview</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            <MedicalIcons.close className="w-4 h-4 mr-2" />
-            Close
-          </Button>
-          <Button variant="outline" onClick={handlePrint} disabled={isGenerating}>
-            <MedicalIcons.print className="w-4 h-4 mr-2" />
-            Print
-          </Button>
-          <Button onClick={handleExportPDF} disabled={isGenerating}>
-            <MedicalIcons.download className="w-4 h-4 mr-2" />
-            Export PDF
-          </Button>
-        </div>
-      </div>
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex justify-between items-center">
+            <span>Laboratory Order Print Preview</span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handlePrint} disabled={isGenerating}>
+                <MedicalIcons.print className="w-4 h-4 mr-2" />
+                Print
+              </Button>
+              <Button onClick={handleExportPDF} disabled={isGenerating}>
+                <MedicalIcons.download className="w-4 h-4 mr-2" />
+                Export PDF
+              </Button>
+            </div>
+          </DialogTitle>
+        </DialogHeader>
 
-      {/* Print Content */}
-      <div id="lab-order-print-content" className="bg-white p-8 print:p-0" style={{ minHeight: '297mm' }}>
+        {/* Print Content */}
+        <div id="lab-order-print-content" className="bg-white p-8 print:p-0" style={{ minHeight: '297mm' }}>
         {/* Organization Header */}
         {generateClinicHeader(organization)}
 
@@ -294,6 +292,7 @@ export default function CustomLabOrderPrint({ labOrders, patient, onClose }: Cus
           <p className="mt-2">Generated on {new Date().toLocaleString()} | {organization.name}</p>
         </div>
       </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
