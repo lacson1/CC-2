@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from './db';
-import { errorLogs, systemHealth } from '@shared/schema';
+import { errorLogs, systemHealth, users } from '@shared/schema';
 import { eq, desc, and, gte, count, avg } from 'drizzle-orm';
 import { authenticateToken } from './middleware/auth';
 
