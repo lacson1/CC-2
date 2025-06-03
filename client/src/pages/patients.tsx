@@ -42,16 +42,16 @@ export default function Patients() {
       <div className="fixed-tabs-container bg-gradient-to-r from-background/95 to-muted/30 backdrop-blur-sm border-b border-border/60">
         <div className="px-6 py-3">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-muted/60 backdrop-blur-sm border border-border/50">
-              <TabsTrigger value="patients" className="flex items-center gap-2 text-muted-foreground font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
+            <TabsList className="grid w-full grid-cols-3 bg-slate-100/80 backdrop-blur-sm border border-slate-200/60 rounded-lg p-1 shadow-sm">
+              <TabsTrigger value="patients" className="flex items-center gap-2 text-slate-600 font-medium transition-all duration-200 hover:text-slate-900 hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-blue-200/50">
                 <Users className="w-4 h-4" />
                 Patient Records
               </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-2 text-muted-foreground font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
+              <TabsTrigger value="analytics" className="flex items-center gap-2 text-slate-600 font-medium transition-all duration-200 hover:text-slate-900 hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-green-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-green-200/50">
                 <BarChart3 className="w-4 h-4" />
                 Analytics
               </TabsTrigger>
-              <TabsTrigger value="appointments" className="flex items-center gap-2 text-muted-foreground font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
+              <TabsTrigger value="appointments" className="flex items-center gap-2 text-slate-600 font-medium transition-all duration-200 hover:text-slate-900 hover:bg-white/80 data-[state=active]:bg-white data-[state=active]:text-purple-700 data-[state=active]:shadow-md data-[state=active]:border data-[state=active]:border-purple-200/50">
                 <Calendar className="w-4 h-4" />
                 Appointments
               </TabsTrigger>

@@ -110,41 +110,41 @@ export default function Dashboard() {
         {/* Premium Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div 
-            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl hover:border-blue-200/60 transition-all duration-300"
             onClick={() => setLocation('/patients')}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-transparent to-blue-100/40 pointer-events-none group-hover:from-blue-100/80 group-hover:to-blue-200/60 transition-all duration-300"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-br from-primary/15 to-primary/25 rounded-xl shadow-sm">
-                  <Users className="h-6 w-6 text-primary" />
+                <div className="p-3 bg-gradient-to-br from-blue-100/80 to-blue-200/60 rounded-xl shadow-sm group-hover:shadow-md transition-all duration-200">
+                  <Users className="h-6 w-6 text-blue-600 group-hover:scale-110 transition-transform duration-200" />
                 </div>
-                <span className="status-badge info text-xs font-medium">Active</span>
+                <span className="status-badge info text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Active</span>
               </div>
               <div className="space-y-2">
-                <p className="text-3xl font-bold text-foreground group-hover:text-primary transition-colors">{stats?.totalPatients || 0}</p>
+                <p className="text-3xl font-bold text-foreground group-hover:text-blue-700 transition-colors">{stats?.totalPatients || 0}</p>
                 <p className="text-sm font-medium text-muted-foreground">Total Patients</p>
-                <p className="text-xs text-success font-medium">+12% from last month</p>
+                <p className="text-xs text-green-600 font-medium">+12% from last month</p>
               </div>
             </div>
           </div>
 
           <div 
-            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 hover:shadow-xl hover:border-green-200/60 transition-all duration-300"
             onClick={() => setLocation('/appointments')}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50/80 via-transparent to-green-100/40 pointer-events-none group-hover:from-green-100/80 group-hover:to-green-200/60 transition-all duration-300"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-br from-accent/15 to-accent/25 rounded-xl shadow-sm">
-                  <Calendar className="h-6 w-6 text-accent" />
+                <div className="p-3 bg-gradient-to-br from-green-100/80 to-green-200/60 rounded-xl shadow-sm group-hover:shadow-md transition-all duration-200">
+                  <Calendar className="h-6 w-6 text-green-600 group-hover:scale-110 transition-transform duration-200" />
                 </div>
-                <span className="status-badge success text-xs font-medium">Active</span>
+                <span className="status-badge success text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
               </div>
               <div className="space-y-2">
-                <p className="text-3xl font-bold text-foreground group-hover:text-accent transition-colors">{stats?.todayVisits || 0}</p>
+                <p className="text-3xl font-bold text-foreground group-hover:text-green-700 transition-colors">{stats?.todayVisits || 0}</p>
                 <p className="text-sm font-medium text-muted-foreground">Today's Visits</p>
-                <p className="text-xs text-info font-medium">3 scheduled next</p>
+                <p className="text-xs text-blue-600 font-medium">3 scheduled next</p>
               </div>
             </div>
           </div>

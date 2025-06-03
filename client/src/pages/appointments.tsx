@@ -846,7 +846,7 @@ export default function AppointmentsPage() {
               ) : (
                 <div className="space-y-4">
                   {filteredAndSortedAppointments.map((appointment: Appointment) => (
-                    <div key={appointment.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div key={appointment.id} className="border border-slate-200 rounded-lg p-4 hover:bg-slate-50 hover:border-slate-300 hover:shadow-md transition-all duration-200 cursor-pointer">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-wrap">
                           <div className="flex items-center gap-2">
@@ -963,22 +963,28 @@ export default function AppointmentsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}
+                    className="hover:bg-blue-50 hover:border-blue-200 transition-all duration-200"
                   >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
                     Previous
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentWeek(new Date())}
+                    className="hover:bg-green-50 hover:border-green-200 transition-all duration-200"
                   >
+                    <Calendar className="w-4 h-4 mr-1" />
                     Today
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}
+                    className="hover:bg-blue-50 hover:border-blue-200 transition-all duration-200"
                   >
                     Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
               </div>
