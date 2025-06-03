@@ -1028,7 +1028,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                         Add to Repeat Medications
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendToDispensary(prescription)}>
-                                        <Building2 className="w-3 h-3 mr-2 text-green-600" />
+                                        <MedicalIcons.pharmacy className="w-3 h-3 mr-2 text-green-600" />
                                         Send to Dispensary
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
@@ -1037,7 +1037,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                         Mark Completed
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'discontinued')}>
-                                        <XCircle className="w-3 h-3 mr-2 text-orange-600" />
+                                        <MedicalIcons.cancel className="w-3 h-3 mr-2 text-orange-600" />
                                         Discontinue
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'active')}>
@@ -1130,7 +1130,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-gray-600 hover:text-gray-800"
                                     onClick={() => handlePrintPrescription(prescription)}
                                   >
-                                    <Printer className="w-3 h-3 mr-1" />
+                                    <MedicalIcons.print className="w-3 h-3 mr-1" />
                                     Print
                                   </Button>
                                 </div>
@@ -1232,7 +1232,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               <div className="flex items-center justify-between mt-4 pt-3 border-t border-green-200">
                                 <div className="flex items-center space-x-4 text-xs text-gray-500">
                                   <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
+                                    <MedicalIcons.appointment className="w-3 h-3" />
                                     <span>Started: {new Date(prescription.startDate).toLocaleDateString()}</span>
                                   </div>
                                   {prescription.lastReviewDate && (
@@ -1273,7 +1273,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                         Edit Repeat
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
-                                        <Printer className="w-3 h-3 mr-2" />
+                                        <MedicalIcons.print className="w-3 h-3 mr-2" />
                                         Print
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
@@ -1396,7 +1396,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           });
                         }}
                       >
-                        <UserCheck className="w-4 h-4 mr-2" />
+                        <MedicalIcons.patientProfile className="w-4 h-4 mr-2" />
                         Assign Review
                       </Button>
                       <Button 
@@ -1409,7 +1409,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           });
                         }}
                       >
-                        <Calendar className="w-4 h-4 mr-2" />
+                        <MedicalIcons.appointment className="w-4 h-4 mr-2" />
                         Schedule Follow-up
                       </Button>
                     </div>
