@@ -11,6 +11,7 @@ import { LabResultModal } from "@/components/lab-result-modal";
 import { PrescriptionModal } from "@/components/prescription-modal";
 import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
 import { ModernPatientOverview } from "@/components/modern-patient-overview";
+import { AdvancedPatientCare } from "@/components/advanced-patient-care";
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
 import { formatPatientName, getPatientInitials } from "@/lib/patient-utils";
@@ -330,13 +331,18 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
 
         {/* Detailed Tabs */}
         <div className="mt-8">
-          <Tabs defaultValue="visits" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="care" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="care">Advanced Care</TabsTrigger>
               <TabsTrigger value="visits">Visits</TabsTrigger>
               <TabsTrigger value="labs">Lab Results</TabsTrigger>
               <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
               <TabsTrigger value="history">History</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="care">
+              <AdvancedPatientCare patientId={patientId} />
+            </TabsContent>
 
             <TabsContent value="visits">
               <Card>
