@@ -42,19 +42,30 @@ export default function PatientProfile() {
     queryKey: [`/api/patients/${patientId}/labs`],
     queryFn: async () => {
       console.log('Lab results queryFn called for patient:', patientId);
+      const token = localStorage.getItem('clinic_token');
+      console.log('Auth token exists:', !!token);
+      
       const response = await fetch(`/api/patients/${patientId}/labs`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('clinic_token') || ''}`,
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
+        credentials: 'include',
       });
+      
+      console.log('Response status:', response.status);
       if (!response.ok) {
-        throw new Error(`Failed to fetch lab results: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Fetch error:', errorText);
+        throw new Error(`Failed to fetch lab results: ${response.status} - ${errorText}`);
       }
       const data = await response.json();
       console.log('Lab results data received:', data);
       return data;
     },
     enabled: !!patientId,
+    retry: 1,
   });
 
   // Debug logging
