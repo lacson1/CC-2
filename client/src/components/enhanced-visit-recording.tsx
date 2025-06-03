@@ -30,6 +30,12 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Stethoscope, 
   Heart, 
@@ -103,10 +109,12 @@ type VisitFormData = z.infer<typeof comprehensiveVisitSchema>;
 
 interface EnhancedVisitRecordingProps {
   patientId: number;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSave?: () => void;
 }
 
-export function EnhancedVisitRecording({ patientId, onSave }: EnhancedVisitRecordingProps) {
+export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }: EnhancedVisitRecordingProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -258,25 +266,34 @@ export function EnhancedVisitRecording({ patientId, onSave }: EnhancedVisitRecor
   };
 
   return (
-    <div className="space-y-6">
-      {!isFormVisible ? (
-        <div className="text-center py-12">
-          <div className="bg-blue-50 p-8 rounded-lg border border-blue-200 max-w-md mx-auto">
-            <Stethoscope className="w-16 h-16 mx-auto text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Ready to Record Visit</h3>
-            <p className="text-sm text-blue-700 mb-6">
-              Click below to start comprehensive visit documentation including vital signs, examination, and treatment plan.
-            </p>
-            <Button 
-              onClick={() => setIsFormVisible(true)}
-              className="bg-blue-600 hover:bg-blue-700"
-              size="lg"
-            >
-              <Stethoscope className="w-4 h-4 mr-2" />
-              Start Visit Recording
-            </Button>
-          </div>
-        </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Stethoscope className="h-5 w-5" />
+            Record Patient Visit - {patient ? formatPatientName(patient) : "Loading..."}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {!isFormVisible ? (
+            <div className="text-center py-8">
+              <div className="bg-blue-50 p-6 rounded-lg border border-blue-200 max-w-md mx-auto">
+                <Stethoscope className="w-12 h-12 mx-auto text-blue-600 mb-4" />
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Ready to Record Visit</h3>
+                <p className="text-sm text-blue-700 mb-6">
+                  Click below to start comprehensive visit documentation including vital signs, examination, and treatment plan.
+                </p>
+                <Button 
+                  onClick={() => setIsFormVisible(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  size="lg"
+                >
+                  <Stethoscope className="w-4 h-4 mr-2" />
+                  Start Visit Recording
+                </Button>
+              </div>
+            </div>
       ) : (
         <div>
           <div className="mb-6">
@@ -779,6 +796,8 @@ export function EnhancedVisitRecording({ patientId, onSave }: EnhancedVisitRecor
           </Form>
         </div>
       )}
-    </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
