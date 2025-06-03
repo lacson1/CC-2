@@ -121,6 +121,8 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [additionalDiagnoses, setAdditionalDiagnoses] = useState<string[]>([]);
   const [medicationList, setMedicationList] = useState<string[]>([]);
+  const [medicationSearchTerm, setMedicationSearchTerm] = useState("");
+  const [isMedicationPopoverOpen, setIsMedicationPopoverOpen] = useState(false);
 
 
   const form = useForm<VisitFormData>({
