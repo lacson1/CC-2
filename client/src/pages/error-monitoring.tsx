@@ -195,6 +195,10 @@ export default function ErrorMonitoring() {
             <TabsTrigger value="errors">Error Logs</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="ai-insights">
+              <Brain className="h-4 w-4 mr-2" />
+              AI Insights
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="errors" className="space-y-6">
@@ -350,6 +354,10 @@ export default function ErrorMonitoring() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai-insights">
+            <AIErrorInsights timeframe={timeframe} />
           </TabsContent>
         </Tabs>
       </div>
