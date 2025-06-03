@@ -2821,6 +2821,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         ))
         .orderBy(labOrders.createdAt);
       
+      // Set no-cache headers to ensure fresh data
+      res.set({
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      });
+      
       res.json(orders);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch lab orders" });

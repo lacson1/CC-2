@@ -52,10 +52,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const headers = {
-      ...getAuthHeaders(),
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
+      ...getAuthHeaders()
     };
 
     // Ensure fetch is available
