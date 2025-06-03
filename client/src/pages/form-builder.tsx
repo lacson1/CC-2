@@ -241,9 +241,9 @@ export default function FormBuilder() {
   const createFormMutation = useMutation({
     mutationFn: async (formData: any) => {
       if (editingForm) {
-        return apiRequest('PATCH', `/api/consultation-forms/${editingForm.id}`, formData);
+        return apiRequest(`/api/consultation-forms/${editingForm.id}`, 'PATCH', formData);
       } else {
-        return apiRequest('POST', '/api/consultation-forms', formData);
+        return apiRequest('/api/consultation-forms', 'POST', formData);
       }
     },
     onSuccess: () => {
