@@ -16,7 +16,11 @@ import {
   RefreshCw,
   AlertTriangle,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  Shield,
+  Settings,
+  Wifi,
+  XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 

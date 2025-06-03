@@ -25,6 +25,7 @@ import { setupOrganizationStaffRoutes } from "./organization-staff";
 import { setupTenantRoutes } from "./tenant-routes";
 import { setupSuperAdminRoutes } from "./super-admin-routes";
 import { performanceMonitor, globalErrorHandler, setupErrorRoutes } from "./error-handler";
+import { getOptimizationTasks, implementOptimizationTask } from "./system-optimizer";
 
 // Helper function to generate prescription HTML for printing
 function generatePrescriptionHTML(prescriptionResult: any): string {
@@ -493,6 +494,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch performance stats' });
     }
   });
+
+  // System optimization endpoints
+  app.get('/api/optimization/tasks', authenticateToken, getOptimizationTasks);
+  app.post('/api/optimization/implement/:taskId', authenticateToken, implementOptimizationTask);
 
   // Healthcare integration endpoints
   app.get('/api/fhir/patient/:patientId', authenticateToken, handleFHIRExport);
