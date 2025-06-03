@@ -148,28 +148,21 @@ export default function CustomPrescriptionPrint({ prescriptions, patient, onClos
           </p>
         </div>
 
-        {/* Patient Information */}
-        <div className="mb-8 p-4 bg-gray-50 rounded-lg print:bg-gray-100">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: organization.themeColor }}>
+        {/* Patient Information - Compact for A6 */}
+        <div className="mb-3 p-2 bg-green-100 rounded print:bg-green-100">
+          <h3 className="text-xs font-semibold mb-1" style={{ color: organization.themeColor }}>
             Patient Information
           </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p><strong>Name:</strong> {patient.title} {patient.firstName} {patient.lastName}</p>
-              <p><strong>Phone:</strong> {patient.phone}</p>
-              {patient.email && <p><strong>Email:</strong> {patient.email}</p>}
-            </div>
-            <div>
-              <p><strong>Date of Birth:</strong> {new Date(patient.dateOfBirth).toLocaleDateString()}</p>
-              <p><strong>Gender:</strong> {patient.gender}</p>
-              {patient.address && <p><strong>Address:</strong> {patient.address}</p>}
-            </div>
+          <div className="space-y-1 text-xs">
+            <p><strong>Name:</strong> {patient.title} {patient.firstName} {patient.lastName}</p>
+            <p><strong>DOB:</strong> {new Date(patient.dateOfBirth).toLocaleDateString()} | <strong>Gender:</strong> {patient.gender}</p>
+            <p><strong>Phone:</strong> {patient.phone}</p>
           </div>
         </div>
 
-        {/* Prescription Details */}
-        <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-4" style={{ color: organization.themeColor }}>
+        {/* Prescription Details - Compact for A6 */}
+        <div className="mb-3">
+          <h3 className="text-xs font-semibold mb-2" style={{ color: organization.themeColor }}>
             Prescribed Medications
           </h3>
           
@@ -179,36 +172,20 @@ export default function CustomPrescriptionPrint({ prescriptions, patient, onClos
               <p>No active prescriptions found for this patient.</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-2">
               {activePrescriptions.map((prescription, index) => (
-                <div key={prescription.id} className="border-l-4 pl-4 py-3" style={{ borderLeftColor: organization.themeColor }}>
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-lg font-semibold">{index + 1}. {prescription.medicationName}</h4>
-                    <span className="text-sm text-gray-500">
-                      Started: {new Date(prescription.startDate).toLocaleDateString()}
-                    </span>
+                <div key={prescription.id} className="border-l-2 pl-2 py-1" style={{ borderLeftColor: organization.themeColor }}>
+                  <div className="mb-1">
+                    <h4 className="text-xs font-semibold">{index + 1}. {prescription.medicationName}</h4>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p><strong>Dosage:</strong> {prescription.dosage}</p>
-                    </div>
-                    <div>
-                      <p><strong>Frequency:</strong> {prescription.frequency}</p>
-                    </div>
-                    <div>
-                      <p><strong>Duration:</strong> {prescription.duration}</p>
-                    </div>
-                  </div>
-                  
-                  {prescription.instructions && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded print:bg-gray-100">
+                  <div className="text-xs space-y-1">
+                    <p><strong>Dose:</strong> {prescription.dosage} | <strong>Freq:</strong> {prescription.frequency}</p>
+                    <p><strong>Duration:</strong> {prescription.duration}</p>
+                    {prescription.instructions && (
                       <p><strong>Instructions:</strong> {prescription.instructions}</p>
-                    </div>
-                  )}
-                  
-                  <div className="mt-2 text-sm text-gray-600">
-                    <p><strong>Prescribed by:</strong> Dr. {prescription.prescribedBy}</p>
+                    )}
+                    <p><strong>By:</strong> Dr. {prescription.prescribedBy}</p>
                   </div>
                 </div>
               ))}
@@ -216,35 +193,26 @@ export default function CustomPrescriptionPrint({ prescriptions, patient, onClos
           )}
         </div>
 
-        {/* Footer */}
-        <div className="border-t pt-6 mt-12">
-          <div className="grid grid-cols-2 gap-8">
+        {/* Footer - Compact for A6 */}
+        <div className="border-t pt-2 mt-3">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
-              <h4 className="font-semibold mb-2" style={{ color: organization.themeColor }}>
-                Prescribing Physician
-              </h4>
-              <div className="border-t border-gray-300 mt-8 pt-2">
-                <p className="text-sm">Dr. {activePrescriptions[0]?.prescribedBy || 'N/A'}</p>
-                <p className="text-sm text-gray-600">Signature & Date</p>
-              </div>
+              <p className="font-semibold" style={{ color: organization.themeColor }}>Physician:</p>
+              <p>Dr. {activePrescriptions[0]?.prescribedBy || 'N/A'}</p>
+              <p className="text-gray-600">Signature: ___________</p>
             </div>
             <div>
-              <h4 className="font-semibold mb-2" style={{ color: organization.themeColor }}>
-                Pharmacy Use
-              </h4>
-              <div className="border-t border-gray-300 mt-8 pt-2">
-                <p className="text-sm text-gray-600">Dispensed by: ________________</p>
-                <p className="text-sm text-gray-600 mt-2">Date: ________________</p>
-              </div>
+              <p className="font-semibold" style={{ color: organization.themeColor }}>Pharmacy:</p>
+              <p className="text-gray-600">Dispensed: ___________</p>
+              <p className="text-gray-600">Date: ___________</p>
             </div>
           </div>
         </div>
 
-        {/* Legal Notice */}
-        <div className="mt-8 text-xs text-gray-500 text-center border-t pt-4">
-          <p>This prescription is valid only when issued by a licensed medical practitioner.</p>
-          <p>Please follow the instructions carefully and consult your doctor if you experience any adverse effects.</p>
-          <p className="mt-2">Generated on {new Date().toLocaleString()} | {organization.name}</p>
+        {/* Legal Notice - Compact */}
+        <div className="mt-2 text-xs text-gray-500 text-center border-t pt-2">
+          <p>Valid only when issued by licensed practitioner | {organization.name}</p>
+          <p>{new Date().toLocaleDateString()}</p>
         </div>
       </div>
       </DialogContent>
