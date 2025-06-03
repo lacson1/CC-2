@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { CalendarIcon, Clock, Plus, Search, User, Stethoscope, Filter, Grid3X3, List, CheckCircle, XCircle, Calendar as CalendarView, Brain, Zap, AlertCircle, Play, Pause } from 'lucide-react';
+import { CalendarIcon, Clock, Plus, Search, User, Stethoscope, Filter, Grid3X3, List, CheckCircle, XCircle, Calendar as CalendarView, Brain, Zap, AlertCircle, Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, isSameDay, parseISO, startOfWeek, endOfWeek, addWeeks, subWeeks, startOfDay, endOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/queryClient';
