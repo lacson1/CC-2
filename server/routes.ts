@@ -2194,11 +2194,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/patients/:id/lab-orders', authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+      
       const patientId = parseInt(req.params.id);
+      
+      // Verify patient belongs to user's organization
+      const patient = await db.select().from(patients).where(
+        and(
+          eq(patients.id, patientId),
+          eq(patients.organizationId, userOrgId)
+        )
+      ).limit(1);
+      
+      if (patient.length === 0) {
+        return res.status(404).json({ message: "Patient not found in your organization" });
+      }
       
       const orders = await db.select()
         .from(labOrders)
-        .where(eq(labOrders.patientId, patientId))
+        .where(
+          and(
+            eq(labOrders.patientId, patientId),
+            eq(labOrders.organizationId, userOrgId)
+          )
+        )
         .orderBy(labOrders.createdAt);
       
       res.json(orders);
@@ -2209,7 +2231,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/lab-orders/:id/items', authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+      
       const labOrderId = parseInt(req.params.id);
+      
+      // Verify lab order belongs to user's organization
+      const labOrder = await db.select().from(labOrders).where(
+        and(
+          eq(labOrders.id, labOrderId),
+          eq(labOrders.organizationId, userOrgId)
+        )
+      ).limit(1);
+      
+      if (labOrder.length === 0) {
+        return res.status(404).json({ message: "Lab order not found in your organization" });
+      }
       
       const orderItems = await db.select({
         id: labOrderItems.id,
