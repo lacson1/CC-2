@@ -27,10 +27,10 @@
     --secondary-hover: 216 22% 90%;
     --secondary-dark: 216 22% 8%;
     
-    /* Modern Muted Tones */
-    --muted: 217 10% 97%; /* Elegant background */
-    --muted-foreground: 217 13% 50%; /* Balanced gray text */
-    --muted-dark: 217 32% 25%;
+    /* Enhanced Muted Tones for Better Contrast */
+    --muted: 217 15% 96%; /* Refined background with better separation */
+    --muted-foreground: 217 20% 45%; /* Improved contrast for text */
+    --muted-dark: 217 32% 20%;
     
     /* Premium Accent Colors */
     --accent: 160 84% 39%; /* Medical emerald #0CA855 */
@@ -52,11 +52,11 @@
     --info-foreground: 0 0% 100%;
     --info-light: 199 89% 95%;
     
-    /* Refined Interface Elements */
-    --border: 217 16% 84%; /* Elegant borders */
+    /* Enhanced Interface Elements for Better Contrast */
+    --border: 217 20% 78%; /* Stronger border definition */
     --input: 217 16% 84%;
-    --input-focus: 210 100% 56%;
-    --ring: 210 100% 56%;
+    --input-focus: 212 100% 50%;
+    --ring: 212 100% 50%;
     --sidebar: 216 19% 96%;
     --sidebar-foreground: 217 32% 17%;
     
@@ -146,7 +146,7 @@
 @layer components {
   /* Premium Healthcare Components */
   .healthcare-card {
-    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
+    @apply bg-card/90 backdrop-blur-sm border border-border/70 rounded-lg shadow-sm hover:shadow-md transition-all duration-200;
   }
   
   .healthcare-header {
