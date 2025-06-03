@@ -439,15 +439,6 @@ export default function PatientProfile() {
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule Follow-up
                   </Button>
-                  
-                  <Button 
-                    onClick={() => navigate('/documents')}
-                    className="w-full justify-start bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-                    variant="outline"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
                 </CardContent>
               </Card>
 
