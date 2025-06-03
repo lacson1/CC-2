@@ -63,6 +63,11 @@ export function PerformanceDashboard() {
     refetchInterval: 60000, // Refresh every minute
   });
 
+  const { data: aiOptimizationTasks, isLoading: isLoadingAITasks, refetch: refetchAITasks } = useQuery({
+    queryKey: ['/api/ai-optimization/tasks'],
+    refetchInterval: 120000, // Refresh every 2 minutes (AI analysis is more expensive)
+  });
+
   const implementOptimization = useMutation({
     mutationFn: async (taskId: string) => {
       return apiRequest(`/api/optimization/implement/${taskId}`, 'POST');
@@ -72,6 +77,29 @@ export function PerformanceDashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/performance/stats'] });
       refetchTasks();
       refetch();
+    },
+  });
+
+  const implementAIOptimization = useMutation({
+    mutationFn: async (taskId: string) => {
+      return apiRequest(`/api/ai-optimization/implement/${taskId}`, 'POST');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/ai-optimization/tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/performance/stats'] });
+      refetchAITasks();
+      refetch();
+      toast({
+        title: "AI Optimization Complete",
+        description: "AI-powered optimization successfully implemented",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Implementation Error",
+        description: error.message || "Failed to implement AI optimization",
+        variant: "destructive",
+      });
     },
   });
 

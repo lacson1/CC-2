@@ -4140,6 +4140,48 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   setupNetworkValidationRoutes(app);
   setupAuthValidationRoutes(app);
 
+  // AI-powered optimization endpoints
+  app.get('/api/ai-optimization/tasks', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { aiSystemOptimizer } = await import('./ai-system-optimizer');
+      const organizationId = req.user?.organizationId || 1;
+      const timeframe = req.query.timeframe as string || '24h';
+      
+      const result = await aiSystemOptimizer.generateOptimizationPlan(organizationId, timeframe);
+      res.json(result);
+    } catch (error) {
+      console.error('Get AI optimization tasks error:', error);
+      res.status(500).json({ message: 'Failed to get AI optimization tasks' });
+    }
+  });
+
+  app.post('/api/ai-optimization/implement/:taskId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { aiSystemOptimizer } = await import('./ai-system-optimizer');
+      const { taskId } = req.params;
+      const organizationId = req.user?.organizationId || 1;
+      
+      const result = await aiSystemOptimizer.implementAITask(taskId, organizationId);
+      
+      if (result.success) {
+        res.json({ 
+          message: result.message, 
+          success: true,
+          implementationLog: result.implementationLog
+        });
+      } else {
+        res.status(400).json({ 
+          message: result.message, 
+          success: false,
+          implementationLog: result.implementationLog
+        });
+      }
+    } catch (error) {
+      console.error('Implement AI optimization error:', error);
+      res.status(500).json({ message: 'Failed to implement AI optimization' });
+    }
+  });
+
   const httpServer = createServer(app);
   // Organization Management endpoints
   // Super Admin - Global system analytics
