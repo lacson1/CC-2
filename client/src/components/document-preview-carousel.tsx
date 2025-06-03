@@ -74,7 +74,7 @@ export function DocumentPreviewCarousel({
       case 'lab-result':
         return <MedicalIcons.bloodTest className="w-5 h-5" />;
       case 'imaging':
-        return <MedicalIcons.scan className="w-5 h-5" />;
+        return <MedicalIcons.image className="w-5 h-5" />;
       case 'prescription':
         return <MedicalIcons.medication className="w-5 h-5" />;
       case 'medical-record':
@@ -84,7 +84,7 @@ export function DocumentPreviewCarousel({
       case 'referral':
         return <MedicalIcons.referral className="w-5 h-5" />;
       case 'insurance':
-        return <MedicalIcons.insurance className="w-5 h-5" />;
+        return <MedicalIcons.card className="w-5 h-5" />;
       default:
         return <MedicalIcons.document className="w-5 h-5" />;
     }

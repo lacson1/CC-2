@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { apiRequest } from '@/lib/queryClient';
+import { DocumentPreviewCarousel } from './document-preview-carousel';
 // All icons now imported via MedicalIcons system
 
 interface Patient {
@@ -262,6 +263,10 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('');
   const [documentDescription, setDocumentDescription] = useState('');
+  
+  // Document carousel state
+  const [showDocumentCarousel, setShowDocumentCarousel] = useState(false);
+  const [selectedDocumentIndex, setSelectedDocumentIndex] = useState(0);
 
   // Document upload mutation
   const uploadDocumentMutation = useMutation({
@@ -2178,10 +2183,17 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   </TabsList>
 
                   <TabsContent value="medical-records" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.medicalRecord className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Medical Records</h3>
-                      <p className="text-sm text-gray-500 mb-4">Upload and manage patient medical documents</p>
+                    {/* Document Fetch and Display */}
+                    <PatientDocumentsSection 
+                      patientId={patient.id}
+                      onViewDocument={(index) => {
+                        setSelectedDocumentIndex(index);
+                        setShowDocumentCarousel(true);
+                      }}
+                    />
+                    
+                    {/* Upload Dialog */}
+                    <div className="flex justify-center mt-6">
                       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                         <DialogTrigger asChild>
                           <Button className="bg-emerald-600 hover:bg-emerald-700">
