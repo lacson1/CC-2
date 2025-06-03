@@ -48,6 +48,7 @@ import ExportCompliance from "@/components/export-compliance";
 import ConsultationDashboard from "@/pages/consultation-dashboard";
 import PatientAccessCards from "@/pages/patient-access-cards";
 import Settings from "@/pages/settings";
+import ErrorMonitoring from "@/pages/error-monitoring";
 import Profile from "@/pages/profile";
 import SuperAdminAnalytics from "@/pages/superadmin-analytics";
 import SuperAdminControlPanel from "@/pages/super-admin-control-panel";
@@ -132,6 +133,7 @@ function AuthenticatedApp() {
                   <Route path="/settings" component={Settings} />
                   <Route path="/user-management" component={UserManagementEnhanced} />
                   <Route path="/audit-logs" component={AuditLogs} />
+                  <Route path="/error-monitoring" component={ErrorMonitoring} />
                   <Route path="/organization-management" component={OrganizationManagement} />
                   <Route path="/patient-access-cards" component={PatientAccessCards} />
                   <Route path="/procedural-reports" component={ProceduralReports} />

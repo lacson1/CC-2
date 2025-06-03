@@ -99,7 +99,7 @@ export const logServerError = async (params: {
       stack: error.stack,
       userId: req.user?.id || null,
       organizationId: req.user?.organizationId || null,
-      sessionId: req.sessionID,
+      sessionId: req.session?.id || 'unknown',
       url: req.originalUrl || req.url,
       userAgent: req.get('User-Agent') || null,
       action: action || req.method,
