@@ -19,6 +19,8 @@ import { checkPermission, getUserPermissions } from "./middleware/permissions";
 import { initializeFirebase, sendNotificationToRole, sendUrgentNotification, NotificationTypes } from "./notifications";
 import { AuditLogger, AuditActions } from "./audit";
 import { format } from 'date-fns';
+import fs from 'fs';
+import path from 'path';
 import { setupOrganizationStaffRoutes } from "./organization-staff";
 import { setupTenantRoutes } from "./tenant-routes";
 import { setupSuperAdminRoutes } from "./super-admin-routes";
@@ -5223,8 +5225,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileName = `patient_${patientId}_${timestamp}_${Math.random().toString(36).substring(7)}.${originalExtension}`;
 
       // Store file in uploads directory
-      const fs = require('fs');
-      const path = require('path');
       const uploadsDir = path.join(process.cwd(), 'uploads', 'medical');
       
       if (!fs.existsSync(uploadsDir)) {
@@ -5281,17 +5281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const organizationId = req.user?.organizationId || 1;
 
       const documents = await db
-        .select({
-          id: medicalDocuments.id,
-          fileName: medicalDocuments.fileName,
-          originalName: medicalDocuments.originalName,
-          category: medicalDocuments.category,
-          size: medicalDocuments.size,
-          mimeType: medicalDocuments.mimeType,
-          uploadedAt: medicalDocuments.uploadedAt,
-          description: medicalDocuments.description,
-          uploadedBy: medicalDocuments.uploadedBy
-        })
+        .select()
         .from(medicalDocuments)
         .where(and(
           eq(medicalDocuments.patientId, parseInt(patientId)),
