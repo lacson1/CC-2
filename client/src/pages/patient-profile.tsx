@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRoute } from "wouter";
 import { AlertCircle, Edit, Stethoscope, Pill, FlaskRound, Plus, History, Printer } from "lucide-react";
@@ -37,36 +37,51 @@ export default function PatientProfile() {
     enabled: !!patientId,
   });
 
-  // Fetch lab results with explicit queryFn
-  const { data: labResults, isLoading: labsLoading, error: labsError } = useQuery<LabResult[]>({
-    queryKey: [`/api/patients/${patientId}/labs`],
-    queryFn: async () => {
-      console.log('Lab results queryFn called for patient:', patientId);
-      const token = localStorage.getItem('clinic_token');
-      console.log('Auth token exists:', !!token);
-      
-      const response = await fetch(`/api/patients/${patientId}/labs`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        credentials: 'include',
-      });
-      
-      console.log('Response status:', response.status);
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Fetch error:', errorText);
-        throw new Error(`Failed to fetch lab results: ${response.status} - ${errorText}`);
-      }
-      const data = await response.json();
-      console.log('Lab results data received:', data);
-      return data;
-    },
-    enabled: !!patientId,
-    retry: 1,
-  });
+  // Fetch lab results - force immediate execution
+  const [labResults, setLabResults] = useState<LabResult[]>([]);
+  const [labsLoading, setLabsLoading] = useState(true);
+  const [labsError, setLabsError] = useState<Error | null>(null);
+
+  // Manual fetch for debugging with useEffect
+  useEffect(() => {
+    if (patientId) {
+      console.log('Manual lab results fetch for patient:', patientId);
+      const fetchLabResults = async () => {
+        try {
+          setLabsLoading(true);
+          const token = localStorage.getItem('clinic_token');
+          console.log('Auth token exists:', !!token);
+          
+          const response = await fetch(`/api/patients/${patientId}/labs`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            },
+            credentials: 'include',
+          });
+          
+          console.log('Response status:', response.status);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Fetch error:', errorText);
+            throw new Error(`Failed to fetch lab results: ${response.status} - ${errorText}`);
+          }
+          const data = await response.json();
+          console.log('Lab results data received:', data);
+          setLabResults(data);
+          setLabsError(null);
+        } catch (error) {
+          console.error('Lab results fetch error:', error);
+          setLabsError(error as Error);
+        } finally {
+          setLabsLoading(false);
+        }
+      };
+
+      fetchLabResults();
+    }
+  }, [patientId]);
 
   // Debug logging
   console.log('Lab results query:', { 
