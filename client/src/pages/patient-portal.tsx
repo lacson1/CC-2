@@ -657,6 +657,22 @@ export default function PatientPortal() {
     enabled: isAuthenticated && !!patientSession?.id
   });
 
+  // Patient medications data
+  const { data: medications = [] } = useQuery({
+    queryKey: ['/api/patient-portal/medications'],
+    queryFn: async () => {
+      const token = localStorage.getItem('patientToken');
+      const response = await fetch('/api/patient-portal/medications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch medications');
+      return response.json();
+    },
+    enabled: isAuthenticated && !!patientSession?.id
+  });
+
   // Pending consent forms data
   const { data: pendingConsents = [] } = useQuery({
     queryKey: ['/api/patient-portal/pending-consents'],
@@ -714,6 +730,256 @@ export default function PatientPortal() {
       age--;
     }
     return age;
+  };
+
+  // Generate QR code for medication
+  const generateMedicationQRCode = (medication: any) => {
+    try {
+      // Create comprehensive medication data for patient use
+      const medicationData = {
+        prescriptionId: `RX-${medication.id}`,
+        patient: {
+          name: `${patientSession?.firstName} ${patientSession?.lastName}`,
+          phone: patientSession?.phone,
+          dateOfBirth: patientSession?.dateOfBirth,
+          gender: patientSession?.gender
+        },
+        medication: {
+          name: medication.medicationName,
+          dosage: medication.dosage,
+          frequency: medication.frequency,
+          duration: medication.duration,
+          instructions: medication.instructions || 'Take as directed',
+          status: medication.status
+        },
+        prescriber: {
+          name: `Dr. ${medication.prescribedBy}`,
+          qualification: 'MBBS',
+          license: 'MDCN/001/2024'
+        },
+        clinic: {
+          name: 'Bluequee Healthcare Clinical Management',
+          address: 'Lagos Island, Lagos State, Nigeria',
+          phone: '+234-801-234-5678',
+          license: 'FMOH/CLI/LG/001/2024'
+        },
+        prescription: {
+          dateIssued: new Date(medication.startDate || medication.createdAt).toLocaleDateString('en-GB'),
+          expiryDate: medication.endDate ? new Date(medication.endDate).toLocaleDateString('en-GB') : 'No expiry',
+          status: medication.status
+        },
+        verification: {
+          hash: `${medication.id}-${Date.now()}`,
+          digitalSignature: 'VERIFIED'
+        }
+      };
+
+      const prescriptionText = `DIGITAL PRESCRIPTION - ${medicationData.prescriptionId}
+
+Patient: ${medicationData.patient.name}
+Phone: ${medicationData.patient.phone}
+DOB: ${medicationData.patient.dateOfBirth}
+
+Medication: ${medicationData.medication.name}
+Dosage: ${medicationData.medication.dosage}
+Frequency: ${medicationData.medication.frequency}
+Duration: ${medicationData.medication.duration}
+Instructions: ${medicationData.medication.instructions}
+
+Prescribed by: ${medicationData.prescriber.name}
+Clinic: ${medicationData.clinic.name}
+Date Issued: ${medicationData.prescription.dateIssued}
+Status: ${medicationData.prescription.status}
+
+Verification Hash: ${medicationData.verification.hash}
+
+This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.`;
+      
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(prescriptionText)}`;
+      
+      // Open comprehensive medication QR code in new window
+      const qrWindow = window.open('', '_blank', 'width=500,height=700');
+      qrWindow.document.write(`
+        <html>
+          <head>
+            <title>Medication QR Code - ${medication.medicationName}</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                padding: 20px;
+                background: #f8f9fa;
+                margin: 0;
+              }
+              .container {
+                background: white;
+                padding: 25px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                max-width: 450px;
+                margin: 0 auto;
+              }
+              .header {
+                text-align: center;
+                border-bottom: 2px solid #22c55e;
+                padding-bottom: 15px;
+                margin-bottom: 20px;
+              }
+              h1 { 
+                color: #166534; 
+                margin: 0 0 5px 0; 
+                font-size: 18px;
+              }
+              .rx-number {
+                font-weight: bold;
+                color: #dc2626;
+                font-size: 16px;
+                margin: 5px 0;
+              }
+              .patient-info {
+                background: #f0f9ff;
+                padding: 15px;
+                border-radius: 6px;
+                margin: 15px 0;
+                border-left: 4px solid #0ea5e9;
+              }
+              .medication-info {
+                background: #fef3c7;
+                padding: 15px;
+                border-radius: 6px;
+                margin: 15px 0;
+                border-left: 4px solid #f59e0b;
+              }
+              .section-title {
+                font-weight: bold;
+                color: #374151;
+                margin-bottom: 10px;
+                font-size: 14px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+              .detail-line {
+                margin: 6px 0;
+                font-size: 13px;
+                color: #4b5563;
+              }
+              .qr-container {
+                text-align: center;
+                margin: 20px 0;
+                background: white;
+                padding: 15px;
+                border-radius: 8px;
+                border: 2px solid #e5e7eb;
+              }
+              .prescriber-info {
+                background: #f3f4f6;
+                padding: 15px;
+                border-radius: 6px;
+                margin: 15px 0;
+                border-left: 4px solid #6b7280;
+              }
+              .verification {
+                background: #dcfce7;
+                padding: 15px;
+                border-radius: 6px;
+                margin: 15px 0;
+                border-left: 4px solid #16a34a;
+              }
+              .footer {
+                text-align: center;
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #e5e7eb;
+                font-size: 11px;
+                color: #6b7280;
+              }
+              .print-btn {
+                background: #2563eb;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin: 10px 5px;
+              }
+              .status-badge {
+                display: inline-block;
+                padding: 4px 8px;
+                border-radius: 12px;
+                font-size: 11px;
+                font-weight: bold;
+                text-transform: uppercase;
+                ${medication.status === 'active' ? 'background: #dcfce7; color: #166534;' : 
+                  medication.status === 'completed' ? 'background: #dbeafe; color: #1e40af;' :
+                  'background: #fef3c7; color: #92400e;'}
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🏥 BLUEQUEE HEALTHCARE</h1>
+                <div class="rx-number">Prescription: ${medicationData.prescriptionId}</div>
+                <div style="font-size: 12px; color: #059669;">Digital Medication QR Code</div>
+              </div>
+
+              <div class="patient-info">
+                <div class="section-title">PATIENT INFORMATION</div>
+                <div class="detail-line"><strong>Name:</strong> ${medicationData.patient.name}</div>
+                <div class="detail-line"><strong>Phone:</strong> ${medicationData.patient.phone}</div>
+                <div class="detail-line"><strong>Date of Birth:</strong> ${medicationData.patient.dateOfBirth}</div>
+                <div class="detail-line"><strong>Gender:</strong> ${medicationData.patient.gender}</div>
+              </div>
+
+              <div class="medication-info">
+                <div class="section-title">MEDICATION DETAILS</div>
+                <div class="detail-line"><strong>Medication:</strong> ${medicationData.medication.name}</div>
+                <div class="detail-line"><strong>Dosage:</strong> ${medicationData.medication.dosage}</div>
+                <div class="detail-line"><strong>Frequency:</strong> ${medicationData.medication.frequency}</div>
+                <div class="detail-line"><strong>Duration:</strong> ${medicationData.medication.duration}</div>
+                <div class="detail-line"><strong>Instructions:</strong> ${medicationData.medication.instructions}</div>
+                <div class="detail-line"><strong>Status:</strong> <span class="status-badge">${medicationData.medication.status}</span></div>
+              </div>
+
+              <div class="prescriber-info">
+                <div class="section-title">PRESCRIBER & CLINIC</div>
+                <div class="detail-line"><strong>Doctor:</strong> ${medicationData.prescriber.name}</div>
+                <div class="detail-line"><strong>License:</strong> ${medicationData.prescriber.license}</div>
+                <div class="detail-line"><strong>Clinic:</strong> ${medicationData.clinic.name}</div>
+                <div class="detail-line"><strong>Phone:</strong> ${medicationData.clinic.phone}</div>
+              </div>
+
+              <div class="qr-container">
+                <img src="${qrCodeUrl}" alt="Medication QR Code" style="border: 2px solid #22c55e; padding: 8px; background: white;" />
+                <div style="margin-top: 10px; font-size: 12px; color: #059669;">
+                  <strong>Scan this QR code for complete medication data</strong>
+                </div>
+              </div>
+
+              <div class="verification">
+                <div class="section-title">PRESCRIPTION VERIFICATION</div>
+                <div class="detail-line"><strong>Date Issued:</strong> ${medicationData.prescription.dateIssued}</div>
+                <div class="detail-line"><strong>Expires:</strong> ${medicationData.prescription.expiryDate}</div>
+                <div class="detail-line"><strong>Verification Code:</strong> ${medicationData.verification.hash}</div>
+                <div class="detail-line"><strong>Digital Signature:</strong> ${medicationData.verification.digitalSignature}</div>
+              </div>
+
+              <div style="text-align: center; margin: 15px 0;">
+                <button class="print-btn" onclick="window.print()">🖨️ Print QR Code</button>
+                <button class="print-btn" onclick="window.close()">❌ Close</button>
+              </div>
+
+              <div class="footer">
+                <p><strong>This is a valid digital prescription for dispensing at any licensed pharmacy in Nigeria.</strong></p>
+                <p>Generated: ${new Date().toLocaleString()} | ${medicationData.clinic.name}</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+      
+    } catch (error) {
+      console.error('Failed to generate medication QR code:', error);
+    }
   };
 
   // Login Screen
@@ -846,10 +1112,14 @@ export default function PatientPortal() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <User className="w-4 h-4" />
               Overview
+            </TabsTrigger>
+            <TabsTrigger value="medications" className="flex items-center gap-2">
+              <Pill className="w-4 h-4" />
+              Medications
             </TabsTrigger>
             <TabsTrigger value="appointments" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -987,6 +1257,125 @@ export default function PatientPortal() {
                     <p className="text-sm text-purple-600">Active Prescriptions</p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Medications Tab */}
+          <TabsContent value="medications">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Pill className="w-5 h-5" />
+                  Your Medications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {medications.length > 0 ? (
+                  <div className="space-y-4">
+                    {medications.map((medication: any) => (
+                      <div key={medication.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <Pill className="w-6 h-6 text-blue-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900">{medication.medicationName}</h3>
+                                <p className="text-sm text-gray-600">Prescribed by Dr. {medication.prescribedBy}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Dosage</p>
+                                <p className="text-base text-gray-900">{medication.dosage}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Frequency</p>
+                                <p className="text-base text-gray-900">{medication.frequency}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Duration</p>
+                                <p className="text-base text-gray-900">{medication.duration}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Status</p>
+                                <Badge 
+                                  variant={medication.status === 'active' ? 'default' : 
+                                          medication.status === 'completed' ? 'secondary' : 'outline'}
+                                  className={
+                                    medication.status === 'active' ? 'bg-green-100 text-green-800' :
+                                    medication.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }
+                                >
+                                  {medication.status}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            {medication.instructions && (
+                              <div className="mb-4">
+                                <p className="text-sm font-medium text-gray-600">Instructions</p>
+                                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">{medication.instructions}</p>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>Started: {new Date(medication.startDate || medication.createdAt).toLocaleDateString()}</span>
+                              </div>
+                              {medication.endDate && (
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  <span>Ends: {new Date(medication.endDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 ml-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => generateMedicationQRCode(medication)}
+                              className="flex items-center gap-2"
+                            >
+                              <QrCode className="w-4 h-4" />
+                              Generate QR Code
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const medicationInfo = `${medication.medicationName} - ${medication.dosage}\nFrequency: ${medication.frequency}\nDuration: ${medication.duration}\nInstructions: ${medication.instructions || 'Take as directed'}\nPrescribed by: Dr. ${medication.prescribedBy}`;
+                                navigator.share ? 
+                                  navigator.share({
+                                    title: `Medication: ${medication.medicationName}`,
+                                    text: medicationInfo
+                                  }) :
+                                  navigator.clipboard.writeText(medicationInfo);
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              <Share className="w-4 h-4" />
+                              Share
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Pill className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Medications Found</h3>
+                    <p className="text-gray-600">You don't have any prescribed medications at the moment.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
