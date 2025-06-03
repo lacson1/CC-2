@@ -29,6 +29,105 @@ import { apiRequest } from '@/lib/queryClient';
 import { DocumentPreviewCarousel } from './document-preview-carousel';
 // All icons now imported via MedicalIcons system
 
+// Documents List Component
+interface DocumentsListSectionProps {
+  patientId: number;
+  onViewDocument: (index: number) => void;
+}
+
+const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectionProps) => {
+  const { data: documents = [], isLoading } = useQuery<any[]>({
+    queryKey: [`/api/patients/${patientId}/documents`],
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <MedicalIcons.clock className="w-6 h-6 animate-spin text-blue-600 mr-2" />
+        <span className="text-gray-600">Loading documents...</span>
+      </div>
+    );
+  }
+
+  if (!documents.length) {
+    return (
+      <div className="text-center py-12 text-gray-500">
+        <MedicalIcons.medicalRecord className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+        <h3 className="text-lg font-medium text-gray-700 mb-2">No Documents Found</h3>
+        <p className="text-sm text-gray-500 mb-4">No medical documents have been uploaded for this patient yet.</p>
+      </div>
+    );
+  }
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getDocumentIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'lab-result':
+        return <MedicalIcons.bloodTest className="w-5 h-5" />;
+      case 'imaging':
+        return <MedicalIcons.image className="w-5 h-5" />;
+      case 'prescription':
+        return <MedicalIcons.medication className="w-5 h-5" />;
+      case 'medical-record':
+        return <MedicalIcons.medicalRecord className="w-5 h-5" />;
+      case 'discharge-summary':
+        return <MedicalIcons.document className="w-5 h-5" />;
+      case 'referral':
+        return <MedicalIcons.referral className="w-5 h-5" />;
+      case 'insurance':
+        return <MedicalIcons.card className="w-5 h-5" />;
+      default:
+        return <MedicalIcons.document className="w-5 h-5" />;
+    }
+  };
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {documents.map((doc, index) => (
+        <Card key={doc.id} className="hover:shadow-md transition-shadow cursor-pointer border-blue-200/60 hover:border-blue-300">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                {getDocumentIcon(doc.category)}
+                <Badge variant="outline" className="text-xs">
+                  {doc.category}
+                </Badge>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onViewDocument(index)}
+                className="h-8 w-8 p-0 hover:bg-blue-50"
+              >
+                <MedicalIcons.maximize className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            <h4 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
+              {doc.originalName}
+            </h4>
+            
+            <div className="space-y-1 text-xs text-gray-500">
+              <p>Size: {formatFileSize(doc.size)}</p>
+              <p>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</p>
+              {doc.description && (
+                <p className="text-gray-600 line-clamp-2">{doc.description}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
 interface Patient {
   id: number;
   title?: string;
@@ -2184,7 +2283,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
                   <TabsContent value="medical-records" className="space-y-4">
                     {/* Document Fetch and Display */}
-                    <PatientDocumentsSection 
+                    <DocumentsListSection 
                       patientId={patient.id}
                       onViewDocument={(index) => {
                         setSelectedDocumentIndex(index);
@@ -2436,6 +2535,14 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
             queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
           }}
+        />
+
+        {/* Document Preview Carousel */}
+        <DocumentPreviewCarousel
+          patientId={patient.id}
+          isOpen={showDocumentCarousel}
+          onClose={() => setShowDocumentCarousel(false)}
+          initialDocumentIndex={selectedDocumentIndex}
         />
     </div>
   );

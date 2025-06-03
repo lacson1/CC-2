@@ -84,7 +84,7 @@ export function DocumentPreviewCarousel({
       case 'referral':
         return <MedicalIcons.referral className="w-5 h-5" />;
       case 'insurance':
-        return <MedicalIcons.card className="w-5 h-5" />;
+        return <MedicalIcons.billing className="w-5 h-5" />;
       default:
         return <MedicalIcons.document className="w-5 h-5" />;
     }
