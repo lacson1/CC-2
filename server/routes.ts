@@ -466,10 +466,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI Error Insights endpoints (direct registration to fix 404s)
   const { generateAIInsights } = await import('./ai-insights-endpoint');
-  const { testAIAnalysis } = await import('./test-ai-analysis');
+  const { testAIAnalysisWorking } = await import('./ai-analysis-working');
   
   app.get('/api/errors/ai-insights', authenticateToken, generateAIInsights);
-  app.post('/api/test-ai-analysis', testAIAnalysis);
+  app.get('/api/ai-analysis', testAIAnalysisWorking);
   
   // Direct AI test endpoint
   app.get('/api/ai-test', async (req, res) => {
@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const Anthropic = require('@anthropic-ai/sdk');
+      const { default: Anthropic } = await import('@anthropic-ai/sdk');
       const anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY,
       });
@@ -502,7 +502,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         model: 'claude-sonnet-4-20250514',
       });
 
-      const aiResponse = JSON.parse(message.content[0].text);
+      // Handle different content block types
+      const textContent = message.content.find(block => block.type === 'text');
+      if (!textContent || !('text' in textContent)) {
+        throw new Error('No text content found in AI response');
+      }
+
+      const aiResponse = JSON.parse(textContent.text);
       
       res.json({
         success: true,

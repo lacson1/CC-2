@@ -40,7 +40,7 @@ export function AIInsightsDisplay() {
     setError(null);
     
     try {
-      const response = await fetch('/api/ai-test');
+      const response = await fetch('/api/ai-analysis');
       const data = await response.json();
       
       if (data.success) {
