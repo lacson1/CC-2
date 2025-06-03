@@ -202,13 +202,7 @@ export default function PatientProfile() {
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* Edit patient info - available to admin, doctor, nurse */}
-            {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
-              <Button variant="outline" onClick={() => setShowEditPatientModal(true)}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Info
-              </Button>
-            )}
+            {/* Additional actions can be added here if needed */}
           </div>
         </div>
       </header>
