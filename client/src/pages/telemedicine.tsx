@@ -439,7 +439,7 @@ export default function TelemedicinePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Completion Rate</p>
-                <p className="text-2xl font-bold text-purple-600">94%</p>
+                <p className="text-2xl font-bold text-purple-600">--</p>
               </div>
               <CheckCircle className="h-8 w-8 text-purple-600" />
             </div>

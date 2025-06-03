@@ -285,7 +285,7 @@ Last Updated: ${new Date().toLocaleDateString()}`;
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Reports Generated</p>
-                <p className="text-2xl font-bold text-blue-600">24</p>
+                <p className="text-2xl font-bold text-blue-600">--</p>
               </div>
               <FileText className="h-8 w-8 text-blue-600" />
             </div>
@@ -298,7 +298,7 @@ Last Updated: ${new Date().toLocaleDateString()}`;
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Compliance Rate</p>
-                <p className="text-2xl font-bold text-green-600">98.5%</p>
+                <p className="text-2xl font-bold text-green-600">--</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
             </div>

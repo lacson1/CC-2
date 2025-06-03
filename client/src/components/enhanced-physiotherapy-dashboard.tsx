@@ -43,7 +43,7 @@ export default function EnhancedPhysiotherapyDashboard({ patients, assessments }
   const totalPatients = patients.length;
   const activePatients = patients.filter(p => assessments.some(a => a.patientId === p.id)).length;
   const completedSessions = assessments.length;
-  const avgImprovement = Math.round(assessments.reduce((acc, curr, idx) => acc + (70 + (idx % 30)), 0) / assessments.length || 78);
+  const avgImprovement = assessments.length > 0 ? Math.round(assessments.reduce((acc, curr) => acc + (curr.improvementScore || 0), 0) / assessments.length) : 0;
 
   // Treatment protocols with evidence-based data
   const treatmentProtocols = [
@@ -54,7 +54,7 @@ export default function EnhancedPhysiotherapyDashboard({ patients, assessments }
       duration: "6-8 weeks",
       sessions: "12-16",
       evidenceLevel: "1A",
-      successRate: 92,
+      successRate: 0,
       phases: [
         { name: "Acute Pain Management", duration: "1-2 weeks", focus: "Pain reduction, inflammation control" },
         { name: "Mobility Restoration", duration: "2-3 weeks", focus: "Range of motion, flexibility" },
@@ -72,7 +72,7 @@ export default function EnhancedPhysiotherapyDashboard({ patients, assessments }
       duration: "16-24 weeks",
       sessions: "32-48",
       evidenceLevel: "1A",
-      successRate: 89,
+      successRate: 0,
       phases: [
         { name: "Protection Phase", duration: "0-2 weeks", focus: "Wound healing, basic ROM" },
         { name: "Motion Phase", duration: "2-6 weeks", focus: "Full ROM, strength initiation" },
