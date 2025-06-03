@@ -1631,7 +1631,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <FlaskRound className="w-4 h-4 text-green-500" />
+                    <MedicalIcons.bloodTest className="w-4 h-4 text-green-500" />
                     <span className="text-sm">Lab Results</span>
                   </div>
                   <Badge variant="secondary">{recentLabs.length}</Badge>
@@ -1821,7 +1821,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-100 rounded-full flex items-center justify-center">
-                          <FlaskRound className="w-2 h-2 text-green-600" />
+                          <MedicalIcons.bloodTest className="w-2 h-2 text-green-600" />
                         </div>
                         <label htmlFor="filter-labs" className="text-xs cursor-pointer">Lab Results</label>
                       </div>
