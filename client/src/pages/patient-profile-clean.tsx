@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   User, 
   Calendar, 
@@ -28,9 +27,7 @@ import {
   Clock,
   UserCheck,
   Monitor,
-  Share,
-  ChevronUp,
-  TrendingUp
+  Share
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
@@ -78,7 +75,6 @@ export default function PatientProfile() {
   const [showLabModal, setShowLabModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
-  const [isVitalsExpanded, setIsVitalsExpanded] = useState(false);
 
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -349,44 +345,18 @@ export default function PatientProfile() {
           <div className="grid grid-cols-1 xl:grid-cols-5 gap-2">
             {/* Main Content Area - Takes more space */}
             <div className="xl:col-span-4 space-y-2">
-              {/* Collapsible Vital Signs Chart */}
-              <Collapsible open={isVitalsExpanded} onOpenChange={setIsVitalsExpanded}>
-                <Card className="bg-white shadow-sm border-0">
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="pb-2 px-3 pt-3 cursor-pointer hover:bg-gray-50 transition-colors">
-                      <CardTitle className="text-sm font-semibold text-gray-900 flex items-center justify-between">
-                        <div className="flex items-center">
-                          <TrendingUp className="h-4 w-4 mr-2 text-blue-600" />
-                          Vital Signs Trends
-                          <Badge variant="outline" className="ml-2 text-xs">
-                            {visits?.filter(v => v.bloodPressure || v.heartRate || v.temperature || v.weight).length || 0} records
-                          </Badge>
-                        </div>
-                        {isVitalsExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-gray-500" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-gray-500" />
-                        )}
-                      </CardTitle>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="px-3 pb-3">
-                      <div className="h-64">
-                        <PatientVitalsChart 
-                          vitals={visits?.map(visit => ({
-                            date: visit.visitDate.toString(),
-                            bloodPressure: visit.bloodPressure || undefined,
-                            heartRate: visit.heartRate || undefined,
-                            temperature: visit.temperature ? parseFloat(visit.temperature) : undefined,
-                            weight: visit.weight ? parseFloat(visit.weight) : undefined
-                          })) || []}
-                        />
-                      </div>
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
+              {/* Vital Signs Chart - Reduced height */}
+              <div className="h-64">
+                <PatientVitalsChart 
+                  vitals={visits?.map(visit => ({
+                    date: visit.visitDate.toString(),
+                    bloodPressure: visit.bloodPressure || undefined,
+                    heartRate: visit.heartRate || undefined,
+                    temperature: visit.temperature ? parseFloat(visit.temperature) : undefined,
+                    weight: visit.weight ? parseFloat(visit.weight) : undefined
+                  })) || []}
+                />
+              </div>
               
               {/* Patient Overview - Optimized spacing */}
               <ModernPatientOverview
