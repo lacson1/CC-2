@@ -78,8 +78,8 @@ export class AISystemOptimizer {
           
         db.select()
           .from(errorLogs)
-          .where(gte(errorLogs.timestamp, timeFilter))
-          .orderBy(desc(errorLogs.timestamp))
+          .where(gte(errorLogs.createdAt, timeFilter))
+          .orderBy(desc(errorLogs.createdAt))
           .limit(500),
           
         db.select()
@@ -129,7 +129,14 @@ Respond in JSON format with detailed analysis and recommendations.`,
     });
 
     try {
-      return JSON.parse(response.content[0].text);
+      const content = response.content[0];
+      if (content.type === 'text') {
+        let text = content.text;
+        // Clean up any markdown formatting
+        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        return JSON.parse(text);
+      }
+      return this.getFallbackAnalysis();
     } catch (error) {
       console.error('AI response parsing error:', error);
       return this.getFallbackAnalysis();
