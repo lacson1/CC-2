@@ -28,7 +28,13 @@ export async function apiRequest(
     ...(data ? { "Content-Type": "application/json" } : {}),
   };
 
-  const res = await fetch(url, {
+  // Ensure fetch is available
+  const fetchFn = globalThis.fetch || window.fetch;
+  if (!fetchFn) {
+    throw new Error('Fetch API is not available');
+  }
+
+  const res = await fetchFn(url, {
     method,
     headers,
     body: data ? JSON.stringify(data) : undefined,
@@ -52,7 +58,13 @@ export const getQueryFn: <T>(options: {
       'Expires': '0'
     };
 
-    const res = await fetch(queryKey[0] as string, {
+    // Ensure fetch is available
+    const fetchFn = globalThis.fetch || window.fetch;
+    if (!fetchFn) {
+      throw new Error('Fetch API is not available');
+    }
+
+    const res = await fetchFn(queryKey[0] as string, {
       method: "GET",
       headers,
       credentials: "include",
@@ -73,7 +85,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 0, // Allow immediate refetching
-      cacheTime: 0, // Don't cache data
+      gcTime: 0, // Don't cache data (replaces cacheTime in v5)
       retry: false,
     },
     mutations: {
