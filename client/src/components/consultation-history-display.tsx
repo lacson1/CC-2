@@ -27,7 +27,10 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
     const title = record.conductedByTitle || '';
     const firstName = record.conductedByFirstName || '';
     const lastName = record.conductedByLastName || '';
-    const fullName = `${title} ${firstName} ${lastName}`.trim() || record.conductedByUsername || 'Healthcare Staff';
+    
+    // Remove title prefix from firstName if it already contains it
+    const cleanFirstName = firstName.startsWith(title) ? firstName.substring(title.length).trim() : firstName;
+    const fullName = `${title} ${cleanFirstName} ${lastName}`.trim() || record.conductedByUsername || 'Healthcare Staff';
     
     return {
       id: record.id,
