@@ -17,6 +17,7 @@ import {
   Stethoscope
 } from "lucide-react";
 import { format } from "date-fns";
+import { formatPatientName } from "@/lib/patient-utils";
 
 interface PatientExportPrintProps {
   patient: any;
@@ -182,7 +183,7 @@ export function PatientExportPrint({
               <div class="patient-info">
                 <div class="info-group">
                   <div class="info-label">Full Name</div>
-                  <div class="info-value">${patient.firstName} ${patient.lastName}</div>
+                  <div class="info-value">${patient.title ? `${patient.title} ` : ''}${patient.firstName} ${patient.lastName}</div>
                 </div>
                 <div class="info-group">
                   <div class="info-label">Date of Birth</div>
