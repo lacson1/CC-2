@@ -56,11 +56,22 @@ export default function PatientProfile() {
     queryKey: ["/api/organizations/current"],
   });
 
-  // Lab results with React Query
+  // Lab results with React Query - force execution
   const { data: labResults = [], isLoading: labsLoading, error: labsError } = useQuery<LabResultFromOrder[]>({
     queryKey: [`/api/patients/${patientId}/labs`],
     enabled: !!patientId,
     retry: false,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  });
+
+  // Debug log to verify query execution
+  console.log('Lab Results Query State:', { 
+    patientId, 
+    labResults: labResults?.length, 
+    labsLoading, 
+    labsError: labsError?.message,
+    queryEnabled: !!patientId 
   });
 
 
