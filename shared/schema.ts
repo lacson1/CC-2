@@ -128,7 +128,7 @@ export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").notNull().references(() => patients.id),
   visitId: integer("visit_id").references(() => visits.id),
-  medicationId: integer("medication_id").references(() => medications.id), // Updated to reference medications table
+  medicationId: integer("medication_id").references(() => medicines.id), // Updated to reference medicines table
   medicationName: text("medication_name"), // For manual entries when medication is not in database
   dosage: text("dosage").notNull(),
   frequency: text("frequency").notNull(),

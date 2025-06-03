@@ -95,41 +95,49 @@ export default function PrescriptionModal({
 
   const createPrescriptionMutation = useMutation({
     mutationFn: async (data: InsertPrescription) => {
-      const response = await apiRequest("POST", `/api/patients/${data.patientId}/prescriptions`, data);
-      return response.json();
+      try {
+        const response = await apiRequest("POST", `/api/patients/${data.patientId}/prescriptions`, data);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Prescription creation failed:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
-      // Comprehensive cache invalidation for immediate refresh
-      queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/prescriptions"] });
-      if (selectedPatientId) {
-        queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId] });
-        queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "prescriptions"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "prescriptions", "active"] });
-        queryClient.invalidateQueries({ queryKey: ["/api/patients", selectedPatientId, "activity-trail"] });
+      try {
+        // Comprehensive cache invalidation for immediate refresh
+        queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/prescriptions"] });
+        if (selectedPatientId) {
+          queryClient.invalidateQueries({ queryKey: [`/api/patients/${selectedPatientId}/prescriptions`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/patients/${selectedPatientId}/activity-trail`] });
+        }
+        if (visitId) {
+          queryClient.invalidateQueries({ queryKey: [`/api/visits/${visitId}/prescriptions`] });
+        }
+        
+        toast({
+          title: "Success",
+          description: "Prescription created and sent to pharmacy!",
+        });
+        form.reset();
+        setSelectedPatientId(undefined);
+        setSelectedMedicine(null);
+        setManualMedicationName("");
+        onOpenChange(false);
+      } catch (error) {
+        console.error('Post-success cleanup failed:', error);
       }
-      if (visitId) {
-        queryClient.invalidateQueries({ queryKey: ["/api/visits", visitId, "prescriptions"] });
-      }
-      
-      // Force refetch patient data immediately
-      if (selectedPatientId) {
-        queryClient.refetchQueries({ queryKey: ["/api/patients", selectedPatientId, "prescriptions"] });
-      }
-      
-      toast({
-        title: "Success",
-        description: "Prescription created and sent to pharmacy!",
-      });
-      form.reset();
-      setSelectedPatientId(undefined);
-      setSelectedMedicine(null);
-      onOpenChange(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Prescription creation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create prescription. Please try again.",
+        description: error.message || "Failed to create prescription. Please try again.",
         variant: "destructive",
       });
     },
