@@ -109,7 +109,10 @@ export default function Dashboard() {
       <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         {/* Premium Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="metric-card group relative overflow-hidden">
+          <div 
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            onClick={() => setLocation('/patients')}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 pointer-events-none"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
@@ -126,7 +129,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="metric-card group relative overflow-hidden">
+          <div 
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            onClick={() => setLocation('/appointments')}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-accent/10 pointer-events-none"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
@@ -143,7 +149,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="metric-card group relative overflow-hidden">
+          <div 
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            onClick={() => setLocation('/lab-orders')}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-warning/5 via-transparent to-warning/10 pointer-events-none"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
@@ -160,7 +169,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="metric-card group relative overflow-hidden">
+          <div 
+            className="metric-card group relative overflow-hidden cursor-pointer hover:scale-105 transition-all duration-300"
+            onClick={() => setLocation('/pharmacy')}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-destructive/5 via-transparent to-destructive/10 pointer-events-none"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-4">
