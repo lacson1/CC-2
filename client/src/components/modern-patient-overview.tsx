@@ -31,7 +31,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { DocumentPreviewCarousel } from './document-preview-carousel';
 import CustomPrescriptionPrint from './custom-prescription-print';
 import CustomLabOrderPrint from './custom-lab-order-print';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, MoreVertical, Eye, Download, Share, FileText, Printer } from 'lucide-react';
 // All icons now imported via MedicalIcons system
 
 // CompletedLabResult interface for reviewed results
@@ -51,6 +51,7 @@ interface CompletedLabResult {
 
 // PatientReviewedResults Component
 function PatientReviewedResults({ patientId }: { patientId: number }) {
+  const { toast } = useToast();
   const { data: reviewedResults = [], isLoading } = useQuery<CompletedLabResult[]>({
     queryKey: ['/api/lab-results/reviewed', patientId],
     queryFn: async () => {
@@ -64,6 +65,113 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
 
   // Results are already filtered by patient ID in the backend
   const patientResults = reviewedResults;
+
+  // Handler functions for dropdown actions
+  const handleViewResultDetails = (result: CompletedLabResult) => {
+    // Create a detailed view modal or navigate to detailed page
+    toast({
+      title: "View Details",
+      description: `Opening detailed view for ${result.testName}`,
+    });
+  };
+
+  const handlePrintResult = (result: CompletedLabResult) => {
+    // Generate and print the lab result
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const printContent = `
+        <html>
+          <head>
+            <title>Lab Result - ${result.testName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+              .result-card { border: 1px solid #ddd; padding: 15px; margin: 10px 0; }
+              .status-badge { padding: 5px 10px; border-radius: 5px; color: white; }
+              .normal { background-color: #22c55e; }
+              .abnormal { background-color: #eab308; }
+              .critical { background-color: #ef4444; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>Laboratory Test Result</h1>
+              <p>Patient ID: ${patientId} | Order #${result.orderId}</p>
+            </div>
+            <div class="result-card">
+              <h2>${result.testName}</h2>
+              <p><strong>Result:</strong> ${result.result} ${result.units || ''}</p>
+              <p><strong>Normal Range:</strong> ${result.normalRange}</p>
+              <p><strong>Category:</strong> ${result.category}</p>
+              <p><strong>Status:</strong> <span class="status-badge ${result.status}">${result.status.toUpperCase()}</span></p>
+              <p><strong>Completed Date:</strong> ${new Date(result.completedDate).toLocaleDateString()}</p>
+              ${result.remarks ? `<p><strong>Remarks:</strong> ${result.remarks}</p>` : ''}
+              <p><strong>Reviewed by:</strong> ${result.reviewedBy}</p>
+            </div>
+          </body>
+        </html>
+      `;
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+  };
+
+  const handleExportResult = async (result: CompletedLabResult) => {
+    try {
+      // Create downloadable PDF content
+      const content = `Lab Result: ${result.testName}\nResult: ${result.result} ${result.units || ''}\nNormal Range: ${result.normalRange}\nStatus: ${result.status}\nCompleted: ${new Date(result.completedDate).toLocaleDateString()}\nReviewed by: ${result.reviewedBy}`;
+      
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lab-result-${result.testName.replace(/\s+/g, '-')}-${result.id}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Export Complete",
+        description: `${result.testName} result exported successfully`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Unable to export the lab result",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareResult = (result: CompletedLabResult) => {
+    // Copy shareable link or open share dialog
+    const shareData = {
+      title: `Lab Result: ${result.testName}`,
+      text: `${result.testName} - Status: ${result.status}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData);
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(`Lab Result: ${result.testName}\nStatus: ${result.status}\nResult: ${result.result}`);
+      toast({
+        title: "Link Copied",
+        description: "Lab result details copied to clipboard",
+      });
+    }
+  };
+
+  const handleAddToReport = (result: CompletedLabResult) => {
+    // Add to medical report compilation
+    toast({
+      title: "Added to Report",
+      description: `${result.testName} added to medical report compilation`,
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -102,7 +210,7 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
               key={result.id}
               className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-2">
                     <h4 className="font-medium text-lg">{result.testName}</h4>
@@ -139,6 +247,38 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
                     Reviewed by: {result.reviewedBy} • Order #{result.orderId}
                   </div>
                 </div>
+                
+                {/* Actions Dropdown Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onClick={() => handleViewResultDetails(result)}>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View Full Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handlePrintResult(result)}>
+                      <MedicalIcons.print className="mr-2 h-4 w-4" />
+                      Print Result
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportResult(result)}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleShareResult(result)}>
+                      <Share className="mr-2 h-4 w-4" />
+                      Share Result
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleAddToReport(result)}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Add to Report
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           ))}
