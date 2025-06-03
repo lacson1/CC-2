@@ -20,42 +20,10 @@ import { useLocation } from "wouter";
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { MedicalIcons, MedicalContext, getStatusStyling, IconSizes } from '@/lib/medical-icons';
 import { 
-  User, 
-  Calendar, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Heart,
-  Activity,
-  Pill,
-  FlaskRound,
-  MessageSquare,
-  CalendarDays,
-  Monitor,
-  FileText,
-  Stethoscope,
-  Plus,
   ChevronDown,
-  ChevronRight,
-  Edit,
-  Share,
-  UserCheck,
-  Archive,
-  Users,
-  Upload,
-  Clock,
-  Printer,
-  MoreVertical,
-  Eye,
-  Copy,
-  QrCode,
-  Trash2,
-  CheckCircle,
-  XCircle,
-  RefreshCw,
-  AlertTriangle,
-  Building2
+  ChevronRight
 } from 'lucide-react';
 
 interface Patient {
