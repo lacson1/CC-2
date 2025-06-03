@@ -253,7 +253,7 @@ function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
   const orgTheme = orderResult.organizationTheme || '#2563eb';
   
   // Generate organization logo initials
-  const orgInitials = orgName.split(' ').map(word => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+  const orgInitials = orgName.split(' ').map((word: string) => word.charAt(0)).join('').substring(0, 2).toUpperCase();
 
   return `
 <!DOCTYPE html>
