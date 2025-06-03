@@ -99,7 +99,7 @@ class PerformanceMonitor {
       console.log(`📊 Performance metrics flushed: ${metrics.length} records`);
     } catch (error) {
       console.error('Failed to flush performance metrics:', error);
-      // Re-add metrics to buffer for retry
+      // Re-add metrics to buffer for retry on next flush
       this.metricsBuffer.unshift(...metrics);
     }
   }
@@ -217,7 +217,7 @@ class PerformanceMonitor {
         .sort((a, b) => b.avgResponseTime - a.avgResponseTime)
         .slice(0, 10);
 
-      // Error rates
+      // Error rates (as percentage)
       const errorRate = (metrics.filter(m => m.statusCode >= 400).length / totalRequests) * 100 || 0;
 
       return {
@@ -225,7 +225,7 @@ class PerformanceMonitor {
         avgResponseTime: Math.round(avgResponseTime),
         avgMemoryUsage: Math.round(avgMemoryUsage * 100) / 100,
         avgCpuUsage: Math.round(avgCpuUsage * 100) / 100,
-        errorRate: Math.round(errorRate * 100) / 100,
+        errorRate: Math.round(errorRate * 10) / 10, // Fixed: Round to 1 decimal place
         slowestEndpoints,
         timeframe
       };
