@@ -1364,12 +1364,44 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  app.get("/api/patients/:id/labs", async (req, res) => {
+  app.get("/api/patients/:id/labs", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
-      const labResults = await storage.getLabResultsByPatient(patientId);
+      const organizationId = req.user?.organizationId;
+
+      if (!organizationId) {
+        return res.status(403).json({ message: "Organization access required" });
+      }
+
+      // Get completed lab results from lab order items with results
+      const labResults = await db
+        .select({
+          id: labOrderItems.id,
+          patientId: labOrders.patientId,
+          testName: labTests.name,
+          testDate: labOrderItems.resultDate,
+          result: labOrderItems.result,
+          normalRange: labTests.referenceRange,
+          status: labOrderItems.status,
+          notes: labOrderItems.notes,
+          organizationId: labOrders.organizationId,
+          createdAt: labOrderItems.createdAt
+        })
+        .from(labOrderItems)
+        .innerJoin(labOrders, eq(labOrderItems.labOrderId, labOrders.id))
+        .innerJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
+        .where(
+          and(
+            eq(labOrders.patientId, patientId),
+            eq(labOrders.organizationId, organizationId),
+            isNotNull(labOrderItems.result) // Only get items with actual results
+          )
+        )
+        .orderBy(desc(labOrderItems.resultDate));
+
       res.json(labResults);
     } catch (error) {
+      console.error("Error fetching lab results:", error);
       res.status(500).json({ message: "Failed to fetch lab results" });
     }
   });
