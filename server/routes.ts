@@ -2697,10 +2697,26 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(400).json({ message: "Organization context required" });
       }
       
+      const { patientId } = req.query;
+      
+      // Build where conditions
+      let whereConditions = [
+        eq(labOrders.organizationId, userOrgId),
+        eq(labOrderItems.status, 'completed'),
+        isNotNull(labOrderItems.result),
+        isNotNull(labOrderItems.completedAt)
+      ];
+      
+      // Add patient filter if specified
+      if (patientId) {
+        whereConditions.push(eq(labOrders.patientId, parseInt(patientId as string)));
+      }
+      
       // Get completed lab results that have been reviewed (status = 'completed')
       const reviewedResults = await db.select({
         id: labOrderItems.id,
         orderId: labOrderItems.labOrderId,
+        patientId: labOrders.patientId,
         patientName: sql<string>`CONCAT(${patients.firstName}, ' ', ${patients.lastName})`,
         testName: labTests.name,
         result: labOrderItems.result,
@@ -2716,20 +2732,14 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       .innerJoin(labOrders, eq(labOrderItems.labOrderId, labOrders.id))
       .innerJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
       .innerJoin(patients, eq(labOrders.patientId, patients.id))
-      .where(
-        and(
-          eq(labOrders.organizationId, userOrgId),
-          eq(labOrderItems.status, 'completed'),
-          isNotNull(labOrderItems.result),
-          isNotNull(labOrderItems.completedAt)
-        )
-      )
+      .where(and(...whereConditions))
       .orderBy(desc(labOrderItems.completedAt));
       
       // Transform the data to match frontend expectations
       const transformedResults = reviewedResults.map(result => ({
         id: result.id,
         orderId: result.orderId,
+        patientId: result.patientId,
         patientName: result.patientName,
         testName: result.testName,
         result: result.result,

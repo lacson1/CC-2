@@ -33,6 +33,120 @@ export default function PatientProfile() {
   const [showLabModal, setShowLabModal] = useState(false);
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
 
+// PatientReviewedResults component for displaying reviewed lab results for a specific patient
+interface CompletedLabResult {
+  id: number;
+  orderId: number;
+  patientName: string;
+  testName: string;
+  result: string;
+  normalRange: string;
+  status: 'normal' | 'abnormal' | 'critical';
+  completedDate: string;
+  reviewedBy: string;
+  category: string;
+  units?: string;
+  remarks?: string;
+}
+
+function PatientReviewedResults({ patientId }: { patientId: number }) {
+  const { data: reviewedResults = [], isLoading } = useQuery<CompletedLabResult[]>({
+    queryKey: ['/api/lab-results/reviewed', patientId],
+    queryFn: async () => {
+      const response = await fetch(`/api/lab-results/reviewed?patientId=${patientId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch reviewed results');
+      }
+      return response.json();
+    }
+  });
+
+  // Results are already filtered by patient ID in the backend
+  const patientResults = reviewedResults;
+
+  const getStatusBadge = (status: string) => {
+    const statusColors = {
+      normal: 'bg-green-100 text-green-800 border-green-200',
+      abnormal: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      critical: 'bg-red-100 text-red-800 border-red-200'
+    };
+    
+    return (
+      <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
+        <span>Loading reviewed results...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {patientResults.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No reviewed lab results available for this patient.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {patientResults.map(result => (
+            <div
+              key={result.id}
+              className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4 mb-2">
+                    <h4 className="font-medium text-lg">{result.testName}</h4>
+                    {getStatusBadge(result.status)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-muted-foreground">Result:</span>
+                      <p className="font-semibold">{result.result} {result.units || ''}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground">Normal Range:</span>
+                      <p>{result.normalRange}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground">Category:</span>
+                      <p>{result.category}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-muted-foreground">Completed:</span>
+                      <p>{new Date(result.completedDate).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  
+                  {result.remarks && (
+                    <div className="mt-3 text-sm">
+                      <span className="font-medium text-muted-foreground">Remarks:</span>
+                      <p className="mt-1 text-gray-700">{result.remarks}</p>
+                    </div>
+                  )}
+                  
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Reviewed by: {result.reviewedBy} • Order #{result.orderId}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
   // Fetch patient data
   const { data: patient, isLoading: patientLoading } = useQuery<Patient>({
     queryKey: [`/api/patients/${patientId}`],
@@ -308,10 +422,14 @@ export default function PatientProfile() {
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="results" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                       <TabsTrigger value="results" className="flex items-center gap-2">
                         <FlaskRound className="h-4 w-4" />
                         Results
+                      </TabsTrigger>
+                      <TabsTrigger value="reviewed" className="flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Reviewed
                       </TabsTrigger>
                       <TabsTrigger value="pending" className="flex items-center gap-2">
                         <History className="h-4 w-4" />
@@ -370,6 +488,10 @@ export default function PatientProfile() {
                           <p className="mt-2 text-sm text-slate-500">Completed lab results will appear here.</p>
                         </div>
                       )}
+                    </TabsContent>
+
+                    <TabsContent value="reviewed" className="mt-4">
+                      <PatientReviewedResults patientId={patient.id} />
                     </TabsContent>
 
                     <TabsContent value="pending" className="mt-4">
