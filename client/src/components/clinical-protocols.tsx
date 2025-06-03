@@ -25,7 +25,9 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Grid3X3,
   Heart,
+  List,
   Pill,
   Search,
   Stethoscope,
@@ -57,6 +59,7 @@ export default function ClinicalProtocols() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProtocol, setSelectedProtocol] = useState<ClinicalProtocol | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const protocols: ClinicalProtocol[] = [
     {
@@ -662,10 +665,10 @@ export default function ClinicalProtocols() {
         </div>
       </div>
 
-      {/* Search and Filter */}
+      {/* Search, Filter, and View Options */}
       <Card>
         <CardContent className="p-6">
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -677,67 +680,90 @@ export default function ClinicalProtocols() {
                 />
               </div>
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category === 'all' ? 'All Categories' : category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2">
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category === 'all' ? 'All Categories' : category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              {/* View Mode Toggle */}
+              <div className="flex border rounded-md">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="rounded-r-none"
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="rounded-l-none"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Protocols Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProtocols.map((protocol) => (
-          <Card key={protocol.id} className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <CardTitle className="text-lg">{protocol.title}</CardTitle>
-                <Badge className={getUrgencyColor(protocol.urgency)}>
-                  {protocol.urgency}
-                </Badge>
-              </div>
-              <Badge variant="outline">{protocol.category}</Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">Common Symptoms:</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {protocol.symptoms.slice(0, 3).map((symptom, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {symptom}
-                      </Badge>
-                    ))}
-                    {protocol.symptoms.length > 3 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{protocol.symptoms.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
+      {/* Protocols Display */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProtocols.map((protocol) => (
+            <Card key={protocol.id} className="hover:shadow-md transition-shadow cursor-pointer">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <CardTitle className="text-lg">{protocol.title}</CardTitle>
+                  <Badge className={getUrgencyColor(protocol.urgency)}>
+                    {protocol.urgency}
+                  </Badge>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {protocol.steps.length} steps
-                  </span>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setSelectedProtocol(protocol)}
-                      >
-                        View Protocol
-                      </Button>
-                    </DialogTrigger>
+                <Badge variant="outline">{protocol.category}</Badge>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Common Symptoms:</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {protocol.symptoms.slice(0, 3).map((symptom, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {symptom}
+                        </Badge>
+                      ))}
+                      {protocol.symptoms.length > 3 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{protocol.symptoms.length - 3} more
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                      {protocol.steps.length} steps
+                    </span>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setSelectedProtocol(protocol)}
+                        >
+                          View Protocol
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
@@ -829,6 +855,175 @@ export default function ClinicalProtocols() {
           </Card>
         ))}
       </div>
+      ) : (
+        <>
+        <div className="space-y-4">
+          {filteredProtocols.map((protocol) => (
+            <Card key={protocol.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h3 className="text-xl font-semibold text-gray-900">{protocol.title}</h3>
+                      <Badge className={getUrgencyColor(protocol.urgency)}>
+                        {protocol.urgency}
+                      </Badge>
+                      <Badge variant="outline">{protocol.category}</Badge>
+                    </div>
+                    
+                    <p className="text-gray-600 mb-3">{protocol.diagnosis}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Common Symptoms:</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {protocol.symptoms.slice(0, 5).map((symptom, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {symptom}
+                            </Badge>
+                          ))}
+                          {protocol.symptoms.length > 5 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{protocol.symptoms.length - 5} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2">Treatment Steps:</h4>
+                        <div className="space-y-1">
+                          {protocol.steps.slice(0, 3).map((step) => (
+                            <div key={step.order} className="flex items-center gap-2 text-sm text-gray-600">
+                              <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                {getStepIcon(step.type)}
+                              </div>
+                              <span className="truncate">{step.description}</span>
+                            </div>
+                          ))}
+                          {protocol.steps.length > 3 && (
+                            <div className="text-xs text-gray-500 ml-7">
+                              +{protocol.steps.length - 3} more steps
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <span>{protocol.steps.length} treatment steps</span>
+                        {protocol.medications && (
+                          <span>{protocol.medications.length} medications</span>
+                        )}
+                      </div>
+                      
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline"
+                            onClick={() => setSelectedProtocol(protocol)}
+                          >
+                            View Full Protocol
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                              <BookOpen className="h-5 w-5" />
+                              {protocol.title}
+                            </DialogTitle>
+                            <DialogDescription>
+                              {protocol.category} • {protocol.diagnosis}
+                            </DialogDescription>
+                          </DialogHeader>
+                          
+                          <div className="space-y-6">
+                            {/* Protocol Steps */}
+                            <div>
+                              <h3 className="text-lg font-semibold mb-4">Treatment Protocol</h3>
+                              <div className="space-y-4">
+                                {protocol.steps.map((step) => (
+                                  <div key={step.order} className="flex gap-4 p-4 border rounded-lg">
+                                    <div className="flex-shrink-0">
+                                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        {getStepIcon(step.type)}
+                                      </div>
+                                    </div>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <span className="font-medium">Step {step.order}</span>
+                                        <Badge variant="outline" className="text-xs">
+                                          {step.type}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-gray-900 mb-2">{step.description}</p>
+                                      {step.details && (
+                                        <p className="text-sm text-gray-600">{step.details}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Medications */}
+                            {protocol.medications && (
+                              <div>
+                                <h3 className="text-lg font-semibold mb-3">Recommended Medications</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {protocol.medications.map((medication, index) => (
+                                    <div key={index} className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                                      <Pill className="h-4 w-4 text-green-600" />
+                                      <span className="text-sm">{medication}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Contraindications */}
+                            {protocol.contraindications && (
+                              <div>
+                                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                                  Contraindications & Warnings
+                                </h3>
+                                <div className="space-y-2">
+                                  {protocol.contraindications.map((contraindication, index) => (
+                                    <div key={index} className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
+                                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                                      <span className="text-sm">{contraindication}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Follow-up */}
+                            {protocol.followUp && (
+                              <div>
+                                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                  <Clock className="h-5 w-5 text-blue-500" />
+                                  Follow-up Instructions
+                                </h3>
+                                <div className="p-4 bg-blue-50 rounded-lg">
+                                  <p className="text-sm text-blue-900">{protocol.followUp}</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        </>
+      )}
 
       {filteredProtocols.length === 0 && (
         <Card>
