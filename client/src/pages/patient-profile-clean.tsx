@@ -20,8 +20,6 @@ import {
   Activity,
   ChevronDown,
   Edit,
-  Monitor,
-  Share,
   MoreHorizontal,
   Heart,
   Clock,
@@ -55,13 +53,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { 
-  CalendarDays,
-  Users,
-  Upload,
-  MessageSquare,
-  Archive
-} from 'lucide-react';
 
 interface Organization {
   id: number;
