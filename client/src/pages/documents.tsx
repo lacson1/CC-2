@@ -410,50 +410,82 @@ export default function DocumentsPage() {
       {/* Document Preview Modal */}
       {previewDocument && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[80vh] w-full mx-4 overflow-auto">
-            <div className="flex justify-between items-center mb-4">
+          <div className="bg-white rounded-lg max-w-6xl max-h-[90vh] w-full mx-4 flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b">
               <h3 className="text-lg font-semibold">{previewDocument.originalName}</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setIsPreviewOpen(false);
-                  setPreviewDocument(null);
-                }}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-            
-            {previewDocument.mimeType === 'application/pdf' ? (
-              <div className="w-full h-96">
-                <iframe
-                  src={`/api/files/medical/${previewDocument.fileName}#toolbar=1&navpanes=1&scrollbar=1`}
-                  className="w-full h-full border rounded"
-                  title={previewDocument.originalName}
-                  style={{ minHeight: '500px' }}
-                />
-              </div>
-            ) : previewDocument.mimeType.startsWith('image/') ? (
-              <div className="text-center">
-                <img
-                  src={`/api/files/medical/${previewDocument.fileName}`}
-                  alt={previewDocument.originalName}
-                  className="max-w-full max-h-96 mx-auto"
-                />
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <File className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 mb-4">This file type cannot be previewed</p>
+              <div className="flex items-center gap-2">
                 <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handleDownload(previewDocument.fileName, previewDocument.originalName)}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Download to View
+                  Download
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsPreviewOpen(false);
+                    setPreviewDocument(null);
+                  }}
+                >
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
-            )}
+            </div>
+            
+            <div className="flex-1 p-4">
+              {previewDocument.mimeType === 'application/pdf' ? (
+                <div className="w-full h-full">
+                  <object
+                    data={`/api/files/medical/${previewDocument.fileName}`}
+                    type="application/pdf"
+                    width="100%"
+                    height="600px"
+                    className="border rounded"
+                  >
+                    <iframe
+                      src={`/api/files/medical/${previewDocument.fileName}`}
+                      width="100%"
+                      height="600px"
+                      className="border rounded"
+                      title={previewDocument.originalName}
+                    >
+                      <div className="text-center py-8">
+                        <File className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                        <p className="text-gray-600 mb-4">PDF cannot be displayed in this browser</p>
+                        <Button
+                          onClick={() => handleDownload(previewDocument.fileName, previewDocument.originalName)}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download PDF
+                        </Button>
+                      </div>
+                    </iframe>
+                  </object>
+                </div>
+              ) : previewDocument.mimeType.startsWith('image/') ? (
+                <div className="text-center">
+                  <img
+                    src={`/api/files/medical/${previewDocument.fileName}`}
+                    alt={previewDocument.originalName}
+                    className="max-w-full max-h-[500px] mx-auto rounded"
+                  />
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <File className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600 mb-4">This file type cannot be previewed</p>
+                  <Button
+                    onClick={() => handleDownload(previewDocument.fileName, previewDocument.originalName)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download to View
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
