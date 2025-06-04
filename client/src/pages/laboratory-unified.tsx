@@ -194,7 +194,8 @@ export default function LaboratoryUnified() {
 
   const generateLabOrderPrintContent = (order: LabOrder) => {
     const patient = patients.find(p => p.id === order.patientId);
-    const org = organizationData || {};
+    // Use the issuing staff member's organization for letterhead branding
+    const org = organizationData || userProfile?.organization || {};
     const orgName = org.name || 'Healthcare Organization';
     const orgType = org.type || 'clinic';
     const orgEmail = org.email || 'info@healthcare.com';
@@ -337,7 +338,8 @@ export default function LaboratoryUnified() {
 
   const generateLabResultPrintContent = (result: any) => {
     const patient = result.orderItem?.labOrder?.patient;
-    const org = organizationData || {};
+    // Use the issuing staff member's organization for letterhead branding
+    const org = organizationData || userProfile?.organization || {};
     const orgName = org.name || 'Healthcare Organization';
     const orgType = org.type || 'clinic';
     const orgEmail = org.email || 'info@healthcare.com';
