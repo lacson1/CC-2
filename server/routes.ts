@@ -1834,7 +1834,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
 
       if (user) {
         // For demo purposes, accept simple passwords
-        const validPasswords = ['admin123', 'doctor123', 'super123', 'nurse123', 'receptionist123'];
+        const validPasswords = ['admin123', 'doctor123', 'super123', 'nurse123', 'receptionist123', 'password123', 'pharmacy123', 'physio123'];
         if (validPasswords.includes(password)) {
           const org = user.organizationId ? await getOrganizationDetails(user.organizationId) : null;
           const token = generateToken({ 
