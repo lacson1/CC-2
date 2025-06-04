@@ -3531,61 +3531,47 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       
       const { patientId } = req.query;
       
-      // Build where conditions
-      let whereConditions = [
-        eq(labOrders.organizationId, userOrgId),
-        eq(labOrderItems.status, 'completed'),
-        isNotNull(labOrderItems.result),
-        isNotNull(labOrderItems.completedAt)
-      ];
+      // Build where conditions for lab_results table
+      let whereConditions = [eq(labResults.organizationId, userOrgId)];
       
       // Add patient filter if specified
       if (patientId) {
-        whereConditions.push(eq(labOrders.patientId, parseInt(patientId as string)));
+        whereConditions.push(eq(labResults.patientId, parseInt(patientId as string)));
       }
       
-      // Get completed lab results that have been reviewed (status = 'completed')
+      // Get authentic lab results from lab_results table
       const reviewedResults = await db.select({
-        id: labOrderItems.id,
-        orderId: labOrderItems.labOrderId,
-        patientId: labOrders.patientId,
+        id: labResults.id,
+        patientId: labResults.patientId,
         patientName: sql<string>`CONCAT(${patients.firstName}, ' ', ${patients.lastName})`,
-        testName: labTests.name,
-        result: labOrderItems.result,
-        normalRange: labTests.referenceRange,
-        status: labOrderItems.status,
-        completedDate: labOrderItems.completedAt,
-        reviewedBy: sql<string>`'Lab Staff'`, // Remove reference to reviewedBy field that doesn't exist
-        category: labTests.category,
-        units: labTests.units,
-        remarks: labOrderItems.remarks
+        testName: labResults.testName,
+        result: labResults.result,
+        normalRange: labResults.normalRange,
+        status: labResults.status,
+        testDate: labResults.testDate,
+        notes: labResults.notes,
+        createdAt: labResults.createdAt
       })
-      .from(labOrderItems)
-      .innerJoin(labOrders, eq(labOrderItems.labOrderId, labOrders.id))
-      .innerJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
-      .innerJoin(patients, eq(labOrders.patientId, patients.id))
+      .from(labResults)
+      .innerJoin(patients, eq(labResults.patientId, patients.id))
       .where(and(...whereConditions))
-      .orderBy(desc(labOrderItems.completedAt));
+      .orderBy(desc(labResults.createdAt));
       
       // Transform the data to match frontend expectations
       const transformedResults = reviewedResults.map(result => ({
         id: result.id,
-        orderId: result.orderId,
+        orderId: null,
         patientId: result.patientId,
         patientName: result.patientName,
         testName: result.testName,
         result: result.result,
         normalRange: result.normalRange || 'See lab standards',
-        status: result.status === 'completed' ? 
-          (result.result && result.normalRange ? 
-            (isResultNormal(result.result, result.normalRange) ? 'normal' : 'abnormal') 
-            : 'normal') 
-          : 'normal',
-        completedDate: result.completedDate,
-        reviewedBy: result.reviewedBy || 'Lab Staff',
-        category: result.category || 'General',
-        units: result.units,
-        remarks: result.remarks
+        status: result.status,
+        completedDate: result.testDate,
+        reviewedBy: 'Lab Staff',
+        category: 'General',
+        units: '',
+        remarks: result.notes
       }));
       
       res.json(transformedResults);
