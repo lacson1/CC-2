@@ -1157,11 +1157,11 @@ export default function LaboratoryUnified() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <p className="text-sm font-medium text-gray-600">Result</p>
-                            <p className="text-lg font-semibold text-gray-900">{result.value} {result.units}</p>
+                            <p className="text-lg font-semibold text-gray-900">{result.result}</p>
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-600">Reference Range</p>
-                            <p className="text-sm text-gray-700">{result.referenceRange || 'N/A'}</p>
+                            <p className="text-sm text-gray-700">{result.normalRange || 'N/A'}</p>
                           </div>
                           <div>
                             <p className="text-sm font-medium text-gray-600">Status</p>
