@@ -208,6 +208,13 @@ export const labTests = pgTable('lab_tests', {
   description: varchar('description', { length: 255 }),
   units: varchar('units', { length: 50 }),
   referenceRange: varchar('reference_range', { length: 100 }),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  isActive: boolean('is_active').default(true),
+  priority: varchar('priority', { length: 20 }).default('routine'), // routine, urgent, stat
+  sampleType: varchar('sample_type', { length: 50 }), // blood, urine, stool, etc.
+  methodOfCollection: varchar('method_of_collection', { length: 100 }),
+  estimatedTime: varchar('estimated_time', { length: 50 }), // e.g., "2-4 hours"
+  cost: decimal('cost', { precision: 10, scale: 2 }),
   createdAt: timestamp('created_at').defaultNow()
 });
 
@@ -215,8 +222,17 @@ export const labOrders = pgTable('lab_orders', {
   id: serial('id').primaryKey(),
   patientId: integer('patient_id').notNull().references(() => patients.id),
   orderedBy: integer('ordered_by').notNull().references(() => users.id),
-  status: varchar('status', { length: 20 }).default('pending'), // pending, in_progress, completed
+  status: varchar('status', { length: 20 }).default('pending'), // pending, in_progress, completed, cancelled
+  priority: varchar('priority', { length: 20 }).default('routine'), // routine, urgent, stat
+  clinicalNotes: text('clinical_notes'),
+  diagnosis: text('diagnosis'),
   organizationId: integer('organization_id').references(() => organizations.id),
+  totalCost: decimal('total_cost', { precision: 10, scale: 2 }),
+  specimenCollectedAt: timestamp('specimen_collected_at'),
+  specimenCollectedBy: integer('specimen_collected_by').references(() => users.id),
+  reportedAt: timestamp('reported_at'),
+  reviewedBy: integer('reviewed_by').references(() => users.id),
+  reviewedAt: timestamp('reviewed_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   completedAt: timestamp('completed_at')
 });
@@ -226,10 +242,65 @@ export const labOrderItems = pgTable('lab_order_items', {
   labOrderId: integer('lab_order_id').notNull().references(() => labOrders.id),
   labTestId: integer('lab_test_id').notNull().references(() => labTests.id),
   result: text('result'),
+  numericResult: decimal('numeric_result', { precision: 15, scale: 4 }),
+  isAbnormal: boolean('is_abnormal').default(false),
+  abnormalFlags: varchar('abnormal_flags', { length: 50 }), // H, L, HH, LL, etc.
   remarks: text('remarks'),
-  status: varchar('status', { length: 20 }).default('pending'), // pending, completed
+  status: varchar('status', { length: 20 }).default('pending'), // pending, in_progress, completed, cancelled
   completedBy: integer('completed_by').references(() => users.id),
+  verifiedBy: integer('verified_by').references(() => users.id),
+  verifiedAt: timestamp('verified_at'),
   completedAt: timestamp('completed_at')
+});
+
+// Lab departments/sections
+export const labDepartments = pgTable('lab_departments', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  headOfDepartment: integer('head_of_department').references(() => users.id),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Lab equipment/instruments
+export const labEquipment = pgTable('lab_equipment', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  model: varchar('model', { length: 50 }),
+  manufacturer: varchar('manufacturer', { length: 100 }),
+  departmentId: integer('department_id').references(() => labDepartments.id),
+  status: varchar('status', { length: 20 }).default('active'), // active, maintenance, out_of_order
+  lastMaintenanceDate: date('last_maintenance_date'),
+  nextMaintenanceDate: date('next_maintenance_date'),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Lab worksheets/batches for processing multiple samples together
+export const labWorksheets = pgTable('lab_worksheets', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  departmentId: integer('department_id').references(() => labDepartments.id),
+  equipmentId: integer('equipment_id').references(() => labEquipment.id),
+  technicianId: integer('technician_id').references(() => users.id),
+  status: varchar('status', { length: 20 }).default('open'), // open, in_progress, completed, verified
+  startedAt: timestamp('started_at'),
+  completedAt: timestamp('completed_at'),
+  verifiedBy: integer('verified_by').references(() => users.id),
+  verifiedAt: timestamp('verified_at'),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Track which lab order items are processed in which worksheet
+export const worksheetItems = pgTable('worksheet_items', {
+  id: serial('id').primaryKey(),
+  worksheetId: integer('worksheet_id').notNull().references(() => labWorksheets.id),
+  labOrderItemId: integer('lab_order_item_id').notNull().references(() => labOrderItems.id),
+  position: integer('position'), // Position in the worksheet
+  createdAt: timestamp('created_at').defaultNow()
 });
 
 export const medications = pgTable('medications', {
@@ -709,6 +780,47 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
   updatedAt: true,
 });
 
+// Lab schema exports
+export const insertLabTestSchema = createInsertSchema(labTests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLabOrderSchema = createInsertSchema(labOrders).omit({
+  id: true,
+  createdAt: true,
+  completedAt: true,
+});
+
+export const insertLabOrderItemSchema = createInsertSchema(labOrderItems).omit({
+  id: true,
+  completedAt: true,
+  verifiedAt: true,
+});
+
+export const insertLabDepartmentSchema = createInsertSchema(labDepartments).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLabEquipmentSchema = createInsertSchema(labEquipment).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLabWorksheetSchema = createInsertSchema(labWorksheets).omit({
+  id: true,
+  createdAt: true,
+  startedAt: true,
+  completedAt: true,
+  verifiedAt: true,
+});
+
+export const insertWorksheetItemSchema = createInsertSchema(worksheetItems).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -718,6 +830,20 @@ export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type Visit = typeof visits.$inferSelect;
 export type InsertVisit = z.infer<typeof insertVisitSchema>;
 export type LabResult = typeof labResults.$inferSelect;
+
+// Lab system types
+export type LabOrder = typeof labOrders.$inferSelect;
+export type InsertLabOrder = z.infer<typeof insertLabOrderSchema>;
+export type LabOrderItem = typeof labOrderItems.$inferSelect;
+export type InsertLabOrderItem = z.infer<typeof insertLabOrderItemSchema>;
+export type LabDepartment = typeof labDepartments.$inferSelect;
+export type InsertLabDepartment = z.infer<typeof insertLabDepartmentSchema>;
+export type LabEquipment = typeof labEquipment.$inferSelect;
+export type InsertLabEquipment = z.infer<typeof insertLabEquipmentSchema>;
+export type LabWorksheet = typeof labWorksheets.$inferSelect;
+export type InsertLabWorksheet = z.infer<typeof insertLabWorksheetSchema>;
+export type WorksheetItem = typeof worksheetItems.$inferSelect;
+export type InsertWorksheetItem = z.infer<typeof insertWorksheetItemSchema>;
 
 // Type for lab results from lab order items (for completed results)
 export type LabResultFromOrder = {
@@ -990,11 +1116,6 @@ export const insertCommentSchema = createInsertSchema(comments).omit({
 
 export type Comment = typeof comments.$inferSelect;
 export type InsertComment = z.infer<typeof insertCommentSchema>;
-
-export const insertLabTestSchema = createInsertSchema(labTests).omit({
-  id: true,
-  createdAt: true,
-});
 
 export type LabTest = typeof labTests.$inferSelect;
 export type InsertLabTest = z.infer<typeof insertLabTestSchema>;
