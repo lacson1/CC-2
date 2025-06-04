@@ -201,8 +201,22 @@ export default function LaboratoryUnified() {
 
   const generateLabOrderPrintContent = (order: LabOrder) => {
     const patient = patients.find(p => p.id === order.patientId);
-    // Use the issuing staff member's organization for letterhead branding
-    const org = organizationData || userProfile?.organization || {};
+    
+    // Find the organization of the staff member who ordered the test
+    let orderingOrganization = null;
+    
+    // Look for the ordering user's organization ID from the order data
+    if (order.orderedByUser?.organizationId) {
+      orderingOrganization = organizations.find(org => org.id === order.orderedByUser.organizationId);
+    }
+    
+    // If not found in order data, use current user's organization as fallback
+    if (!orderingOrganization && userProfile?.organizationId) {
+      orderingOrganization = organizations.find(org => org.id === userProfile.organizationId);
+    }
+    
+    // Use the ordering staff member's organization for letterhead branding
+    const org = orderingOrganization || {};
     const orgName = org.name || 'Healthcare Organization';
     const orgType = org.type || 'clinic';
     const orgEmail = org.email || 'info@healthcare.com';
@@ -210,6 +224,7 @@ export default function LaboratoryUnified() {
     const orgAddress = org.address || 'Healthcare Address';
     const orgWebsite = org.website || 'www.healthcare.com';
     const themeColor = org.themeColor || '#1e40af';
+    const orgLogo = org.logo || '';
     
     return `
       <!DOCTYPE html>
@@ -517,6 +532,10 @@ export default function LaboratoryUnified() {
 
   const { data: userProfile } = useQuery({
     queryKey: ['/api/profile']
+  });
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ['/api/organizations']
   });
 
   const { data: organizationData } = useQuery({
