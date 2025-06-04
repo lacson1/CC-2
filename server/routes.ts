@@ -3259,6 +3259,33 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
+  // Get user's organization for letterhead printing
+  app.get('/api/organizations/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      // Users can only access their own organization data
+      if (userOrgId && orgId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied to this organization" });
+      }
+      
+      const [organization] = await db
+        .select()
+        .from(organizations)
+        .where(eq(organizations.id, orgId));
+
+      if (!organization) {
+        return res.status(404).json({ message: "Organization not found" });
+      }
+
+      res.json(organization);
+    } catch (error) {
+      console.error('Error fetching organization:', error);
+      res.status(500).json({ message: "Failed to fetch organization" });
+    }
+  });
+
   // Organizations Management API
   app.get('/api/organizations', authenticateToken, async (req: AuthRequest, res) => {
     try {
