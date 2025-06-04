@@ -14,6 +14,24 @@ export const organizations = pgTable('organizations', {
   phone: varchar('phone', { length: 20 }),
   email: varchar('email', { length: 100 }),
   website: varchar('website', { length: 255 }),
+  // Enhanced letterhead configuration
+  letterheadConfig: json('letterhead_config').$type<{
+    logo?: string;
+    tagline?: string;
+    accreditation?: string;
+    certifications?: string[];
+    footerNote?: string;
+    disclaimer?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    contactLayout?: 'horizontal' | 'vertical';
+    showLogo?: boolean;
+    showTagline?: boolean;
+    showAccreditation?: boolean;
+    showCertifications?: boolean;
+    headerHeight?: number;
+    footerHeight?: number;
+  }>(),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow()
