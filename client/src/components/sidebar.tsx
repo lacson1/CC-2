@@ -116,7 +116,7 @@ const getNavigationGroupsForRole = (role: string) => {
     }
   ];
 
-  return navigationGroups.map(group => ({
+  return [...superAdminExtras, ...navigationGroups].map(group => ({
     ...group,
     items: group.items.filter(item => item.roles.includes(role))
   })).filter(group => group.items.length > 0);
