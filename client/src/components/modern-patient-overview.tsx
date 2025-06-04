@@ -33,7 +33,9 @@ import CustomPrescriptionPrint from './custom-prescription-print';
 import CustomLabOrderPrint from './custom-lab-order-print';
 import { MedicationReviewAssignmentModal } from './medication-review-assignment-modal';
 import { MedicationReviewAssignmentsList } from './medication-review-assignments-list';
-import { CheckCircle, MoreVertical, Eye, Download, Share, FileText, Printer, X } from 'lucide-react';
+import VaccinationManagement from './vaccination-management';
+import { useAuth } from '@/contexts/AuthContext';
+import { CheckCircle, MoreVertical, Eye, Download, Share, FileText, Printer, X, Heart } from 'lucide-react';
 // All icons now imported via MedicalIcons system
 
 // CompletedLabResult interface for reviewed results
@@ -437,6 +439,7 @@ export function ModernPatientOverview({
   onEditPatient,
   onPrintRecord
 }: ModernPatientOverviewProps) {
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -2689,6 +2692,24 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               patient={patient}
               onCreateAssignment={() => handleCreateMedicationReviewAssignment()}
             />
+          </TabsContent>
+
+          {/* Vaccination Tab */}
+          <TabsContent value="vaccinations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-green-500" />
+                  Vaccination History & Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <VaccinationManagement 
+                  patientId={patient.id} 
+                  canEdit={user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin'} 
+                />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Communication Tab */}
