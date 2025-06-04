@@ -619,18 +619,10 @@ export default function LaboratoryUnified() {
     return matchesSearch && matchesPatient && matchesCategory;
   });
 
-  // Medical specialty categories for lab tests
-  const medicalCategories = [
-    'Hematology', 'Clinical Chemistry', 'Microbiology', 'Immunology', 
-    'Endocrinology', 'Cardiology', 'Nephrology', 'Hepatology',
-    'Oncology', 'Toxicology', 'Serology', 'Parasitology'
-  ];
-
-  // Test categories for filtering (from database + medical specialties)
-  const testCategories = Array.from(new Set([
-    ...labTests.map(test => test.category).filter(Boolean),
-    ...medicalCategories
-  ]));
+  // Test categories for filtering (only from database)
+  const testCategories = Array.from(new Set(
+    labTests.map(test => test.category).filter(Boolean)
+  )).sort();
 
   // Filter tests based on search and selected categories
   const filteredTests = labTests.filter(test => {

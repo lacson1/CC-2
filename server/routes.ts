@@ -3384,7 +3384,10 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
 
       const patientId = parseInt(req.params.id);
       const { tests, labTestIds, notes, priority } = req.body;
-      const userOrgId = req.user?.organizationId || 2; // Default to organization 2
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
       
       console.log('🔬 Processing lab order:', { patientId, tests, labTestIds, userOrgId });
       
@@ -7846,7 +7849,10 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       }
 
       // Determine target organization - use specified target or default to Lagos Island Hospital
-      const targetOrgId = targetOrganizationId || 2; // Default to Lagos Island Hospital (ID: 2)
+      const targetOrgId = targetOrganizationId;
+      if (!targetOrgId) {
+        return res.status(400).json({ message: "Target organization ID required" });
+      }
 
       // Smart message routing logic for the target organization
       const routingInfo = await routeMessageToProvider(messageType, priority, patientId, targetOrgId);
