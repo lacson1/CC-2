@@ -1603,104 +1603,150 @@ export default function LaboratoryUnified() {
                           <Input placeholder="fL" className="w-16" disabled />
                         </div>
                       </div>
+
+                      {/* MCH */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Mean Cell Hemoglobin (MCH)</label>
+                        <div className="flex gap-2">
+                          <Input placeholder="27-32" className="flex-1" />
+                          <Input placeholder="pg" className="w-16" disabled />
+                        </div>
+                      </div>
+
+                      {/* MCHC */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Mean Cell Hemoglobin Concentration (MCHC)</label>
+                        <div className="flex gap-2">
+                          <Input placeholder="32-36" className="flex-1" />
+                          <Input placeholder="g/dL" className="w-20" disabled />
+                        </div>
+                      </div>
+
+                      {/* RDW */}
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Red Cell Distribution Width (RDW)</label>
+                        <div className="flex gap-2">
+                          <Input placeholder="11.5-14.5" className="flex-1" />
+                          <Input placeholder="%" className="w-16" disabled />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clinical Assessment */}
+                    <div className="space-y-4">
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-green-900 mb-2">Clinical Assessment</h4>
+                        <p className="text-sm text-green-700">Review results and provide clinical interpretation</p>
+                      </div>
+
+                      <FormField
+                        control={resultForm.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Result Status</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select result status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="normal">Normal - Within reference ranges</SelectItem>
+                                <SelectItem value="abnormal">Abnormal - Outside reference ranges</SelectItem>
+                                <SelectItem value="critical">Critical - Requires immediate attention</SelectItem>
+                                <SelectItem value="pending_review">Pending Review - Needs specialist review</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={resultForm.control}
+                        name="interpretation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Clinical Interpretation</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Enter clinical interpretation, abnormal findings, and recommendations..."
+                                className="min-h-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={resultForm.control}
+                        name="recommendations"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Recommendations</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Enter follow-up recommendations, additional tests needed, or clinical actions..."
+                                className="min-h-[80px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
                   </div>
                 ) : (
-                  /* General Result Field for Non-FBC Tests */
-                  <FormField
-                    control={resultForm.control}
-                    name="value"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Result Value</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter result value" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  // Generic test result fields
+                  <div className="space-y-4">
+                    <FormField
+                      control={resultForm.control}
+                      name="result"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Test Result</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Enter test result..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={resultForm.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Result Status</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select result status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="abnormal">Abnormal</SelectItem>
+                              <SelectItem value="critical">Critical</SelectItem>
+                              <SelectItem value="pending_review">Pending Review</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={resultForm.control}
-                    name="units"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Units</FormLabel>
-                        <FormControl>
-                          <Input placeholder="mg/dL, mmol/L, etc." {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={resultForm.control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Overall Status</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="normal">Normal</SelectItem>
-                            <SelectItem value="abnormal">Abnormal</SelectItem>
-                            <SelectItem value="critical">Critical</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={resultForm.control}
-                  name="referenceRange"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Reference Range</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Normal range for this test" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={resultForm.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Clinical Remarks</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Clinical interpretation, recommendations, or additional observations..."
-                          className="resize-none h-20"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Workflow Status</h4>
-                  <p className="text-sm text-gray-600">
-                    After saving, this result will move to <strong>"Ready for Review"</strong> status and can be reviewed by authorized medical staff before final approval.
-                  </p>
-                </div>
-
-                <div className="flex justify-end space-x-2">
+                <div className="flex justify-end space-x-2 pt-4 border-t">
                   <Button
                     type="button"
                     variant="outline"
@@ -1709,7 +1755,7 @@ export default function LaboratoryUnified() {
                     Cancel
                   </Button>
                   <Button type="submit" disabled={submitResult.isPending}>
-                    {submitResult.isPending ? "Submitting..." : "Submit Result"}
+                    {submitResult.isPending ? "Saving Result..." : "Save Result"}
                   </Button>
                 </div>
               </form>
@@ -1718,348 +1764,7 @@ export default function LaboratoryUnified() {
         </DialogContent>
       </Dialog>
 
-      {/* Custom View Dialog */}
-      <Dialog open={showCustomViewDialog} onOpenChange={setShowCustomViewDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Settings className="w-5 h-5" />
-              Customize Laboratory View
-            </DialogTitle>
-            <DialogDescription>
-              Configure which information to display in the laboratory interface
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-patient-info" className="text-sm font-medium">
-                  Patient Information
-                </Label>
-                <Checkbox
-                  id="show-patient-info"
-                  checked={customViewSettings.showPatientInfo}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showPatientInfo: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-test-details" className="text-sm font-medium">
-                  Test Details
-                </Label>
-                <Checkbox
-                  id="show-test-details"
-                  checked={customViewSettings.showTestDetails}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showTestDetails: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-timestamps" className="text-sm font-medium">
-                  Timestamps
-                </Label>
-                <Checkbox
-                  id="show-timestamps"
-                  checked={customViewSettings.showTimestamps}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showTimestamps: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-status" className="text-sm font-medium">
-                  Status Badges
-                </Label>
-                <Checkbox
-                  id="show-status"
-                  checked={customViewSettings.showStatus}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showStatus: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-priority" className="text-sm font-medium">
-                  Priority Indicators
-                </Label>
-                <Checkbox
-                  id="show-priority"
-                  checked={customViewSettings.showPriority}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showPriority: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="show-notes" className="text-sm font-medium">
-                  Clinical Notes
-                </Label>
-                <Checkbox
-                  id="show-notes"
-                  checked={customViewSettings.showNotes}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, showNotes: !!checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label htmlFor="compact-view" className="text-sm font-medium">
-                  Compact View
-                </Label>
-                <Checkbox
-                  id="compact-view"
-                  checked={customViewSettings.compactView}
-                  onCheckedChange={(checked) => 
-                    setCustomViewSettings(prev => ({ ...prev, compactView: !!checked }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Items per Page</Label>
-              <Select 
-                value={customViewSettings.itemsPerPage.toString()} 
-                onValueChange={(value) => 
-                  setCustomViewSettings(prev => ({ ...prev, itemsPerPage: parseInt(value) }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5 items</SelectItem>
-                  <SelectItem value="10">10 items</SelectItem>
-                  <SelectItem value="20">20 items</SelectItem>
-                  <SelectItem value="50">50 items</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="flex justify-between pt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setCustomViewSettings({
-                  showPatientInfo: true,
-                  showTestDetails: true,
-                  showTimestamps: true,
-                  showStatus: true,
-                  showPriority: true,
-                  showNotes: true,
-                  compactView: false,
-                  itemsPerPage: 10
-                });
-              }}
-            >
-              Reset to Default
-            </Button>
-            <Button onClick={() => setShowCustomViewDialog(false)}>
-              Apply Changes
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Lab Order View Dialog */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <TestTube className="w-5 h-5" />
-              Lab Order #{selectedOrder?.id} Details
-            </DialogTitle>
-            <DialogDescription>
-              Complete information for this laboratory order
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedOrder && (
-            <div className="space-y-6">
-              {/* Patient Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Patient Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Patient Name</p>
-                      <p className="text-lg font-semibold">
-                        {selectedOrder.patient?.firstName} {selectedOrder.patient?.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Date of Birth</p>
-                      <p className="text-lg">
-                        {selectedOrder.patient?.dateOfBirth ? 
-                          format(new Date(selectedOrder.patient.dateOfBirth), 'MMM dd, yyyy') : 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Phone</p>
-                      <p className="text-lg">{selectedOrder.patient?.phone || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Gender</p>
-                      <p className="text-lg capitalize">{selectedOrder.patient?.gender || 'N/A'}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Order Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Order Information
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Order ID</p>
-                      <p className="text-lg font-semibold">#{selectedOrder.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Status</p>
-                      <Badge className={
-                        selectedOrder.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        selectedOrder.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                        selectedOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
-                        'bg-gray-100 text-gray-800'
-                      }>
-                        {selectedOrder.status?.charAt(0).toUpperCase() + selectedOrder.status?.slice(1)}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Priority</p>
-                      <Badge variant={
-                        selectedOrder.priority === 'stat' ? 'destructive' :
-                        selectedOrder.priority === 'urgent' ? 'default' :
-                        'secondary'
-                      }>
-                        {selectedOrder.priority?.toUpperCase()}
-                      </Badge>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Ordered By</p>
-                      <p className="text-lg">
-                        {selectedOrder.orderedByUser?.firstName} {selectedOrder.orderedByUser?.lastName}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Created</p>
-                      <p className="text-lg">
-                        {format(new Date(selectedOrder.createdAt), 'MMM dd, yyyy HH:mm')}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Tests</p>
-                      <p className="text-lg font-semibold">{selectedOrder.itemCount || 0}</p>
-                    </div>
-                  </div>
-                  
-                  {selectedOrder.clinicalNotes && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-sm font-medium text-gray-600 mb-1">Clinical Notes</p>
-                      <p className="text-sm text-gray-700">{selectedOrder.clinicalNotes}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Tests Information */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <TestTube className="w-5 h-5" />
-                    Ordered Tests
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
-                    <div className="space-y-3">
-                      {selectedOrder.items.map((item: any, index: number) => (
-                        <div key={item.id || index} className="flex items-center justify-between p-3 border rounded-lg">
-                          <div className="flex-1">
-                            <p className="font-medium">{item.labTest?.name || 'Unknown Test'}</p>
-                            <p className="text-sm text-gray-600">{item.labTest?.category || 'Unknown Category'}</p>
-                            {item.labTest?.description && (
-                              <p className="text-xs text-gray-500 mt-1">{item.labTest.description}</p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <Badge className={
-                              item.status === 'completed' ? 'bg-green-100 text-green-800' :
-                              item.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }>
-                              {item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || 'Pending'}
-                            </Badge>
-                            {item.result && (
-                              <p className="text-sm text-gray-600 mt-1">
-                                Result: {item.result} {item.labTest?.units}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <TestTube className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>No test details available</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Action Buttons */}
-              <div className="flex justify-between pt-4 border-t">
-                <Button 
-                  variant="outline"
-                  onClick={() => setShowViewDialog(false)}
-                >
-                  Close
-                </Button>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={() => handlePrintOrderWithLetterhead(selectedOrder)}
-                  >
-                    <Printer className="w-4 h-4 mr-1" />
-                    Print Order
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      setShowViewDialog(false);
-                      // Could open edit dialog here if needed
-                    }}
-                  >
-                    <Edit className="w-4 h-4 mr-1" />
-                    Edit Order
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
+
