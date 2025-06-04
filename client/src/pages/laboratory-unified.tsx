@@ -167,7 +167,7 @@ export default function LaboratoryUnified() {
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders/enhanced'] });
       toast({ 
         title: "Existing lab results uploaded successfully", 
-        description: `${data.count} results connected to the system` 
+        description: `${data?.count || 0} results connected to the system` 
       });
     },
     onError: (error) => {
@@ -206,18 +206,18 @@ export default function LaboratoryUnified() {
     let orderingOrganization = null;
     
     // Look for the ordering user's organization ID from the order data
-    if (order.orderedByUser?.organizationId) {
-      orderingOrganization = organizations.find(org => org.id === order.orderedByUser.organizationId);
+    if (order.orderedBy) {
+      orderingOrganization = organizations.find(org => org.id === order.organizationId);
     }
     
     // If not found in order data, use current user's organization as fallback
     if (!orderingOrganization && userProfile?.organizationId) {
-      orderingOrganization = organizations.find(org => org.id === userProfile.organizationId);
+      orderingOrganization = Array.isArray(organizations) ? organizations.find((org: any) => org.id === userProfile.organizationId) : null;
     }
     
     // Use the ordering staff member's organization for letterhead branding
     const org = orderingOrganization || {};
-    const orgName = org.name || 'Healthcare Organization';
+    const orgName = (org as any)?.name || 'Healthcare Organization';
     const orgType = org.type || 'clinic';
     const orgEmail = org.email || 'info@healthcare.com';
     const orgPhone = org.phone || '+234-XXX-XXX-XXXX';
@@ -424,7 +424,7 @@ export default function LaboratoryUnified() {
             <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <strong style="font-size: 16px;">Test: ${result.orderItem?.labTest?.name || 'Unknown Test'}</strong><br>
-                <span style="color: #6b7280;">Order #${result.orderItem?.labOrder?.id} | Report Date: ${format(new Date(result.createdAt), 'PPPP')}</span>
+                <span style="color: #6b7280;">Order #${result.orderItem?.labOrder?.id} | Report Date: ${result.createdAt ? format(new Date(result.createdAt), 'PPPP') : 'N/A'}</span>
               </div>
               <div style="text-align: right;">
                 <span class="status-badge status-${result.status}">${result.status.toUpperCase()}</span>

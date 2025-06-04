@@ -3613,7 +3613,24 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(404).json({ message: "Patient not found" });
       }
       
-      const orders = await db.select()
+      const orders = await db.select({
+        id: labOrders.id,
+        patientId: labOrders.patientId,
+        orderedBy: labOrders.orderedBy,
+        status: labOrders.status,
+        priority: labOrders.priority,
+        clinicalNotes: labOrders.clinicalNotes,
+        diagnosis: labOrders.diagnosis,
+        organizationId: labOrders.organizationId,
+        totalCost: labOrders.totalCost,
+        specimenCollectedAt: labOrders.specimenCollectedAt,
+        specimenCollectedBy: labOrders.specimenCollectedBy,
+        reportedAt: labOrders.reportedAt,
+        reviewedBy: labOrders.reviewedBy,
+        reviewedAt: labOrders.reviewedAt,
+        createdAt: labOrders.createdAt,
+        completedAt: labOrders.completedAt
+      })
         .from(labOrders)
         .where(and(
           eq(labOrders.patientId, patientId),
