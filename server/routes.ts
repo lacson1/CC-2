@@ -6747,7 +6747,11 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
 
       if (!fileExists) {
         console.log(`File not found at path: ${filePath}`);
-        return res.status(404).json({ message: "File not found on filesystem" });
+        // Clean up orphaned database record
+        await db.delete(medicalDocuments)
+          .where(eq(medicalDocuments.fileName, fileName));
+        console.log(`Cleaned up orphaned database record for file: ${fileName}`);
+        return res.status(404).json({ message: "File not found - database record cleaned up" });
       }
 
       // Set appropriate headers for text files
