@@ -194,6 +194,15 @@ export default function LaboratoryUnified() {
 
   const generateLabOrderPrintContent = (order: LabOrder) => {
     const patient = patients.find(p => p.id === order.patientId);
+    const org = organizationData || {};
+    const orgName = org.name || 'Healthcare Organization';
+    const orgType = org.type || 'clinic';
+    const orgEmail = org.email || 'info@healthcare.com';
+    const orgPhone = org.phone || '+234-XXX-XXX-XXXX';
+    const orgAddress = org.address || 'Healthcare Address';
+    const orgWebsite = org.website || 'www.healthcare.com';
+    const themeColor = org.themeColor || '#1e40af';
+    
     return `
       <!DOCTYPE html>
       <html>
@@ -201,14 +210,14 @@ export default function LaboratoryUnified() {
           <title>Lab Order #${order.id}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
-            .letterhead { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; margin: -20px -20px 30px -20px; }
+            .letterhead { background: linear-gradient(135deg, ${themeColor} 0%, #3b82f6 100%); color: white; padding: 30px; margin: -20px -20px 30px -20px; }
             .org-name { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
             .org-tagline { font-size: 14px; opacity: 0.9; margin-bottom: 15px; }
             .org-contact { font-size: 12px; opacity: 0.8; display: flex; justify-content: space-between; }
-            .document-title { text-align: center; font-size: 24px; font-weight: bold; color: #1e40af; margin: 30px 0 20px 0; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-            .order-info { background: #f8fafc; border-left: 4px solid #1e40af; padding: 20px; margin-bottom: 25px; }
+            .document-title { text-align: center; font-size: 24px; font-weight: bold; color: ${themeColor}; margin: 30px 0 20px 0; border-bottom: 3px solid ${themeColor}; padding-bottom: 10px; }
+            .order-info { background: #f8fafc; border-left: 4px solid ${themeColor}; padding: 20px; margin-bottom: 25px; }
             .patient-section { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
-            .section-title { font-size: 18px; font-weight: bold; color: #1e40af; margin-bottom: 15px; display: flex; align-items: center; }
+            .section-title { font-size: 18px; font-weight: bold; color: ${themeColor}; margin-bottom: 15px; display: flex; align-items: center; }
             .tests-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
             .test-card { border: 1px solid #e2e8f0; border-radius: 6px; padding: 15px; background: #fafafa; }
             .test-name { font-weight: bold; color: #1f2937; margin-bottom: 5px; }
@@ -230,11 +239,11 @@ export default function LaboratoryUnified() {
         </head>
         <body>
           <div class="letterhead">
-            <div class="org-name">Bluequee Healthcare</div>
-            <div class="org-tagline">Advanced Clinical Laboratory Services</div>
+            <div class="org-name">${orgName}</div>
+            <div class="org-tagline">${orgType.charAt(0).toUpperCase() + orgType.slice(1)} Laboratory Services</div>
             <div class="org-contact">
-              <span>📧 lab@bluequee.health | 📞 +234-800-BLUE-LAB</span>
-              <span>🏥 Lagos, Nigeria | 🌐 www.bluequee.health</span>
+              <span>📧 ${orgEmail} | 📞 ${orgPhone}</span>
+              <span>🏥 ${orgAddress} | 🌐 ${orgWebsite}</span>
             </div>
           </div>
           
@@ -301,10 +310,10 @@ export default function LaboratoryUnified() {
           </div>
           
           <div class="footer">
-            <p><strong>Bluequee Healthcare Laboratory Services</strong></p>
+            <p><strong>${orgName} Laboratory Services</strong></p>
             <p>This document was generated electronically on ${format(new Date(), 'PPPP')} at ${format(new Date(), 'p')}</p>
             <p style="font-size: 10px; margin-top: 10px;">
-              ⚕️ Accredited by Nigerian Medical Laboratory Science Council | ISO 15189:2012 Certified
+              ⚕️ Licensed Healthcare Facility | Professional Laboratory Services
             </p>
           </div>
         </body>
@@ -328,6 +337,15 @@ export default function LaboratoryUnified() {
 
   const generateLabResultPrintContent = (result: any) => {
     const patient = result.orderItem?.labOrder?.patient;
+    const org = organizationData || {};
+    const orgName = org.name || 'Healthcare Organization';
+    const orgType = org.type || 'clinic';
+    const orgEmail = org.email || 'info@healthcare.com';
+    const orgPhone = org.phone || '+234-XXX-XXX-XXXX';
+    const orgAddress = org.address || 'Healthcare Address';
+    const orgWebsite = org.website || 'www.healthcare.com';
+    const themeColor = org.themeColor || '#1e40af';
+    
     return `
       <!DOCTYPE html>
       <html>
@@ -335,15 +353,15 @@ export default function LaboratoryUnified() {
           <title>Lab Result - ${result.orderItem?.labTest?.name}</title>
           <style>
             body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; line-height: 1.6; }
-            .letterhead { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); color: white; padding: 30px; margin: -20px -20px 30px -20px; }
+            .letterhead { background: linear-gradient(135deg, ${themeColor} 0%, #3b82f6 100%); color: white; padding: 30px; margin: -20px -20px 30px -20px; }
             .org-name { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
             .org-tagline { font-size: 14px; opacity: 0.9; margin-bottom: 15px; }
             .org-contact { font-size: 12px; opacity: 0.8; display: flex; justify-content: space-between; }
-            .document-title { text-align: center; font-size: 24px; font-weight: bold; color: #1e40af; margin: 30px 0 20px 0; border-bottom: 3px solid #1e40af; padding-bottom: 10px; }
-            .result-header { background: #f8fafc; border-left: 4px solid #1e40af; padding: 20px; margin-bottom: 25px; }
+            .document-title { text-align: center; font-size: 24px; font-weight: bold; color: ${themeColor}; margin: 30px 0 20px 0; border-bottom: 3px solid ${themeColor}; padding-bottom: 10px; }
+            .result-header { background: #f8fafc; border-left: 4px solid ${themeColor}; padding: 20px; margin-bottom: 25px; }
             .patient-section { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 25px; }
-            .result-main { background: #ffffff; border: 2px solid #1e40af; border-radius: 12px; padding: 30px; margin: 25px 0; text-align: center; }
-            .result-value { font-size: 36px; font-weight: bold; color: #1e40af; margin: 20px 0; }
+            .result-main { background: #ffffff; border: 2px solid ${themeColor}; border-radius: 12px; padding: 30px; margin: 25px 0; text-align: center; }
+            .result-value { font-size: 36px; font-weight: bold; color: ${themeColor}; margin: 20px 0; }
             .result-normal { border-color: #16a34a; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); }
             .result-abnormal { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); }
             .result-critical { border-color: #dc2626; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); animation: pulse 2s infinite; }
@@ -368,11 +386,11 @@ export default function LaboratoryUnified() {
         </head>
         <body>
           <div class="letterhead">
-            <div class="org-name">Bluequee Healthcare</div>
-            <div class="org-tagline">Advanced Clinical Laboratory Services</div>
+            <div class="org-name">${orgName}</div>
+            <div class="org-tagline">${orgType.charAt(0).toUpperCase() + orgType.slice(1)} Laboratory Services</div>
             <div class="org-contact">
-              <span>📧 lab@bluequee.health | 📞 +234-800-BLUE-LAB</span>
-              <span>🏥 Lagos, Nigeria | 🌐 www.bluequee.health</span>
+              <span>📧 ${orgEmail} | 📞 ${orgPhone}</span>
+              <span>🏥 ${orgAddress} | 🌐 ${orgWebsite}</span>
             </div>
           </div>
           
@@ -455,10 +473,10 @@ export default function LaboratoryUnified() {
           </div>
           
           <div class="footer">
-            <p><strong>Bluequee Healthcare Laboratory Services</strong></p>
+            <p><strong>${orgName} Laboratory Services</strong></p>
             <p>This result report was generated electronically on ${format(new Date(), 'PPPP')} at ${format(new Date(), 'p')}</p>
             <p style="font-size: 10px; margin-top: 10px;">
-              ⚕️ Accredited by Nigerian Medical Laboratory Science Council | ISO 15189:2012 Certified<br>
+              ⚕️ Licensed Healthcare Facility | Professional Laboratory Services<br>
               🔒 This report contains confidential medical information. Handle with appropriate care.
             </p>
           </div>
@@ -486,6 +504,15 @@ export default function LaboratoryUnified() {
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/lab-analytics']
+  });
+
+  const { data: userProfile } = useQuery({
+    queryKey: ['/api/profile']
+  });
+
+  const { data: organizationData } = useQuery({
+    queryKey: ['/api/organizations', userProfile?.organizationId],
+    enabled: !!userProfile?.organizationId
   });
 
   // Forms
