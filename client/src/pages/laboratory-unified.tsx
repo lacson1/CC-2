@@ -475,17 +475,40 @@ export default function LaboratoryUnified() {
       console.log('Saving lab result data:', data);
       return apiRequest(`/api/lab-order-items/${data.orderItemId}`, 'PATCH', {
         result: data.value || data.result || '',
-        remarks: data.notes || ''
+        remarks: data.notes || '',
+        status: data.status || 'completed',
+        units: data.units || '',
+        referenceRange: data.referenceRange || ''
       });
     },
-    onSuccess: () => {
+    onSuccess: (response) => {
+      // Show AI analysis if available
+      if (response.aiAnalysis) {
+        const analysis = response.aiAnalysis;
+        toast({
+          title: "Result saved with AI insights",
+          description: `Status: ${analysis.status} | Urgency: ${analysis.urgency}`,
+          duration: 6000
+        });
+        
+        // Log detailed AI analysis for clinical review
+        console.log('🤖 AI Clinical Analysis:', {
+          testName: response.testName,
+          interpretation: analysis.interpretation,
+          recommendations: analysis.recommendations,
+          urgency: analysis.urgency,
+          followUpNeeded: analysis.followUpNeeded
+        });
+      } else {
+        toast({ title: "Result saved successfully" });
+      }
+
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders/enhanced'] });
       queryClient.invalidateQueries({ queryKey: ['/api/lab-results/reviewed'] });
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders-with-items'] });
       setShowResultDialog(false);
       resultForm.reset();
       setSelectedOrderItem(null);
-      toast({ title: "Result saved successfully" });
     },
     onError: (error) => {
       console.error('Save error:', error);

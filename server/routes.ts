@@ -3736,23 +3736,38 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  // Simplified lab order item update endpoint for testing
+  // Enhanced lab order item update endpoint with AI analysis
   app.patch('/api/lab-order-items/:id', async (req, res) => {
     try {
       const itemId = parseInt(req.params.id);
-      const { result, remarks } = req.body;
+      const { result, remarks, status, units, referenceRange } = req.body;
 
-      console.log(`🔬 Updating lab order item ${itemId} with:`, { result, remarks });
+      console.log(`🔬 Updating lab order item ${itemId} with:`, { result, remarks, status });
 
       if (!result || !result.trim()) {
         return res.status(400).json({ message: "Result is required" });
       }
 
+      // Get test details for AI analysis
+      const [orderItem] = await db
+        .select({
+          testName: labTests.name,
+          testCategory: labTests.category,
+          labOrderId: labOrderItems.labOrderId,
+          referenceRange: labTests.referenceRange,
+          units: labTests.units
+        })
+        .from(labOrderItems)
+        .leftJoin(labTests, eq(labOrderItems.labTestId, labTests.id))
+        .where(eq(labOrderItems.id, itemId))
+        .limit(1);
+
+      // Update the lab order item
       const [updatedItem] = await db.update(labOrderItems)
         .set({
           result: result.trim(),
           remarks: remarks?.trim() || null,
-          status: 'completed',
+          status: status || 'completed',
           completedAt: new Date()
         })
         .where(eq(labOrderItems.id, itemId))
@@ -3762,8 +3777,29 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(404).json({ message: "Lab order item not found" });
       }
 
-      console.log(`✅ Lab order item ${itemId} updated successfully:`, updatedItem);
-      res.json(updatedItem);
+      // Try AI analysis if available
+      let aiAnalysis = null;
+      if (process.env.ANTHROPIC_API_KEY && orderItem) {
+        try {
+          const { analyzeLabResult } = await import('./ai-lab-analysis');
+          aiAnalysis = await analyzeLabResult({
+            testName: orderItem.testName || 'Lab Test',
+            result: result.trim(),
+            referenceRange: referenceRange || orderItem.referenceRange || undefined,
+            units: units || orderItem.units || undefined
+          });
+          console.log(`🤖 AI analysis completed for ${orderItem.testName}`);
+        } catch (aiError) {
+          console.log('AI analysis unavailable:', aiError);
+        }
+      }
+
+      console.log(`✅ Lab order item ${itemId} updated successfully`);
+      res.json({ 
+        ...updatedItem, 
+        aiAnalysis: aiAnalysis || null,
+        testName: orderItem?.testName 
+      });
     } catch (error) {
       console.error('❌ Error updating lab order item:', error);
       res.status(500).json({ message: "Failed to update lab order item" });
