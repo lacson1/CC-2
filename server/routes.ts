@@ -2716,7 +2716,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         },
         itemCount: sql<number>`(SELECT COUNT(*) FROM lab_order_items WHERE lab_order_id = ${labOrders.id})`,
         completedItems: sql<number>`(SELECT COUNT(*) FROM lab_order_items WHERE lab_order_id = ${labOrders.id} AND status = 'completed')`,
-        totalCost: sql<string>`(SELECT SUM(CAST(cost AS DECIMAL)) FROM lab_order_items loi JOIN lab_tests lt ON loi.test_id = lt.id WHERE loi.lab_order_id = ${labOrders.id})`
+        totalCost: sql<string>`(SELECT SUM(CAST(cost AS DECIMAL)) FROM lab_order_items loi JOIN lab_tests lt ON loi.lab_test_id = lt.id WHERE loi.lab_order_id = ${labOrders.id})`
       })
       .from(labOrders)
       .leftJoin(patients, eq(labOrders.patientId, patients.id))
