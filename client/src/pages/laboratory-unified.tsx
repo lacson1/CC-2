@@ -1374,46 +1374,77 @@ export default function LaboratoryUnified() {
                         />
                       </div>
                       
-                      <div className="space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            type="button"
-                            variant={selectedCategories.length === 0 ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setSelectedCategories([])}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Filter by Category</Label>
+                          <Select
+                            value={selectedCategories.length === 1 ? selectedCategories[0] : "all"}
+                            onValueChange={(value) => {
+                              if (value === "all") {
+                                setSelectedCategories([]);
+                              } else {
+                                setSelectedCategories([value]);
+                              }
+                            }}
                           >
-                            All Categories
-                          </Button>
-                          {testCategories.slice(0, 8).map((category) => (
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select category..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Categories ({testCategories.length})</SelectItem>
+                              {testCategories.map((category) => {
+                                const categoryTests = labTests.filter(test => test.category === category);
+                                return (
+                                  <SelectItem key={category} value={category}>
+                                    {category} ({categoryTests.length})
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Quick Actions</Label>
+                          <div className="flex gap-2">
                             <Button
-                              key={category}
                               type="button"
-                              variant={selectedCategories.includes(category) ? "default" : "outline"}
+                              variant="outline"
                               size="sm"
-                              onClick={() => toggleCategory(category)}
+                              onClick={() => {
+                                setTestSearchQuery("");
+                                setSelectedCategories([]);
+                              }}
+                              className="flex-1"
                             >
-                              {category}
+                              Clear Filters
                             </Button>
-                          ))}
-                        </div>
-                        {testCategories.length > 8 && (
-                          <div className="flex flex-wrap gap-2">
-                            {testCategories.slice(8).map((category) => (
-                              <Button
-                                key={category}
-                                type="button"
-                                variant={selectedCategories.includes(category) ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => toggleCategory(category)}
-                              >
-                                {category}
-                              </Button>
-                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const allTests = Object.values(groupedTests).flat();
+                                const unselectedTests = allTests.filter(test => 
+                                  !field.value.some(selected => selected.id === test.id)
+                                );
+                                if (unselectedTests.length > 0) {
+                                  field.onChange([...field.value, ...unselectedTests]);
+                                }
+                              }}
+                              className="flex-1"
+                            >
+                              Select All Visible
+                            </Button>
                           </div>
-                        )}
-                        <div className="text-xs text-gray-500">
-                          {testCategories.length} categories available • {labTests.length} total tests
                         </div>
+                      </div>
+                      
+                      <div className="text-xs text-gray-500 text-center">
+                        {selectedCategories.length === 0 
+                          ? `Showing all ${testCategories.length} categories • ${labTests.length} total tests`
+                          : `Showing ${selectedCategories[0]} category • ${Object.values(groupedTests).flat().length} tests`
+                        }
                       </div>
                     </div>
 
