@@ -6762,6 +6762,10 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       }
       res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
       
+      // Add headers to allow iframe embedding
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+      
       console.log(`Streaming file: ${fileName}`);
       const fileStream = fs.default.createReadStream(filePath);
       fileStream.pipe(res);

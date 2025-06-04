@@ -428,9 +428,10 @@ export default function DocumentsPage() {
             {previewDocument.mimeType === 'application/pdf' ? (
               <div className="w-full h-96">
                 <iframe
-                  src={`/api/files/medical/${previewDocument.fileName}`}
+                  src={`/api/files/medical/${previewDocument.fileName}#toolbar=1&navpanes=1&scrollbar=1`}
                   className="w-full h-full border rounded"
                   title={previewDocument.originalName}
+                  style={{ minHeight: '500px' }}
                 />
               </div>
             ) : previewDocument.mimeType.startsWith('image/') ? (
