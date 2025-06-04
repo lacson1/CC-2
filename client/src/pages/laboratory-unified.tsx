@@ -247,7 +247,7 @@ export default function LaboratoryUnified() {
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesPatient = !selectedPatient || order.patientId === selectedPatient;
     const matchesCategory = categoryFilter === "all" || 
-      order.items.some(item => item.labTest.category === categoryFilter);
+      (order.items && order.items.some(item => item.labTest?.category === categoryFilter));
     
     return matchesSearch && matchesStatus && matchesPatient && matchesCategory;
   });
@@ -416,62 +416,153 @@ export default function LaboratoryUnified() {
         </div>
       )}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search patients or tests..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+      {/* Enhanced Filters */}
+      <Card className="border-l-4 border-l-blue-500">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-blue-600" />
+              <CardTitle className="text-lg">Laboratory Filters</CardTitle>
             </div>
-            
-            <Select value={selectedPatient?.toString() || "all"} onValueChange={(value) => setSelectedPatient(value === "all" ? null : parseInt(value))}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by patient" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Patients</SelectItem>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id.toString()}>
-                    {patient.firstName} {patient.lastName}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedPatient(null);
+                setStatusFilter('all');
+                setCategoryFilter('all');
+              }}
+              className="text-gray-600 hover:text-gray-800"
+            >
+              Clear All
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search Row */}
+          <div className="relative">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search patients, tests, or order numbers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+            />
+          </div>
+          
+          {/* Filter Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">Patient</Label>
+              <Select value={selectedPatient?.toString() || "all"} onValueChange={(value) => setSelectedPatient(value === "all" ? null : parseInt(value))}>
+                <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <SelectValue placeholder="All Patients" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-gray-500" />
+                      All Patients
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-xs font-medium text-blue-600">
+                            {patient.firstName.charAt(0)}{patient.lastName.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium">{patient.firstName} {patient.lastName}</div>
+                          <div className="text-xs text-gray-500">{patient.phone}</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Medical Specialty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Specialties</SelectItem>
-                {testCategories.sort().map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-gray-500" />
+                    <SelectValue placeholder="All Status" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Activity className="w-4 h-4 text-gray-500" />
+                      All Status
+                    </div>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectItem value="pending">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-yellow-500" />
+                      Pending
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="processing">
+                    <div className="flex items-center gap-2">
+                      <TestTube className="w-4 h-4 text-blue-500" />
+                      Processing
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      Completed
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cancelled">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      Cancelled
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">Medical Specialty</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-11 border-gray-300 focus:border-blue-500">
+                  <div className="flex items-center gap-2">
+                    <Microscope className="w-4 h-4 text-gray-500" />
+                    <SelectValue placeholder="All Specialties" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <SelectItem value="all">
+                    <div className="flex items-center gap-2">
+                      <Microscope className="w-4 h-4 text-gray-500" />
+                      All Specialties
+                    </div>
+                  </SelectItem>
+                  {testCategories.sort().map((category) => (
+                    <SelectItem key={category} value={category}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-purple-100 rounded flex items-center justify-center">
+                          <span className="text-xs font-bold text-purple-600">
+                            {category.charAt(0)}
+                          </span>
+                        </div>
+                        <span className="font-medium">{category}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
