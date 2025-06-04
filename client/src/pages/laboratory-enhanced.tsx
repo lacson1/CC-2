@@ -239,6 +239,19 @@ export default function LaboratoryEnhanced() {
     return matchesStatus && matchesPriority && matchesSearch;
   });
 
+  // Get unique categories for filtering
+  const categories = ["all", ...Array.from(new Set(labTests.map((test: LabTest) => test.category)))];
+
+  // Filter tests by category and search
+  const filteredTests = labTests.filter((test: LabTest) => {
+    const matchesCategory = selectedCategory === "all" || test.category === selectedCategory;
+    const matchesSearch = searchTerm === "" || 
+      test.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      test.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesCategory && matchesSearch && test.isActive;
+  });
+
   // Handle order creation
   const onCreateOrder = (data: z.infer<typeof labOrderSchema>) => {
     createOrderMutation.mutate(data);
@@ -457,10 +470,47 @@ export default function LaboratoryEnhanced() {
 
                     {/* Test Selection */}
                     <div>
-                      <Label className="text-base font-medium">Select Tests</Label>
-                      <div className="mt-2 max-h-60 overflow-y-auto border rounded-md p-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <Label className="text-base font-medium">Select Tests</Label>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTests(filteredTests)}
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedTests([])}
+                          >
+                            Clear All
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Category Filter */}
+                      <div className="mb-3">
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                          <SelectTrigger className="w-48">
+                            <SelectValue placeholder="Filter by category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category} value={category}>
+                                {category === "all" ? "All Categories" : category}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="max-h-60 overflow-y-auto border rounded-md p-4">
                         <div className="grid grid-cols-2 gap-2">
-                          {labTests.map((test: LabTest) => (
+                          {filteredTests.map((test: LabTest) => (
                             <div key={test.id} className="flex items-center space-x-2">
                               <Checkbox
                                 checked={selectedTests.some(t => t.id === test.id)}
@@ -473,12 +523,26 @@ export default function LaboratoryEnhanced() {
                             </div>
                           ))}
                         </div>
+                        {filteredTests.length === 0 && (
+                          <p className="text-center text-gray-500 py-4">No tests found for selected category</p>
+                        )}
                       </div>
+                      
                       {selectedTests.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-600">
-                            Selected: {selectedTests.map(t => t.name).join(", ")}
+                        <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-sm font-medium text-blue-800 mb-2">
+                            Selected Tests ({selectedTests.length}):
                           </p>
+                          <div className="grid grid-cols-2 gap-1 text-xs text-blue-600">
+                            {selectedTests.map(t => (
+                              <span key={t.id}>• {t.name}</span>
+                            ))}
+                          </div>
+                          {selectedTests.some(t => t.cost) && (
+                            <p className="text-sm font-medium text-blue-800 mt-2">
+                              Total Cost: ${selectedTests.reduce((sum, t) => sum + (parseFloat(t.cost || '0')), 0).toFixed(2)}
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
@@ -520,7 +584,8 @@ export default function LaboratoryEnhanced() {
                         type="submit" 
                         disabled={createOrderMutation.isPending || selectedTests.length === 0}
                         onClick={() => {
-                          orderForm.setValue("tests", selectedTests.map(t => ({ id: t.id, name: t.name })));
+                          orderForm.setValue("tests", selectedTests.map(t => ({ id: t.id, name: t.name, category: t.category })));
+                          orderForm.setValue("category", selectedCategory === "all" ? "" : selectedCategory);
                         }}
                       >
                         {createOrderMutation.isPending ? "Creating..." : "Create Order"}
