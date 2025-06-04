@@ -42,7 +42,9 @@ import {
   MoreVertical,
   ArrowUpDown,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -137,6 +139,9 @@ export default function LaboratoryUnified() {
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [selectedOrderItem, setSelectedOrderItem] = useState<LabOrderItem | null>(null);
   const [showCustomViewDialog, setShowCustomViewDialog] = useState(false);
+  const [testSearchQuery, setTestSearchQuery] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
   const [customViewSettings, setCustomViewSettings] = useState({
     showPatientInfo: true,
     showTestDetails: true,
@@ -605,6 +610,44 @@ export default function LaboratoryUnified() {
     ...labTests.map(test => test.category).filter(Boolean),
     ...medicalCategories
   ]));
+
+  // Filter tests based on search and selected categories
+  const filteredTests = labTests.filter(test => {
+    const matchesSearch = !testSearchQuery || 
+      test.name.toLowerCase().includes(testSearchQuery.toLowerCase()) ||
+      test.category.toLowerCase().includes(testSearchQuery.toLowerCase());
+    
+    const matchesCategory = selectedCategories.length === 0 || 
+      selectedCategories.includes(test.category);
+    
+    return matchesSearch && matchesCategory;
+  });
+
+  // Group filtered tests by category
+  const groupedTests = testCategories.reduce((acc, category) => {
+    const testsInCategory = filteredTests.filter(test => test.category === category);
+    if (testsInCategory.length > 0) {
+      acc[category] = testsInCategory;
+    }
+    return acc;
+  }, {} as Record<string, LabTest[]>);
+
+  // Toggle category selection
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
+
+  // Toggle category collapse
+  const toggleCategoryCollapse = (category: string) => {
+    setCollapsedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -1314,37 +1357,168 @@ export default function LaboratoryUnified() {
                 name="tests"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lab Tests</FormLabel>
-                    <div className="max-h-64 overflow-y-auto border rounded-lg p-4 space-y-2">
-                      {testCategories.map((category) => (
+                    <FormLabel className="flex items-center gap-2">
+                      <TestTube className="w-4 h-4" />
+                      Lab Tests
+                    </FormLabel>
+                    
+                    {/* Search and Category Filter Controls */}
+                    <div className="space-y-3 mb-4">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search tests by name or category..."
+                          value={testSearchQuery}
+                          onChange={(e) => setTestSearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant={selectedCategories.length === 0 ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setSelectedCategories([])}
+                        >
+                          All Categories
+                        </Button>
+                        {testCategories.slice(0, 6).map((category) => (
+                          <Button
+                            key={category}
+                            type="button"
+                            variant={selectedCategories.includes(category) ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => toggleCategory(category)}
+                          >
+                            {category}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Test Selection with Collapsible Categories */}
+                    <div className="max-h-80 overflow-y-auto border rounded-lg p-4 space-y-3">
+                      {Object.entries(groupedTests).map(([category, tests]) => (
                         <div key={category} className="space-y-2">
-                          <h4 className="font-medium text-gray-900 border-b pb-1">{category}</h4>
-                          {labTests
-                            .filter(test => test.category === category)
-                            .map((test) => (
-                              <div key={test.id} className="flex items-center space-x-2">
-                                <Checkbox
-                                  id={`test-${test.id}`}
-                                  checked={field.value.some(t => t.id === test.id)}
-                                  onCheckedChange={(checked) => {
-                                    if (checked) {
-                                      field.onChange([...field.value, test]);
-                                    } else {
-                                      field.onChange(field.value.filter(t => t.id !== test.id));
-                                    }
-                                  }}
-                                />
-                                <label
-                                  htmlFor={`test-${test.id}`}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                  {test.name}
-                                </label>
-                              </div>
-                            ))}
+                          <div 
+                            className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded"
+                            onClick={() => toggleCategoryCollapse(category)}
+                          >
+                            <div className="flex items-center gap-2">
+                              {collapsedCategories[category] ? (
+                                <ChevronRight className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )}
+                              <h4 className="font-medium text-gray-900">{category}</h4>
+                              <Badge variant="secondary" className="text-xs">
+                                {tests.length}
+                              </Badge>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const categoryTests = tests.filter(test => 
+                                  !field.value.some(selected => selected.id === test.id)
+                                );
+                                if (categoryTests.length > 0) {
+                                  field.onChange([...field.value, ...categoryTests]);
+                                }
+                              }}
+                            >
+                              Select All
+                            </Button>
+                          </div>
+                          
+                          {!collapsedCategories[category] && (
+                            <div className="pl-6 space-y-2">
+                              {tests.map((test) => (
+                                <div key={test.id} className="flex items-center space-x-2 py-1">
+                                  <Checkbox
+                                    id={`test-${test.id}`}
+                                    checked={field.value.some(t => t.id === test.id)}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        field.onChange([...field.value, test]);
+                                      } else {
+                                        field.onChange(field.value.filter(t => t.id !== test.id));
+                                      }
+                                    }}
+                                  />
+                                  <label
+                                    htmlFor={`test-${test.id}`}
+                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 cursor-pointer"
+                                  >
+                                    {test.name}
+                                  </label>
+                                  {test.description && (
+                                    <span className="text-xs text-gray-500 truncate max-w-32">
+                                      {test.description}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
+                      
+                      {Object.keys(groupedTests).length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <TestTube className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                          <p>No tests found matching your criteria</p>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              setTestSearchQuery("");
+                              setSelectedCategories([]);
+                            }}
+                          >
+                            Clear Filters
+                          </Button>
+                        </div>
+                      )}
                     </div>
+                    
+                    {/* Selected Tests Summary */}
+                    {field.value.length > 0 && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-blue-900">
+                            {field.value.length} test{field.value.length === 1 ? '' : 's'} selected
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => field.onChange([])}
+                            className="text-blue-700 hover:text-blue-900"
+                          >
+                            Clear All
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {field.value.slice(0, 3).map((test) => (
+                            <Badge key={test.id} variant="outline" className="text-xs">
+                              {test.name}
+                            </Badge>
+                          ))}
+                          {field.value.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{field.value.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     <FormMessage />
                   </FormItem>
                 )}
