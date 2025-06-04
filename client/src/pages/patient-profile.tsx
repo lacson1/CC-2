@@ -355,14 +355,8 @@ function PendingLabOrders({ labOrders, labOrdersLoading, onProcessResult }: {
   );
 }
 
-// Lab Result Input Modal
-const resultSchema = z.object({
-  result: z.string().min(1, "Result value is required"),
-  status: z.enum(["normal", "abnormal", "critical"]),
-  remarks: z.string().optional(),
-});
-
-function LabResultModal({ 
+// Lab Result Input Modal for adding FBC and other test results
+function LabResultInputModal({ 
   isOpen, 
   onClose, 
   orderItem, 
@@ -373,99 +367,148 @@ function LabResultModal({
   orderItem: any;
   onSubmit: (data: any) => void;
 }) {
-  const form = useForm({
-    resolver: zodResolver(resultSchema),
-    defaultValues: {
-      result: "",
-      status: "normal" as const,
-      remarks: "",
-    },
-  });
+  const [result, setResult] = useState("");
+  const [status, setStatus] = useState("normal");
+  const [remarks, setRemarks] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (data: any) => {
-    onSubmit({
-      itemId: orderItem?.id,
-      ...data,
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!result.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit({
+        itemId: orderItem?.id,
+        result: result.trim(),
+        status,
+        remarks: remarks.trim(),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setResult("");
+    setStatus("normal");
+    setRemarks("");
   };
 
   if (!orderItem) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        resetForm();
+        onClose();
+      }
+    }}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Lab Result</DialogTitle>
+          <DialogTitle className="flex items-center">
+            <TestTube className="mr-2 h-5 w-5 text-blue-600" />
+            Add Lab Result - {orderItem.testName}
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="mb-4 p-3 bg-slate-50 rounded-lg">
-          <p className="font-medium text-slate-800">{orderItem.testName}</p>
-          <p className="text-sm text-slate-600">Category: {orderItem.category}</p>
+        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <h4 className="font-medium text-blue-900">{orderItem.testName}</h4>
+          <p className="text-sm text-blue-700">Category: {orderItem.category}</p>
+          <p className="text-sm text-blue-700">Test ID: {orderItem.labTestId}</p>
         </div>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="result"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Result Value</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Enter result value" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="result" className="text-sm font-medium">
+              Test Result Value *
+            </Label>
+            <Input
+              id="result"
+              value={result}
+              onChange={(e) => setResult(e.target.value)}
+              placeholder="Enter the FBC result values"
+              className="mt-1"
+              required
             />
+            <p className="text-xs text-slate-500 mt-1">
+              Example: "WBC: 7.2, RBC: 4.5, Hgb: 14.2, Hct: 42.1, PLT: 250"
+            </p>
+          </div>
 
-            <FormField
-              control={form.control}
-              name="status"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="normal">Normal</SelectItem>
-                        <SelectItem value="abnormal">Abnormal</SelectItem>
-                        <SelectItem value="critical">Critical</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+          <div>
+            <Label htmlFor="status" className="text-sm font-medium">
+              Result Status *
+            </Label>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="normal">
+                  <span className="flex items-center">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Normal - Within reference range
+                  </span>
+                </SelectItem>
+                <SelectItem value="abnormal">
+                  <span className="flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4 text-yellow-600" />
+                    Abnormal - Outside reference range
+                  </span>
+                </SelectItem>
+                <SelectItem value="critical">
+                  <span className="flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4 text-red-600" />
+                    Critical - Requires immediate attention
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="remarks" className="text-sm font-medium">
+              Clinical Remarks (Optional)
+            </Label>
+            <Textarea
+              id="remarks"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Add any clinical observations or notes"
+              className="mt-1"
+              rows={3}
             />
+          </div>
 
-            <FormField
-              control={form.control}
-              name="remarks"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Clinical Remarks (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} placeholder="Add any clinical notes" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="bg-slate-50 p-3 rounded-lg">
+            <p className="text-sm text-slate-600">
+              <strong>Next Step:</strong> After saving, this result will move to "Ready for Review" 
+              status where a doctor, nurse, or pharmacist can review and approve it.
+            </p>
+          </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                Save Result
-              </Button>
-            </div>
-          </form>
-        </Form>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                resetForm();
+                onClose();
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={isSubmitting || !result.trim()}
+            >
+              {isSubmitting ? "Saving..." : "Save Result"}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -1011,7 +1054,7 @@ function LabResultModal({
         patientId={patientId}
       />
 
-      <LabResultModal
+      <LabResultInputModal
         isOpen={showResultModal}
         onClose={() => {
           setShowResultModal(false);
