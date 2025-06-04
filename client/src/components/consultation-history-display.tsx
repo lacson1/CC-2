@@ -211,7 +211,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
             <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">Role:</label>
-                <Select value={filters.role} onValueChange={(value) => setFilters(prev => ({ ...prev, role: value }))}>
+                <Select value={selectedRole} onValueChange={setSelectedRole}>
                   <SelectTrigger className="w-32 h-8">
                     <SelectValue />
                   </SelectTrigger>
@@ -227,7 +227,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
 
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">Period:</label>
-                <Select value={filters.dateRange} onValueChange={(value) => setFilters(prev => ({ ...prev, dateRange: value }))}>
+                <Select value={dateRange} onValueChange={setDateRange}>
                   <SelectTrigger className="w-28 h-8">
                     <SelectValue />
                   </SelectTrigger>
@@ -242,7 +242,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
 
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">Type:</label>
-                <Select value={filters.formType} onValueChange={(value) => setFilters(prev => ({ ...prev, formType: value }))}>
+                <Select value={selectedFormType} onValueChange={setSelectedFormType}>
                   <SelectTrigger className="w-40 h-8">
                     <SelectValue />
                   </SelectTrigger>
@@ -258,11 +258,15 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                 </Select>
               </div>
 
-              {(filters.role !== 'all' || filters.dateRange !== 'all' || filters.formType !== 'all') && (
+              {(selectedRole !== 'all' || dateRange !== 'all' || selectedFormType !== 'all') && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setFilters({ role: 'all', dateRange: 'all', formType: 'all' })}
+                  onClick={() => {
+                    setSelectedRole('all');
+                    setDateRange('all');
+                    setSelectedFormType('all');
+                  }}
                   className="h-8 px-2 text-gray-500 hover:text-gray-700"
                 >
                   <X className="h-3 w-3 mr-1" />
