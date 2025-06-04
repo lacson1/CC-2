@@ -44,11 +44,13 @@ const labOrderSchema = z.object({
   patientId: z.string().min(1, "Patient is required"),
   tests: z.array(z.object({
     id: z.number(),
-    name: z.string()
+    name: z.string(),
+    category: z.string()
   })).min(1, "At least one test is required"),
   clinicalNotes: z.string().optional(),
   diagnosis: z.string().optional(),
-  priority: z.enum(["routine", "urgent", "stat"]).default("routine")
+  priority: z.enum(["routine", "urgent", "stat"]).default("routine"),
+  category: z.string().optional()
 });
 
 const labTestSchema = z.object({
@@ -130,6 +132,7 @@ export default function LaboratoryEnhanced() {
   const [isCreateOrderOpen, setIsCreateOrderOpen] = useState(false);
   const [isCreateTestOpen, setIsCreateTestOpen] = useState(false);
   const [selectedTests, setSelectedTests] = useState<LabTest[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const queryClient = useQueryClient();
 
