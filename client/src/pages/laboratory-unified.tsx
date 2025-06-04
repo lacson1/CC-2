@@ -1149,7 +1149,7 @@ export default function LaboratoryUnified() {
                               {result.patientName || 'Unknown Patient'}
                             </h3>
                             <p className="text-sm text-gray-600">
-                              {result.orderItem?.labTest?.name || 'Unknown Test'} • Order #{result.orderItem?.labOrder?.id || 'N/A'}
+                              {result.testName || 'Unknown Test'} • {result.category || 'General'}
                             </p>
                           </div>
                         </div>
