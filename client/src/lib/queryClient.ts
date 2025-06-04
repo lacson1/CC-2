@@ -61,7 +61,8 @@ export const getQueryFn: <T>(options: {
       throw new Error('Fetch API is not available');
     }
 
-    const res = await fetchFn(queryKey[0] as string, {
+    const url = queryKey[0] as string;
+    const res = await fetchFn(url, {
       method: "GET",
       headers,
       credentials: "include",
