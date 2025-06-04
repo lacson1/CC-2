@@ -2998,6 +2998,244 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
+  // User Management API Endpoints
+  app.get('/api/users/management', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(403).json({ message: "Organization access required" });
+      }
+
+      const managementUsers = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          title: users.title,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
+          phone: users.phone,
+          role: users.role,
+          roleId: users.roleId,
+          organizationId: users.organizationId,
+          createdAt: users.createdAt,
+          roleName: roles.name,
+          organizationName: organizations.name,
+          isActive: sql<boolean>`COALESCE(users.is_active, true)`
+        })
+        .from(users)
+        .leftJoin(roles, eq(users.roleId, roles.id))
+        .leftJoin(organizations, eq(users.organizationId, organizations.id))
+        .where(eq(users.organizationId, userOrgId))
+        .orderBy(users.createdAt);
+
+      res.json(managementUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/users', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(403).json({ message: "Organization access required" });
+      }
+
+      const { username, password, roleId, title, firstName, lastName, email, phone, organizationId } = req.body;
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          username,
+          password: hashedPassword,
+          roleId: parseInt(roleId),
+          role: "user", // Default role for backward compatibility
+          title,
+          firstName,
+          lastName,
+          email,
+          phone,
+          organizationId: parseInt(organizationId),
+          createdAt: new Date()
+        })
+        .returning();
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.patch('/api/users/:id', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(403).json({ message: "Organization access required" });
+      }
+
+      const updateData = req.body;
+      delete updateData.password; // Don't allow password updates through this endpoint
+
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          ...updateData,
+          updatedAt: new Date()
+        })
+        .where(and(eq(users.id, userId), eq(users.organizationId, userOrgId)))
+        .returning();
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  // Roles Management API
+  app.get('/api/roles', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const rolesWithPermissions = await db
+        .select({
+          id: roles.id,
+          name: roles.name,
+          description: roles.description,
+          createdAt: roles.createdAt,
+          userCount: sql<number>`(SELECT COUNT(*) FROM ${users} WHERE role_id = ${roles.id})`
+        })
+        .from(roles)
+        .orderBy(roles.name);
+
+      // Get permissions for each role
+      for (const role of rolesWithPermissions) {
+        const rolePermissionsList = await db
+          .select({
+            id: permissions.id,
+            name: permissions.name,
+            description: permissions.description
+          })
+          .from(rolePermissions)
+          .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+          .where(eq(rolePermissions.roleId, role.id));
+
+        (role as any).permissions = rolePermissionsList;
+      }
+
+      res.json(rolesWithPermissions);
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+      res.status(500).json({ message: "Failed to fetch roles" });
+    }
+  });
+
+  app.post('/api/roles', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { name, description, permissions: selectedPermissions } = req.body;
+
+      const [newRole] = await db
+        .insert(roles)
+        .values({
+          name,
+          description,
+          createdAt: new Date()
+        })
+        .returning();
+
+      // Add role permissions
+      if (selectedPermissions && selectedPermissions.length > 0) {
+        const rolePermissionValues = selectedPermissions.map((permissionId: string) => ({
+          roleId: newRole.id,
+          permissionId: parseInt(permissionId)
+        }));
+
+        await db.insert(rolePermissions).values(rolePermissionValues);
+      }
+
+      res.status(201).json(newRole);
+    } catch (error) {
+      console.error("Error creating role:", error);
+      res.status(500).json({ message: "Failed to create role" });
+    }
+  });
+
+  // Permissions API
+  app.get('/api/permissions', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const allPermissions = await db
+        .select()
+        .from(permissions)
+        .orderBy(permissions.name);
+
+      res.json(allPermissions);
+    } catch (error) {
+      console.error("Error fetching permissions:", error);
+      res.status(500).json({ message: "Failed to fetch permissions" });
+    }
+  });
+
+  // Organizations Management API
+  app.get('/api/organizations', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const orgsWithUserCount = await db
+        .select({
+          id: organizations.id,
+          name: organizations.name,
+          type: organizations.type,
+          address: organizations.address,
+          phone: organizations.phone,
+          email: organizations.email,
+          website: organizations.website,
+          isActive: organizations.isActive,
+          createdAt: organizations.createdAt,
+          userCount: sql<number>`(SELECT COUNT(*) FROM ${users} WHERE organization_id = ${organizations.id})`
+        })
+        .from(organizations)
+        .orderBy(organizations.name);
+
+      res.json(orgsWithUserCount);
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      res.status(500).json({ message: "Failed to fetch organizations" });
+    }
+  });
+
+  app.post('/api/organizations', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { name, type, address, phone, email, website } = req.body;
+
+      const [newOrg] = await db
+        .insert(organizations)
+        .values({
+          name,
+          type,
+          address,
+          phone,
+          email,
+          website,
+          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      res.status(201).json(newOrg);
+    } catch (error) {
+      console.error("Error creating organization:", error);
+      res.status(500).json({ message: "Failed to create organization" });
+    }
+  });
+
   // Lab Tests endpoints
   app.get('/api/lab-tests', authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {

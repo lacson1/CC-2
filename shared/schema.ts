@@ -53,7 +53,9 @@ export const users = pgTable('users', {
   phone: varchar('phone', { length: 20 }),
   photoUrl: varchar('photo_url', { length: 255 }),
   organizationId: integer('organization_id').references(() => organizations.id),
-  createdAt: timestamp('created_at').defaultNow()
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
 export const patients = pgTable("patients", {
