@@ -3497,6 +3497,70 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     try {
       const userOrgId = req.user?.organizationId;
       if (!userOrgId) {
+
+
+  // Patient statistics endpoint
+  app.get("/api/patients/statistics", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userOrgId = req.user?.organizationId;
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+      
+      const patientsWithDetails = await db.select({
+        id: patients.id,
+        title: patients.title,
+        firstName: patients.firstName,
+        lastName: patients.lastName,
+        phone: patients.phone,
+        email: patients.email,
+        dateOfBirth: patients.dateOfBirth,
+        gender: patients.gender,
+        organizationId: patients.organizationId,
+        createdAt: patients.createdAt
+      })
+      .from(patients)
+      .where(eq(patients.organizationId, userOrgId))
+      .orderBy(desc(patients.createdAt));
+      
+      const totalPatients = patientsWithDetails.length;
+      const patientsThisMonth = patientsWithDetails.filter(p => {
+        const createdDate = new Date(p.createdAt);
+        const currentMonth = new Date();
+        return createdDate.getMonth() === currentMonth.getMonth() && 
+               createdDate.getFullYear() === currentMonth.getFullYear();
+      }).length;
+      
+      const patientsThisWeek = patientsWithDetails.filter(p => {
+        const createdDate = new Date(p.createdAt);
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        return createdDate >= oneWeekAgo;
+      }).length;
+
+      res.json({
+        totalPatients,
+        patientsThisMonth,
+        patientsThisWeek,
+        patients: patientsWithDetails.map(p => ({
+          id: p.id,
+          name: `${p.title || ''} ${p.firstName || ''} ${p.lastName || ''}`.trim(),
+          phone: p.phone,
+          email: p.email,
+          gender: p.gender,
+          dateOfBirth: p.dateOfBirth,
+          createdAt: p.createdAt,
+          createdDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Unknown',
+          createdTime: p.createdAt ? new Date(p.createdAt).toLocaleString() : 'Unknown'
+        }))
+      });
+    } catch (error) {
+      console.error('Error fetching patient statistics:', error);
+      res.status(500).json({ message: "Failed to fetch patient statistics" });
+    }
+  });
+
+
         return res.status(400).json({ message: "Organization context required" });
       }
       
