@@ -206,8 +206,8 @@ export default function LaboratoryUnified() {
     let orderingOrganization = null;
     
     // Look for the ordering user's organization ID from the order data
-    if (order.orderedBy) {
-      orderingOrganization = organizations.find(org => org.id === order.organizationId);
+    if (order.orderedBy && Array.isArray(organizations)) {
+      orderingOrganization = organizations.find((org: any) => org.id === (order as any).organizationId);
     }
     
     // If not found in order data, use current user's organization as fallback
