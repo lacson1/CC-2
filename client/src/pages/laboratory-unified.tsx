@@ -291,13 +291,13 @@ export default function LaboratoryUnified() {
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
                 <p><strong>Full Name:</strong> ${patient?.title} ${patient?.firstName} ${patient?.lastName}</p>
-                <p><strong>Phone Number:</strong> ${patient?.phone || 'Not provided'}</p>
-                <p><strong>Email:</strong> ${patient?.email || 'Not provided'}</p>
+                <p><strong>Phone Number:</strong> ${patient?.phone || ''}</p>
+                <p><strong>Email:</strong> ${patient?.email || ''}</p>
               </div>
               <div>
-                <p><strong>Date of Birth:</strong> ${patient?.dateOfBirth ? format(new Date(patient.dateOfBirth), 'PP') : 'Not provided'}</p>
-                <p><strong>Gender:</strong> ${patient?.gender || 'Not specified'}</p>
-                <p><strong>Address:</strong> ${patient?.address || 'Not provided'}</p>
+                <p><strong>Date of Birth:</strong> ${patient?.dateOfBirth ? format(new Date(patient.dateOfBirth), 'PP') : ''}</p>
+                <p><strong>Gender:</strong> ${patient?.gender || ''}</p>
+                <p><strong>Address:</strong> ${patient?.phone || ''}</p>
               </div>
             </div>
           </div>
@@ -316,15 +316,15 @@ export default function LaboratoryUnified() {
             
             <div style="background: #f1f5f9; padding: 15px; border-radius: 6px; margin-top: 15px;">
               <strong>Total Tests Ordered:</strong> ${order.items?.length || 0}<br>
-              <strong>Priority Level:</strong> ${order.items?.[0]?.priority?.toUpperCase() || 'ROUTINE'}<br>
-              ${order.clinicalNotes ? `<strong>Clinical Notes:</strong> ${order.clinicalNotes}` : ''}
+              <strong>Priority Level:</strong> ${order.items?.[0]?.priority?.toUpperCase() || ''}<br>
+              ${(order as any).clinicalNotes ? `<strong>Clinical Notes:</strong> ${(order as any).clinicalNotes}` : ''}
             </div>
           </div>
           
           <div class="signatures">
             <div class="signature-box">
               <div class="signature-line">Ordering Physician</div>
-              <small>Dr. ${order.orderedByUser?.username || 'Unknown'}</small>
+              <small>Dr. ${order.orderedBy || ''}</small>
             </div>
             <div class="signature-box">
               <div class="signature-line">Laboratory Supervisor</div>
@@ -361,13 +361,13 @@ export default function LaboratoryUnified() {
   const generateLabResultPrintContent = (result: any) => {
     const patient = result.orderItem?.labOrder?.patient;
     // Use the issuing staff member's organization for letterhead branding
-    const org = organizationData || userProfile?.organization || {};
-    const orgName = org.name || 'Healthcare Organization';
-    const orgType = org.type || 'clinic';
-    const orgEmail = org.email || 'info@healthcare.com';
-    const orgPhone = org.phone || '+234-XXX-XXX-XXXX';
-    const orgAddress = org.address || 'Healthcare Address';
-    const orgWebsite = org.website || 'www.healthcare.com';
+    const org = organizationData || (userProfile as any)?.organization || {};
+    const orgName = (org as any).name || '';
+    const orgType = (org as any).type || '';
+    const orgEmail = (org as any).email || '';
+    const orgPhone = (org as any).phone || '';
+    const orgAddress = (org as any).address || '';
+    const orgWebsite = (org as any).website || '';
     const themeColor = org.themeColor || '#1e40af';
     
     return `
