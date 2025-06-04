@@ -2688,6 +2688,142 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
+  // Enhanced Laboratory Management API Endpoints
+  app.get('/api/lab-orders/enhanced', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userOrgId = req.user?.organizationId;
+      const { status, priority } = req.query;
+
+      let query = db.select({
+        id: labOrders.id,
+        patientId: labOrders.patientId,
+        status: labOrders.status,
+        priority: labOrders.priority,
+        createdAt: labOrders.createdAt,
+        clinicalNotes: labOrders.clinicalNotes,
+        diagnosis: labOrders.diagnosis,
+        patient: {
+          firstName: patients.firstName,
+          lastName: patients.lastName,
+          dateOfBirth: patients.dateOfBirth,
+          phone: patients.phone
+        },
+        orderedByUser: {
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role
+        },
+        itemCount: sql<number>`(SELECT COUNT(*) FROM lab_order_items WHERE lab_order_id = ${labOrders.id})`,
+        completedItems: sql<number>`(SELECT COUNT(*) FROM lab_order_items WHERE lab_order_id = ${labOrders.id} AND status = 'completed')`,
+        totalCost: sql<string>`(SELECT SUM(CAST(cost AS DECIMAL)) FROM lab_order_items loi JOIN lab_tests lt ON loi.test_id = lt.id WHERE loi.lab_order_id = ${labOrders.id})`
+      })
+      .from(labOrders)
+      .leftJoin(patients, eq(labOrders.patientId, patients.id))
+      .leftJoin(users, eq(labOrders.orderedBy, users.id))
+      .where(userOrgId ? eq(labOrders.organizationId, userOrgId) : undefined);
+
+      if (status && status !== 'all') {
+        query = query.where(and(
+          userOrgId ? eq(labOrders.organizationId, userOrgId) : undefined,
+          eq(labOrders.status, status as string)
+        ));
+      }
+
+      if (priority && priority !== 'all') {
+        query = query.where(and(
+          userOrgId ? eq(labOrders.organizationId, userOrgId) : undefined,
+          eq(labOrders.priority, priority as string)
+        ));
+      }
+
+      const orders = await query.orderBy(desc(labOrders.createdAt));
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching enhanced lab orders:', error);
+      res.status(500).json({ message: "Failed to fetch lab orders" });
+    }
+  });
+
+  app.post('/api/lab-orders/enhanced', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { patientId, tests, clinicalNotes, diagnosis, priority } = req.body;
+      const userOrgId = req.user?.organizationId;
+      const userId = req.user?.id;
+
+      if (!tests || tests.length === 0) {
+        return res.status(400).json({ message: "At least one test is required" });
+      }
+
+      // Create the lab order
+      const [newOrder] = await db.insert(labOrders)
+        .values({
+          patientId: parseInt(patientId),
+          organizationId: userOrgId,
+          orderedBy: userId,
+          status: 'pending',
+          priority: priority || 'routine',
+          clinicalNotes,
+          diagnosis,
+          createdAt: new Date()
+        })
+        .returning();
+
+      // Create lab order items for each test
+      const orderItems = tests.map((test: any) => ({
+        labOrderId: newOrder.id,
+        testId: test.id,
+        status: 'pending',
+        organizationId: userOrgId,
+        createdAt: new Date()
+      }));
+
+      await db.insert(labOrderItems).values(orderItems);
+
+      res.status(201).json(newOrder);
+    } catch (error) {
+      console.error('Error creating enhanced lab order:', error);
+      res.status(500).json({ message: "Failed to create lab order" });
+    }
+  });
+
+  app.get('/api/lab-analytics', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userOrgId = req.user?.organizationId;
+
+      // Get analytics data for the laboratory dashboard
+      const [totalOrders] = await db.select({ count: sql<number>`count(*)` })
+        .from(labOrders)
+        .where(userOrgId ? eq(labOrders.organizationId, userOrgId) : undefined);
+
+      const [completedOrders] = await db.select({ count: sql<number>`count(*)` })
+        .from(labOrders)
+        .where(and(
+          userOrgId ? eq(labOrders.organizationId, userOrgId) : undefined,
+          eq(labOrders.status, 'completed')
+        ));
+
+      const completionRate = totalOrders.count > 0 
+        ? Math.round((completedOrders.count / totalOrders.count) * 100) 
+        : 0;
+
+      // Calculate average turnaround time (simplified)
+      const avgTurnaroundHours = 24; // This would need more complex calculation
+
+      res.json({
+        metrics: {
+          totalOrders: totalOrders.count,
+          completedOrders: completedOrders.count,
+          completionRate,
+          avgTurnaroundHours
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching lab analytics:', error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   app.post('/api/availability-slots', authenticateToken, requireAnyRole(['doctor', 'admin']), async (req: AuthRequest, res) => {
     try {
       const slotData = insertAvailabilitySlotSchema.parse({

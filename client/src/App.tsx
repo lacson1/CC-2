@@ -34,6 +34,7 @@ import RecordVisitPage from "@/pages/record-visit";
 import EditVisit from "@/pages/edit-visit";
 import AppointmentsPage from "@/pages/appointments";
 import LabOrdersPage from "@/pages/lab-orders";
+import LaboratoryEnhanced from "@/pages/laboratory-enhanced";
 import DocumentsPage from "@/pages/documents";
 import RevenueAnalytics from "@/pages/revenue-analytics";
 import TelemedicinePage from "@/pages/telemedicine";
@@ -120,6 +121,7 @@ function AuthenticatedApp() {
                   <Route path="/appointments" component={AppointmentsPage} />
                   <Route path="/consultation-dashboard" component={ConsultationDashboard} />
                   <Route path="/lab-orders" component={LabOrdersPage} />
+                  <Route path="/laboratory-enhanced" component={LaboratoryEnhanced} />
                   <Route path="/documents" component={DocumentsPage} />
                   <Route path="/billing" component={BillingPage} />
                   <Route path="/analytics" component={RevenueAnalytics} />
