@@ -184,14 +184,14 @@ export function MedicationReviewAssignmentModal({
                 value={formData.prescriptionId?.toString() || ""}
                 onValueChange={(value) => setFormData(prev => ({ 
                   ...prev, 
-                  prescriptionId: value ? parseInt(value) : undefined 
+                  prescriptionId: value && value !== "all" ? parseInt(value) : undefined 
                 }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select prescription to review" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Medications</SelectItem>
+                  <SelectItem value="all">All Medications</SelectItem>
                   {prescriptions?.map((prescription: Prescription) => (
                     <SelectItem key={prescription.id} value={prescription.id.toString()}>
                       <div className="flex items-center gap-2">
