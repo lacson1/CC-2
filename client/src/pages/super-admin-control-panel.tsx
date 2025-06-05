@@ -1226,7 +1226,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>View and control active user sessions</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">View Sessions</Button>
+                <Button onClick={handleViewSessions} variant="outline" className="w-full">View Sessions</Button>
               </CardContent>
             </Card>
 
@@ -1239,7 +1239,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Configure global security settings</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Security Settings</Button>
+                <Button onClick={handleSecuritySettings} className="w-full">Security Settings</Button>
               </CardContent>
             </Card>
 
@@ -1252,7 +1252,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Configure system-wide audit logging</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">Audit Configuration</Button>
+                <Button onClick={handleAuditConfiguration} variant="outline" className="w-full">Audit Configuration</Button>
               </CardContent>
             </Card>
           </div>
@@ -1270,7 +1270,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Create full system backups</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Create Backup</Button>
+                <Button onClick={handleCreateBackup} className="w-full">Create Backup</Button>
               </CardContent>
             </Card>
 
@@ -1283,7 +1283,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Import/export data between systems</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">Migration Tools</Button>
+                <Button onClick={handleMigrationTools} variant="outline" className="w-full">Migration Tools</Button>
               </CardContent>
             </Card>
 
@@ -1296,7 +1296,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Direct database management tools</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="destructive" className="w-full">Database Admin</Button>
+                <Button onClick={handleDatabaseAdmin} variant="destructive" className="w-full">Database Admin</Button>
               </CardContent>
             </Card>
 
@@ -1309,7 +1309,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Clean up orphaned or old data</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">Cleanup Tools</Button>
+                <Button onClick={handleCleanupTools} variant="outline" className="w-full">Cleanup Tools</Button>
               </CardContent>
             </Card>
           </div>
@@ -1327,7 +1327,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Monitor system performance and health</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button variant="outline" className="w-full">Health Dashboard</Button>
+                <Button onClick={handleHealthDashboard} variant="outline" className="w-full">Health Dashboard</Button>
               </CardContent>
             </Card>
 
@@ -1340,7 +1340,7 @@ export default function SuperAdminControlPanel() {
                 <CardDescription>Track user activity across all organizations</CardDescription>
               </CardHeader>
               <CardContent>
-                <Button className="w-full">Activity Monitor</Button>
+                <Button onClick={handleActivityMonitor} className="w-full">Activity Monitor</Button>
               </CardContent>
             </Card>
 
