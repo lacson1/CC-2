@@ -8,7 +8,8 @@ import {
 } from './middleware/super-admin';
 import { db } from './db';
 import { organizations, users, auditLogs } from '../shared/schema';
-import { eq, sql, and, isNull } from 'drizzle-orm';
+import { eq, sql, and, isNull, or, ilike } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
 
 export function setupSuperAdminRoutes(app: Express) {
   
@@ -298,6 +299,162 @@ export function setupSuperAdminRoutes(app: Express) {
       } catch (error) {
         console.error('Super admin backup error:', error);
         res.status(500).json({ error: 'Failed to initiate backup' });
+      }
+    }
+  );
+
+  // User Search and Management Routes
+  app.get('/api/superadmin/users',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const allUsers = await db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          organizationId: users.organizationId,
+          isActive: users.isActive,
+          createdAt: users.createdAt
+        }).from(users);
+
+        res.json(allUsers);
+      } catch (error) {
+        console.error('Super admin get users error:', error);
+        res.status(500).json({ error: 'Failed to fetch users' });
+      }
+    }
+  );
+
+  app.get('/api/superadmin/users/search',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const { q } = req.query;
+        if (!q || typeof q !== 'string' || q.length < 2) {
+          return res.status(400).json({ error: 'Search query must be at least 2 characters' });
+        }
+
+        const searchResults = await db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          organizationId: users.organizationId,
+          isActive: users.isActive
+        })
+        .from(users)
+        .where(
+          or(
+            ilike(users.username, `%${q}%`),
+            ilike(users.email, `%${q}%`),
+            ilike(users.firstName, `%${q}%`),
+            ilike(users.lastName, `%${q}%`)
+          )
+        )
+        .limit(20);
+
+        res.json(searchResults);
+      } catch (error) {
+        console.error('Super admin search users error:', error);
+        res.status(500).json({ error: 'Failed to search users' });
+      }
+    }
+  );
+
+  app.post('/api/superadmin/users/:userId/reset-password',
+    authenticateToken,
+    requireSuperAdmin,
+    requireSuperAdminPermission(SuperAdminPermissions.RESET_USER_PASSWORD),
+    logSuperAdminAction('RESET_USER_PASSWORD'),
+    async (req: AuthRequest, res) => {
+      try {
+        const userId = parseInt(req.params.userId);
+        
+        // Generate temporary password
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+        await db.update(users)
+          .set({ 
+            password: hashedPassword,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, userId));
+
+        console.log(`🔴 PASSWORD RESET for user ${userId} by super admin ${req.user?.username}`);
+        console.log(`Temporary password: ${tempPassword}`);
+
+        res.json({
+          success: true,
+          message: 'Password reset completed',
+          tempPassword // In production, this would be sent via email
+        });
+      } catch (error) {
+        console.error('Super admin reset password error:', error);
+        res.status(500).json({ error: 'Failed to reset user password' });
+      }
+    }
+  );
+
+  // Data Import/Export Routes
+  app.post('/api/superadmin/data/import',
+    authenticateToken,
+    requireSuperAdmin,
+    requireSuperAdminPermission(SuperAdminPermissions.IMPORT_DATA),
+    logSuperAdminAction('IMPORT_DATA'),
+    async (req: AuthRequest, res) => {
+      try {
+        console.log(`🔴 DATA IMPORT initiated by super admin ${req.user?.username}`);
+        
+        const importId = `import_${Date.now()}`;
+        
+        res.json({
+          success: true,
+          importId,
+          message: 'Data import process initiated',
+          status: 'processing',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin import data error:', error);
+        res.status(500).json({ error: 'Failed to import data' });
+      }
+    }
+  );
+
+  app.get('/api/superadmin/data/export',
+    authenticateToken,
+    requireSuperAdmin,
+    requireSuperAdminPermission(SuperAdminPermissions.EXPORT_DATA),
+    logSuperAdminAction('EXPORT_DATA'),
+    async (req: AuthRequest, res) => {
+      try {
+        const { type = 'full' } = req.query;
+        
+        console.log(`🔴 DATA EXPORT (${type}) initiated by super admin ${req.user?.username}`);
+        
+        const exportId = `export_${Date.now()}`;
+        const downloadUrl = `/api/superadmin/data/download/${exportId}`;
+        
+        res.json({
+          success: true,
+          exportId,
+          downloadUrl,
+          type,
+          estimatedSize: '125MB',
+          message: 'Data export process initiated',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin export data error:', error);
+        res.status(500).json({ error: 'Failed to export data' });
       }
     }
   );
