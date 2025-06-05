@@ -740,14 +740,14 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   // Use fetched prescriptions with proper fallback logic and status filtering
   const displayPrescriptions = React.useMemo(() => {
     // Always use API data when available, fallback to props only when API fails
-    if (patientPrescriptions && patientPrescriptions.length > 0) {
+    if (Array.isArray(patientPrescriptions) && patientPrescriptions.length > 0) {
       return patientPrescriptions;
     }
     if (prescriptionsLoading) {
       return [];
     }
     if (prescriptionsError) {
-      return activePrescriptions || [];
+      return Array.isArray(activePrescriptions) ? activePrescriptions : [];
     }
     return [];
   }, [patientPrescriptions, activePrescriptions, prescriptionsLoading, prescriptionsError]);
@@ -760,15 +760,15 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
 
   // Filter prescriptions by status for better organization
   const activeMedications = React.useMemo(() => {
-    return displayPrescriptions.filter((p: any) => 
+    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) => 
       p.status === 'active' || p.status === 'pending' || !p.status
-    );
+    ) : [];
   }, [displayPrescriptions]);
 
   const discontinuedMedications = React.useMemo(() => {
-    return displayPrescriptions.filter((p: any) => 
+    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) => 
       p.status === 'completed' || p.status === 'discontinued' || p.status === 'stopped'
-    );
+    ) : [];
   }, [displayPrescriptions]);
 
   const repeatMedications = React.useMemo(() => {

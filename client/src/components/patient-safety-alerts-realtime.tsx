@@ -241,8 +241,8 @@ export function QuickSafetyIndicator({
     refetchInterval: 60000, // Refresh every minute
   });
 
-  const criticalAlerts = alerts.filter((alert: SafetyAlert) => alert.type === 'critical');
-  const warningAlerts = alerts.filter((alert: SafetyAlert) => alert.type === 'warning');
+  const criticalAlerts = Array.isArray(alerts) ? alerts.filter((alert: SafetyAlert) => alert.type === 'critical') : [];
+  const warningAlerts = Array.isArray(alerts) ? alerts.filter((alert: SafetyAlert) => alert.type === 'warning') : [];
   
   if (criticalAlerts.length === 0 && warningAlerts.length === 0) {
     return (
