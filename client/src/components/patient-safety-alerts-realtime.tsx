@@ -232,11 +232,6 @@ export function QuickSafetyIndicator({
   // Fetch real-time safety alerts for indicator
   const { data: alerts = [] } = useQuery({
     queryKey: ['/api/patients', patientId, 'safety-alerts'],
-    queryFn: () => fetch(`/api/patients/${patientId}/safety-alerts`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
-    }).then(res => res.json()),
     enabled: !!patientId,
     refetchInterval: 60000, // Refresh every minute
   });
