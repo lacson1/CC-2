@@ -264,7 +264,7 @@ export function MedicationReviewAssignmentsList({
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {getReviewTypeLabel(assignment.assignment?.reviewType || assignment.reviewType || 'general')}
+                            {getReviewTypeLabel(assignment.assignment?.reviewType || 'general')}
                           </span>
                         </div>
 
