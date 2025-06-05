@@ -158,9 +158,11 @@ export function MedicationReviewAssignmentsList({
     });
   };
 
-  const filteredAssignments = assignments?.filter((assignment: Assignment) => 
-    statusFilter === "all" || assignment.assignment.status === statusFilter
-  ) || [];
+  const filteredAssignments = Array.isArray(assignments) ? assignments.filter((assignment: Assignment) => {
+    if (statusFilter === "all") return true;
+    const status = assignment.assignment?.status || assignment.status || 'pending';
+    return status === statusFilter;
+  }) : [];
 
   if (isLoading) {
     return (
@@ -235,7 +237,7 @@ export function MedicationReviewAssignmentsList({
         ) : (
           <div className="space-y-4">
             {filteredAssignments.map((assignment: Assignment, index: number) => (
-              <div key={assignment.assignment.id}>
+              <div key={assignment.assignment?.id || assignment.id || index}>
                 <Card className="border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
@@ -244,17 +246,17 @@ export function MedicationReviewAssignmentsList({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
-                              {getStatusIcon(assignment.assignment.status)}
-                              <Badge variant={getStatusVariant(assignment.assignment.status)}>
-                                {assignment.assignment.status.replace('_', ' ')}
+                              {getStatusIcon(assignment.assignment?.status || assignment.status || 'pending')}
+                              <Badge variant={getStatusVariant(assignment.assignment?.status || assignment.status || 'pending')}>
+                                {(assignment.assignment?.status || assignment.status || 'pending').replace('_', ' ')}
                               </Badge>
                             </div>
-                            <Badge variant={getPriorityVariant(assignment.assignment.priority)}>
-                              {assignment.assignment.priority}
+                            <Badge variant={getPriorityVariant(assignment.assignment?.priority || assignment.priority || 'medium')}>
+                              {assignment.assignment?.priority || assignment.priority || 'medium'}
                             </Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            #{assignment.assignment.id}
+                            #{assignment.assignment?.id || assignment.id || 'N/A'}
                           </div>
                         </div>
 
@@ -262,7 +264,7 @@ export function MedicationReviewAssignmentsList({
                         <div className="flex items-center gap-2">
                           <FileText className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium">
-                            {getReviewTypeLabel(assignment.assignment.reviewType)}
+                            {getReviewTypeLabel(assignment.assignment?.reviewType || assignment.reviewType || 'general')}
                           </span>
                         </div>
 
