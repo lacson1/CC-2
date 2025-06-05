@@ -28,7 +28,7 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         if (err.name === 'TokenExpiredError') {
           return res.status(401).json({ message: 'Token expired' });
         }
-        console.error('JWT verification error:', err);
+        console.error('JWT verification error for token:', token?.substring(0, 20) + '...', 'Error:', err.message);
         return res.status(403).json({ message: 'Invalid token' });
       }
 
