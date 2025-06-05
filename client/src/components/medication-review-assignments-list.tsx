@@ -160,7 +160,7 @@ export function MedicationReviewAssignmentsList({
 
   const filteredAssignments = Array.isArray(assignments) ? assignments.filter((assignment: Assignment) => {
     if (statusFilter === "all") return true;
-    const status = assignment.assignment?.status || assignment.status || 'pending';
+    const status = assignment.assignment?.status || 'pending';
     return status === statusFilter;
   }) : [];
 
@@ -197,7 +197,7 @@ export function MedicationReviewAssignmentsList({
           </Button>
         </div>
         
-        {assignments && assignments.length > 0 && (
+        {assignments && Array.isArray(assignments) && assignments.length > 0 && (
           <div className="flex items-center gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-48">
@@ -237,7 +237,7 @@ export function MedicationReviewAssignmentsList({
         ) : (
           <div className="space-y-4">
             {filteredAssignments.map((assignment: Assignment, index: number) => (
-              <div key={assignment.assignment?.id || assignment.id || index}>
+              <div key={assignment.assignment?.id || index}>
                 <Card className="border-l-4 border-l-blue-500">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
@@ -246,17 +246,17 @@ export function MedicationReviewAssignmentsList({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="flex items-center gap-2">
-                              {getStatusIcon(assignment.assignment?.status || assignment.status || 'pending')}
-                              <Badge variant={getStatusVariant(assignment.assignment?.status || assignment.status || 'pending')}>
-                                {(assignment.assignment?.status || assignment.status || 'pending').replace('_', ' ')}
+                              {getStatusIcon(assignment.assignment?.status || 'pending')}
+                              <Badge variant={getStatusVariant(assignment.assignment?.status || 'pending')}>
+                                {(assignment.assignment?.status || 'pending').replace('_', ' ')}
                               </Badge>
                             </div>
-                            <Badge variant={getPriorityVariant(assignment.assignment?.priority || assignment.priority || 'medium')}>
-                              {assignment.assignment?.priority || assignment.priority || 'medium'}
+                            <Badge variant={getPriorityVariant(assignment.assignment?.priority || 'medium')}>
+                              {assignment.assignment?.priority || 'medium'}
                             </Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            #{assignment.assignment?.id || assignment.id || 'N/A'}
+                            #{assignment.assignment?.id || 'N/A'}
                           </div>
                         </div>
 
@@ -292,26 +292,28 @@ export function MedicationReviewAssignmentsList({
                         </div>
 
                         {/* Due Date */}
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            Due: <span className="font-medium">
-                              {format(new Date(assignment.assignment.dueDate), "MMM dd, yyyy")}
+                        {(assignment.assignment?.dueDate || assignment.dueDate) && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">
+                              Due: <span className="font-medium">
+                                {format(new Date(assignment.assignment?.dueDate || assignment.dueDate), "MMM dd, yyyy")}
+                              </span>
                             </span>
-                          </span>
-                        </div>
+                          </div>
+                        )}
 
                         {/* Notes */}
-                        {assignment.assignment.notes && (
+                        {(assignment.assignment?.notes || assignment.notes) && (
                           <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md">
-                            {assignment.assignment.notes}
+                            {assignment.assignment?.notes || assignment.notes}
                           </div>
                         )}
 
                         {/* Status Actions */}
-                        {assignment.assignment.status !== "completed" && assignment.assignment.status !== "cancelled" && (
+                        {(assignment.assignment?.status || assignment.status) !== "completed" && (assignment.assignment?.status || assignment.status) !== "cancelled" && (
                           <div className="flex items-center gap-2 pt-2">
-                            {assignment.assignment.status === "pending" && (
+                            {(assignment.assignment?.status || assignment.status) === "pending" && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -321,7 +323,7 @@ export function MedicationReviewAssignmentsList({
                                 Start Review
                               </Button>
                             )}
-                            {assignment.assignment.status === "in_progress" && (
+                            {(assignment.assignment?.status || assignment.status) === "in_progress" && (
                               <Button
                                 size="sm"
                                 onClick={() => handleStatusChange(assignment, "completed")}
