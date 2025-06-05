@@ -25,6 +25,18 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async (demoUsername: string, demoPassword: string) => {
+    setError('');
+    setUsername(demoUsername);
+    setPassword(demoPassword);
+    
+    try {
+      await login(demoUsername, demoPassword);
+    } catch (error) {
+      setError('Invalid demo credentials');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900/90 to-indigo-900/80 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Advanced Futuristic Background */}
@@ -232,127 +244,60 @@ export default function Login() {
               {/* Demo Accounts */}
               <div className="p-5 bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-cyan-400/20">
                 <p className="text-sm font-bold text-cyan-200 mb-4 flex items-center">
-                  <Users className="w-4 h-4 mr-2" />
-                  Demo Accounts
+                  <Zap className="w-4 h-4 mr-2" />
+                  Quick Demo Login
                 </p>
-                <div className="space-y-3 text-xs max-h-64 overflow-y-auto">
-                  <div className="flex justify-between items-center bg-gradient-to-r from-red-900/40 to-orange-900/40 p-3 rounded-lg backdrop-blur-sm border border-red-400/20">
-                    <span className="text-red-300 font-medium flex items-center">
-                      <Shield className="w-3 h-3 mr-2" />
-                      Super Admin
-                    </span>
-                    <span className="text-red-100 font-mono">admin / admin123</span>
-                  </div>
+                <div className="space-y-3">
+                  <Button
+                    onClick={() => handleDemoLogin('superadmin', 'admin123')}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-red-600/80 to-orange-600/80 hover:from-red-500 hover:to-orange-500 text-white border border-red-400/30 h-12"
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Login as Super Admin
+                  </Button>
                   
-                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
-                    <span className="text-cyan-300 font-medium flex items-center">
-                      <Shield className="w-3 h-3 mr-2" />
-                      Admin - Grace Clinic
-                    </span>
-                    <span className="text-cyan-100 font-mono">grace_admin / admin123</span>
-                  </div>
+                  <Button
+                    onClick={() => handleDemoLogin('admin', 'admin123')}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-blue-600/80 to-cyan-600/80 hover:from-blue-500 hover:to-cyan-500 text-white border border-blue-400/30 h-12"
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    Login as Admin
+                  </Button>
                   
-                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
-                    <span className="text-cyan-300 font-medium flex items-center">
-                      <Shield className="w-3 h-3 mr-2" />
-                      Admin - Lagos Island Hospital
-                    </span>
-                    <span className="text-cyan-100 font-mono">lagos_admin / admin123</span>
-                  </div>
+                  <Button
+                    onClick={() => handleDemoLogin('Ade', 'doctor123')}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-blue-600/80 to-indigo-600/80 hover:from-blue-500 hover:to-indigo-500 text-white border border-blue-400/30 h-12"
+                  >
+                    <Stethoscope className="w-4 h-4 mr-2" />
+                    Login as Doctor (Ade)
+                  </Button>
                   
-                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
-                    <span className="text-cyan-300 font-medium flex items-center">
-                      <Shield className="w-3 h-3 mr-2" />
-                      Admin - Lagos Highland Hospital
-                    </span>
-                    <span className="text-cyan-100 font-mono">highland_admin / admin123</span>
-                  </div>
+                  <Button
+                    onClick={() => handleDemoLogin('syb', 'nurse123')}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-green-600/80 to-teal-600/80 hover:from-green-500 hover:to-teal-500 text-white border border-green-400/30 h-12"
+                  >
+                    <Heart className="w-4 h-4 mr-2" />
+                    Login as Nurse (Syb)
+                  </Button>
                   
-                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
-                    <span className="text-cyan-300 font-medium flex items-center">
-                      <Shield className="w-3 h-3 mr-2" />
-                      Admin - Enugu Health Center
-                    </span>
-                    <span className="text-cyan-100 font-mono">enugu_admin / admin123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-blue-700/40 to-indigo-700/40 p-3 rounded-lg backdrop-blur-sm border border-blue-400/20">
-                    <span className="text-blue-300 font-medium flex items-center">
-                      <Stethoscope className="w-3 h-3 mr-2" />
-                      Doctor - Ade
-                    </span>
-                    <span className="text-blue-100 font-mono">Ade / doctor123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-blue-700/40 to-indigo-700/40 p-3 rounded-lg backdrop-blur-sm border border-blue-400/20">
-                    <span className="text-blue-300 font-medium flex items-center">
-                      <Stethoscope className="w-3 h-3 mr-2" />
-                      Doctor - Rob
-                    </span>
-                    <span className="text-blue-100 font-mono">Rob / doctor123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-blue-700/40 to-indigo-700/40 p-3 rounded-lg backdrop-blur-sm border border-blue-400/20">
-                    <span className="text-blue-300 font-medium flex items-center">
-                      <Stethoscope className="w-3 h-3 mr-2" />
-                      Doctor - Abi
-                    </span>
-                    <span className="text-blue-100 font-mono">Abi / doctor123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-purple-700/40 to-pink-700/40 p-3 rounded-lg backdrop-blur-sm border border-purple-400/20">
-                    <span className="text-purple-300 font-medium flex items-center">
-                      <Heart className="w-3 h-3 mr-2" />
-                      Nurse
-                    </span>
-                    <span className="text-purple-100 font-mono">syb / nurse123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-green-700/40 to-emerald-700/40 p-3 rounded-lg backdrop-blur-sm border border-green-400/20">
-                    <span className="text-green-300 font-medium flex items-center">
-                      <Activity className="w-3 h-3 mr-2" />
-                      Pharmacist
-                    </span>
-                    <span className="text-green-100 font-mono">akin / password123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-green-700/40 to-emerald-700/40 p-3 rounded-lg backdrop-blur-sm border border-green-400/20">
-                    <span className="text-green-300 font-medium flex items-center">
-                      <Activity className="w-3 h-3 mr-2" />
-                      Pharmacist - Mike
-                    </span>
-                    <span className="text-green-100 font-mono">pharmacist_mike / password123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-orange-700/40 to-amber-700/40 p-3 rounded-lg backdrop-blur-sm border border-orange-400/20">
-                    <span className="text-orange-300 font-medium flex items-center">
-                      <Zap className="w-3 h-3 mr-2" />
-                      Physiotherapist
-                    </span>
-                    <span className="text-orange-100 font-mono">Mr Seye / password123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-gradient-to-r from-orange-700/40 to-amber-700/40 p-3 rounded-lg backdrop-blur-sm border border-orange-400/20">
-                    <span className="text-orange-300 font-medium flex items-center">
-                      <Zap className="w-3 h-3 mr-2" />
-                      Physiotherapist - Lisa
-                    </span>
-                    <span className="text-orange-100 font-mono">physio_lisa / password123</span>
-                  </div>
-                  
-                  <div className="flex justify-between items-center bg-slate-700/40 p-3 rounded-lg backdrop-blur-sm">
-                    <span className="text-yellow-300 font-medium flex items-center">
-                      <Users className="w-3 h-3 mr-2" />
-                      Receptionist
-                    </span>
-                    <span className="text-yellow-100 font-mono">Akin / reception123</span>
-                  </div>
+                  <Button
+                    onClick={() => handleDemoLogin('receptionist1', 'receptionist123')}
+                    disabled={isLoading}
+                    className="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 hover:from-purple-500 hover:to-pink-500 text-white border border-purple-400/30 h-12"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    Login as Receptionist
+                  </Button>
                 </div>
                 
                 <div className="mt-4 p-3 bg-gradient-to-r from-indigo-900/40 to-purple-900/40 rounded-lg border border-indigo-400/20">
                   <p className="text-xs text-indigo-200 flex items-center">
-                    <Star className="w-3 h-3 mr-2" />
-                    <span className="font-medium">All passwords follow the pattern: [role]123</span>
+                    <CheckCircle className="w-3 h-3 mr-2" />
+                    <span className="font-medium">Click any button above for instant demo access</span>
                   </p>
                 </div>
               </div>
