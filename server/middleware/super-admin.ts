@@ -7,7 +7,7 @@ export const requireSuperAdmin = (req: AuthRequest, res: Response, next: NextFun
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  if (req.user.role !== 'superadmin') {
+  if (req.user.role !== 'superadmin' && req.user.role !== 'super_admin') {
     return res.status(403).json({ 
       error: 'Super admin access required',
       message: 'This action requires super administrator privileges'
