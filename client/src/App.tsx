@@ -14,6 +14,7 @@ import TouchQuickActions from "@/components/touch-quick-actions";
 import OfflineStatusBar from "@/components/offline-status-bar";
 import { GlobalSearch } from "@/components/global-search";
 import { Search } from "lucide-react";
+import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
 import PatientProfile from "@/pages/patient-profile-clean";
@@ -249,14 +250,16 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </GlobalErrorBoundary>
   );
 }
 

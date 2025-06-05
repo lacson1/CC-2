@@ -22,6 +22,7 @@ import { useLocation } from "wouter";
 import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useApiErrorHandler } from "@/hooks/useApiErrorHandler";
 import { MedicalIcons, MedicalContext, getStatusStyling, IconSizes } from '@/lib/medical-icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

@@ -1,0 +1,70 @@
+🎯 **Task:**
+Check and improve all API calls across the healthcare application to ensure:
+- Correct API endpoints are used
+- Errors (fetch/network/backend) are properly caught
+- Failures are not silent
+- User-friendly error messages or fallback UI are shown
+
+---
+
+## 🔍 Areas to Check
+
+1. **API Call Sites (Frontend)**
+   - Scan all files using `fetch`, `axios`, or `TanStack Query` (or any HTTP client)
+   - Ensure all responses are wrapped in try/catch or `.catch()` logic
+   - Check for `response.ok`, `status`, or `error` fields before proceeding with logic
+
+2. **API Response Handling**
+   - Add global or local error handlers
+   - Show user feedback using:
+     - Toasts (e.g., `react-hot-toast`)
+     - Alerts (e.g., shadcn/ui alert component)
+     - Fallback components ("Something went wrong, please try again")
+
+3. **Common Error Types to Catch**
+   - 🔌 Network failure (e.g., internet down)
+   - 🔐 Auth expired / 401 Unauthorized
+   - ❌ 404 Not Found
+   - 💥 500 Internal Server Error
+   - ❗ Validation or input errors (from Zod or backend)
+
+4. **Global Error Boundary (React)**
+   - Add a `<GlobalErrorBoundary />` or React ErrorBoundary to catch uncaught render errors
+   - Display an appropriate message on crash (especially on patient record, prescription, lab result screens)
+
+5. **Backend Validation**
+   - Verify that Express routes:
+     - Return clear status codes (`200`, `400`, `401`, `500`, etc.)
+     - Include helpful JSON messages: `{ success: false, message: "Invalid input" }`
+     - Use middleware for auth/token validation and error logging
+
+---
+
+## 🩺 Healthcare-Specific Considerations
+- Do **not** expose sensitive info in error messages (HIPAA compliance)
+- Alert user when saving records fails (e.g., patient data, lab result, medication)
+- Show retry option for important endpoints (lab orders, prescriptions)
+
+---
+
+## ✅ Expected Output
+
+Return after confirming:
+- All API calls have robust error handling
+- Global error feedback system is in place
+- Users are always informed when something goes wrong
+
+Report in this format:
+
+### ✅ API Check Complete
+- [✔] Patient Fetch: 401 handled + login redirect
+- [✔] Lab Results Save: Shows error if backend fails
+- [✔] Toasts added on all mutation failures
+
+### ❌ Issues Fixed
+- [ ] Missing `.catch()` on prescription update fetch
+- [ ] No fallback UI on broken Health tab
+
+### 🛠 Recommendations
+- Add a `useApiErrorHandler()` custom hook
+- Create reusable `<ErrorToast />` and `<RetryBanner />` components
