@@ -131,13 +131,13 @@ export default function ConsentCapture({
   };
 
   const handleConsentFormChange = (formId: string) => {
-    const form = consentForms.find((f: any) => f.id === parseInt(formId));
-    setSelectedConsentForm(form);
+    const selectedForm = consentForms.find((f: any) => f.id === parseInt(formId));
+    setSelectedConsentForm(selectedForm);
     
     // Initialize consent data with form sections
     const initialData: Record<string, any> = {};
-    if (form?.template?.sections) {
-      form.template.sections.forEach((section: any, index: number) => {
+    if (selectedForm?.template?.sections) {
+      selectedForm.template.sections.forEach((section: any, index: number) => {
         initialData[`section_${index}`] = "";
       });
     }
