@@ -1122,6 +1122,80 @@ export const insertPatientConsentSchema = createInsertSchema(patientConsents).om
   updatedAt: true,
 });
 
+// Patient Insurance
+export const patientInsurance = pgTable('patient_insurance', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  provider: varchar('provider', { length: 200 }).notNull(),
+  policyNumber: varchar('policy_number', { length: 100 }).notNull(),
+  groupNumber: varchar('group_number', { length: 100 }),
+  membershipNumber: varchar('membership_number', { length: 100 }),
+  coverageType: varchar('coverage_type', { length: 20 }).notNull(), // primary, secondary, tertiary
+  policyStatus: varchar('policy_status', { length: 20 }).notNull(), // active, inactive, suspended, expired
+  effectiveDate: date('effective_date').notNull(),
+  expirationDate: date('expiration_date'),
+  deductible: decimal('deductible', { precision: 10, scale: 2 }),
+  copay: decimal('copay', { precision: 8, scale: 2 }),
+  coinsurance: decimal('coinsurance', { precision: 5, scale: 2 }),
+  maximumBenefit: decimal('maximum_benefit', { precision: 12, scale: 2 }),
+  notes: text('notes'),
+  providerPhone: varchar('provider_phone', { length: 20 }),
+  providerEmail: varchar('provider_email', { length: 100 }),
+  providerAddress: text('provider_address'),
+  coverageDetails: text('coverage_details'),
+  preAuthRequired: boolean('pre_auth_required').default(false),
+  referralRequired: boolean('referral_required').default(false),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// Patient Referrals
+export const patientReferrals = pgTable('patient_referrals', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').references(() => patients.id).notNull(),
+  referringDoctorId: integer('referring_doctor_id').references(() => users.id).notNull(),
+  referredToDoctor: varchar('referred_to_doctor', { length: 200 }),
+  referredToFacility: varchar('referred_to_facility', { length: 200 }),
+  specialty: varchar('specialty', { length: 100 }),
+  reason: text('reason').notNull(),
+  urgency: varchar('urgency', { length: 20 }).default('routine'), // urgent, routine, non-urgent
+  status: varchar('status', { length: 20 }).default('pending'), // pending, scheduled, completed, cancelled
+  referralDate: date('referral_date').defaultNow(),
+  appointmentDate: date('appointment_date'),
+  notes: text('notes'),
+  followUpRequired: boolean('follow_up_required').default(false),
+  followUpDate: date('follow_up_date'),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+// Relations for new tables
+export const patientInsuranceRelations = relations(patientInsurance, ({ one }) => ({
+  patient: one(patients, { fields: [patientInsurance.patientId], references: [patients.id] }),
+  organization: one(organizations, { fields: [patientInsurance.organizationId], references: [organizations.id] })
+}));
+
+export const patientReferralsRelations = relations(patientReferrals, ({ one }) => ({
+  patient: one(patients, { fields: [patientReferrals.patientId], references: [patients.id] }),
+  referringDoctor: one(users, { fields: [patientReferrals.referringDoctorId], references: [users.id] }),
+  organization: one(organizations, { fields: [patientReferrals.organizationId], references: [organizations.id] })
+}));
+
+// Insert schemas for new tables
+export const insertPatientInsuranceSchema = createInsertSchema(patientInsurance).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPatientReferralSchema = createInsertSchema(patientReferrals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types for new tables
 export type ProceduralReport = typeof proceduralReports.$inferSelect;
 export type InsertProceduralReport = z.infer<typeof insertProceduralReportSchema>;
@@ -1129,6 +1203,10 @@ export type ConsentForm = typeof consentForms.$inferSelect;
 export type InsertConsentForm = z.infer<typeof insertConsentFormSchema>;
 export type PatientConsent = typeof patientConsents.$inferSelect;
 export type InsertPatientConsent = z.infer<typeof insertPatientConsentSchema>;
+export type PatientInsurance = typeof patientInsurance.$inferSelect;
+export type InsertPatientInsurance = z.infer<typeof insertPatientInsuranceSchema>;
+export type PatientReferral = typeof patientReferrals.$inferSelect;
+export type InsertPatientReferral = z.infer<typeof insertPatientReferralSchema>;
 
 export const insertCommentSchema = createInsertSchema(comments).omit({
   id: true,
