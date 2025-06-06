@@ -7891,10 +7891,12 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.get("/api/files/medical/:fileName", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { fileName } = req.params;
+      const download = req.query.download === 'true';
       const organizationId = req.user?.organizationId || 1;
 
       console.log(`=== SERVING FILE ===`);
       console.log(`File: ${fileName}`);
+      console.log(`Download mode: ${download}`);
       console.log(`User org: ${organizationId}`);
       console.log(`User ID: ${req.user?.id}`);
 
@@ -7934,17 +7936,22 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(404).json({ message: "File not found - database record cleaned up" });
       }
 
-      // Set appropriate headers for text files
+      // Set appropriate headers for different use cases
       if (document.mimeType === 'text/plain') {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       } else {
         res.setHeader('Content-Type', document.mimeType);
       }
-      res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
       
-      // Add headers to allow iframe embedding
-      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+      // Set disposition based on download parameter
+      if (download) {
+        res.setHeader('Content-Disposition', `attachment; filename="${document.originalName}"`);
+      } else {
+        res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
+        // Add headers to allow iframe embedding for preview
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+      }
       
       console.log(`Streaming file: ${fileName}`);
       const fileStream = fs.default.createReadStream(filePath);

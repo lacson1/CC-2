@@ -65,9 +65,11 @@ export function DocumentPreviewCarousel({
 
   const downloadDocument = (doc: Document) => {
     const link = document.createElement('a');
-    link.href = `/api/files/medical/${doc.fileName}`;
+    link.href = `/api/files/medical/${doc.fileName}?download=true`;
     link.download = doc.originalName;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const getDocumentIcon = (category: string) => {
@@ -137,7 +139,7 @@ export function DocumentPreviewCarousel({
                 variant="outline"
                 onClick={() => {
                   const link = document.createElement('a');
-                  link.href = fileUrl;
+                  link.href = `${fileUrl}?download=true`;
                   link.download = doc.originalName;
                   document.body.appendChild(link);
                   link.click();
@@ -179,7 +181,7 @@ export function DocumentPreviewCarousel({
                     variant="outline"
                     onClick={() => {
                       const link = document.createElement('a');
-                      link.href = fileUrl;
+                      link.href = `${fileUrl}?download=true`;
                       link.download = doc.originalName;
                       document.body.appendChild(link);
                       link.click();

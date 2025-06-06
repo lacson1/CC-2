@@ -150,9 +150,11 @@ export default function DocumentsPage() {
 
   const handleDownload = (fileName: string, originalName: string) => {
     const link = document.createElement('a');
-    link.href = `/api/files/medical/${fileName}`;
+    link.href = `/api/files/medical/${fileName}?download=true`;
     link.download = originalName;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const handleDelete = (fileName: string) => {
