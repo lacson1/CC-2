@@ -61,15 +61,17 @@ export default function DocumentsPage() {
   // Upload document mutation
   const uploadDocumentMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      const token = localStorage.getItem('clinic_token');
       const response = await fetch('/api/upload/medical', {
         method: 'POST',
         body: data,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${errorText}`);
       }
       return response.json();
     },

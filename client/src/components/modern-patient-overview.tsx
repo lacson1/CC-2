@@ -663,13 +663,18 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   // Document upload mutation
   const uploadDocumentMutation = useMutation({
     mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem('clinic_token');
       const response = await fetch(`/api/patients/${patient.id}/documents`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Failed to upload document');
+        const errorText = await response.text();
+        throw new Error(`Failed to upload document: ${errorText}`);
       }
       
       return response.json();
