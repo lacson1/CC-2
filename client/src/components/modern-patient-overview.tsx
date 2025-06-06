@@ -39,6 +39,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CheckCircle, MoreVertical, Eye, Download, Share, FileText, Printer, X, Heart } from 'lucide-react';
 import { LabResultPersonalityIntegration } from './LabResultPersonalityIntegration';
 import ConsentCapture from './consent-capture';
+import InsuranceManagement from './insurance-management';
+import ReferralManagement from './referral-management';
 // All icons now imported via MedicalIcons system
 
 // CompletedLabResult interface for reviewed results
@@ -2558,27 +2560,11 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   </TabsContent>
 
                   <TabsContent value="insurance" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.billing className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Insurance Information</h3>
-                      <p className="text-sm text-gray-500 mb-4">Manage patient insurance details and claims</p>
-                      <Button className="bg-purple-600 hover:bg-purple-700">
-                        <MedicalIcons.add className="w-4 h-4 mr-2" />
-                        Add Insurance
-                      </Button>
-                    </div>
+                    <InsuranceManagement patientId={patient.id} />
                   </TabsContent>
 
                   <TabsContent value="referrals" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.referral className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Referrals</h3>
-                      <p className="text-sm text-gray-500 mb-4">Patient referrals to specialists and other providers</p>
-                      <Button className="bg-cyan-600 hover:bg-cyan-700">
-                        <MedicalIcons.add className="w-4 h-4 mr-2" />
-                        New Referral
-                      </Button>
-                    </div>
+                    <ReferralManagement patientId={patient.id} />
                   </TabsContent>
                 </Tabs>
               </CardContent>

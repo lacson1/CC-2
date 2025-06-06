@@ -2865,6 +2865,211 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
+  // Patient Insurance Routes
+  app.get('/api/patients/:id/insurance', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      const insuranceRecords = await db.select()
+        .from(patientInsurance)
+        .where(and(
+          eq(patientInsurance.patientId, patientId),
+          eq(patientInsurance.organizationId, userOrgId!)
+        ))
+        .orderBy(desc(patientInsurance.createdAt));
+
+      res.json(insuranceRecords);
+    } catch (error) {
+      console.error('Error fetching patient insurance:', error);
+      res.status(500).json({ message: "Failed to fetch insurance records" });
+    }
+  });
+
+  app.post('/api/patients/:id/insurance', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      const [newInsurance] = await db.insert(patientInsurance).values({
+        ...req.body,
+        patientId,
+        organizationId: userOrgId!
+      }).returning();
+
+      res.status(201).json(newInsurance);
+    } catch (error) {
+      console.error('Error creating insurance record:', error);
+      res.status(500).json({ message: "Failed to create insurance record" });
+    }
+  });
+
+  app.patch('/api/patients/:id/insurance/:insuranceId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const insuranceId = parseInt(req.params.insuranceId);
+      const userOrgId = req.user?.organizationId;
+      
+      const [updated] = await db.update(patientInsurance)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(
+          eq(patientInsurance.id, insuranceId),
+          eq(patientInsurance.patientId, patientId),
+          eq(patientInsurance.organizationId, userOrgId!)
+        ))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Insurance record not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating insurance record:', error);
+      res.status(500).json({ message: "Failed to update insurance record" });
+    }
+  });
+
+  app.delete('/api/patients/:id/insurance/:insuranceId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const insuranceId = parseInt(req.params.insuranceId);
+      const userOrgId = req.user?.organizationId;
+      
+      const [deleted] = await db.delete(patientInsurance)
+        .where(and(
+          eq(patientInsurance.id, insuranceId),
+          eq(patientInsurance.patientId, patientId),
+          eq(patientInsurance.organizationId, userOrgId!)
+        ))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Insurance record not found" });
+      }
+
+      res.json({ message: "Insurance record deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting insurance record:', error);
+      res.status(500).json({ message: "Failed to delete insurance record" });
+    }
+  });
+
+  // Patient Referral Routes
+  app.get('/api/patients/:id/referrals', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      const referrals = await db.select({
+        id: patientReferrals.id,
+        patientId: patientReferrals.patientId,
+        referredToDoctor: patientReferrals.referredToDoctor,
+        referredToFacility: patientReferrals.referredToFacility,
+        specialty: patientReferrals.specialty,
+        reason: patientReferrals.reason,
+        urgency: patientReferrals.urgency,
+        status: patientReferrals.status,
+        referralDate: patientReferrals.referralDate,
+        appointmentDate: patientReferrals.appointmentDate,
+        notes: patientReferrals.notes,
+        followUpRequired: patientReferrals.followUpRequired,
+        followUpDate: patientReferrals.followUpDate,
+        createdAt: patientReferrals.createdAt,
+        referringDoctor: {
+          id: users.id,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role
+        }
+      })
+      .from(patientReferrals)
+      .leftJoin(users, eq(patientReferrals.referringDoctorId, users.id))
+      .where(and(
+        eq(patientReferrals.patientId, patientId),
+        eq(patientReferrals.organizationId, userOrgId!)
+      ))
+      .orderBy(desc(patientReferrals.createdAt));
+
+      res.json(referrals);
+    } catch (error) {
+      console.error('Error fetching patient referrals:', error);
+      res.status(500).json({ message: "Failed to fetch referrals" });
+    }
+  });
+
+  app.post('/api/patients/:id/referrals', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      const userId = req.user?.id;
+      
+      const [newReferral] = await db.insert(patientReferrals).values({
+        ...req.body,
+        patientId,
+        referringDoctorId: userId!,
+        organizationId: userOrgId!
+      }).returning();
+
+      res.status(201).json(newReferral);
+    } catch (error) {
+      console.error('Error creating referral:', error);
+      res.status(500).json({ message: "Failed to create referral" });
+    }
+  });
+
+  app.patch('/api/patients/:id/referrals/:referralId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const referralId = parseInt(req.params.referralId);
+      const userOrgId = req.user?.organizationId;
+      
+      const [updated] = await db.update(patientReferrals)
+        .set({ ...req.body, updatedAt: new Date() })
+        .where(and(
+          eq(patientReferrals.id, referralId),
+          eq(patientReferrals.patientId, patientId),
+          eq(patientReferrals.organizationId, userOrgId!)
+        ))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Referral not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating referral:', error);
+      res.status(500).json({ message: "Failed to update referral" });
+    }
+  });
+
+  app.delete('/api/patients/:id/referrals/:referralId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const referralId = parseInt(req.params.referralId);
+      const userOrgId = req.user?.organizationId;
+      
+      const [deleted] = await db.delete(patientReferrals)
+        .where(and(
+          eq(patientReferrals.id, referralId),
+          eq(patientReferrals.patientId, patientId),
+          eq(patientReferrals.organizationId, userOrgId!)
+        ))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Referral not found" });
+      }
+
+      res.json({ message: "Referral deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting referral:', error);
+      res.status(500).json({ message: "Failed to delete referral" });
+    }
+  });
+
   // Enhanced Laboratory Management API Endpoints
   app.get('/api/lab-orders/enhanced', authenticateToken, async (req: AuthRequest, res) => {
     try {
