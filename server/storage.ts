@@ -386,7 +386,8 @@ export class DatabaseStorage implements IStorage {
     // Combine medication names: use manual name if available, otherwise use database name
     return results.map(result => ({
       ...result,
-      medicationName: result.medicationName || result.medicationDbName || 'Unknown Medication'
+      medicationName: result.medicationName || result.medicationDbName || 'Unknown Medication',
+      pharmacyId: result.pharmacyId || null
     }));
   }
 
