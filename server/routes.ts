@@ -4949,10 +4949,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       // Check if form exists and user has access
       const [form] = await db.select()
         .from(consultationForms)
-        .where(and(
-          eq(consultationForms.id, consultationFormId),
-          userOrgId ? eq(consultationForms.organizationId, userOrgId) : undefined
-        ))
+        .where(eq(consultationForms.id, consultationFormId))
         .limit(1);
 
       if (!form) {
@@ -4975,9 +4972,9 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       // Create pin
       const [pin] = await db.insert(pinnedConsultationForms)
         .values({
-          userId,
-          consultationFormId,
-          organizationId: userOrgId
+          userId: userId,
+          consultationFormId: consultationFormId,
+          organizationId: userOrgId || null
         })
         .returning();
 
