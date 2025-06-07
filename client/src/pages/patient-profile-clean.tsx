@@ -345,21 +345,9 @@ export default function PatientProfile() {
 
 
           {/* Optimized Content Layout */}
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-2">
-            {/* Main Content Area - Takes more space */}
-            <div className="xl:col-span-4 space-y-2">
-              {/* Patient Overview - Optimized spacing */}
-              <ModernPatientOverview
-                patient={patient as Patient}
-                visits={visits || []}
-                recentLabs={labResults || []}
-                activePrescriptions={prescriptions || []}
-                onAddPrescription={() => setShowPrescriptionModal(true)}
-              />
-            </div>
-
+          <div className="flex flex-col xl:flex-row gap-2">
             {/* Compact Sidebar - Actions & Summary */}
-            <div className="space-y-2">
+            <div className="xl:w-64 space-y-2 xl:order-2">
               {/* Compact Quick Actions */}
               <Card className="bg-white/90 backdrop-blur-sm shadow-lg border-0 ring-1 ring-gray-200/50">
                 <CardHeader className="pb-1 px-3 pt-3">
@@ -412,8 +400,17 @@ export default function PatientProfile() {
                   </DropdownMenu>
                 </CardContent>
               </Card>
-
-
+            </div>
+            
+            {/* Main Content Area - Consultation extends to edge */}
+            <div className="flex-1 xl:order-1">
+              <ModernPatientOverview
+                patient={patient as Patient}
+                visits={visits || []}
+                recentLabs={labResults || []}
+                activePrescriptions={prescriptions || []}
+                onAddPrescription={() => setShowPrescriptionModal(true)}
+              />
             </div>
           </div>
         </div>
