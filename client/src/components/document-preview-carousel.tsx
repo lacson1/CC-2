@@ -224,7 +224,25 @@ export function DocumentPreviewCarousel({
                 </p>
                 <div className="flex gap-3 justify-center">
                   <Button
-                    onClick={() => window.open(fileUrl, '_blank')}
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('authToken');
+                        const response = await fetch(`/api/files/medical/${doc.fileName}`, {
+                          headers: {
+                            'Authorization': `Bearer ${token}`
+                          }
+                        });
+                        
+                        if (response.ok) {
+                          const blob = await response.blob();
+                          const url = URL.createObjectURL(blob);
+                          window.open(url, '_blank');
+                          setTimeout(() => URL.revokeObjectURL(url), 10000);
+                        }
+                      } catch (error) {
+                        console.error('Error opening PDF:', error);
+                      }
+                    }}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     Open PDF in New Tab
