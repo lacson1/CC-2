@@ -5,6 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   User, 
   Calendar, 
@@ -27,7 +34,8 @@ import {
   Clock,
   UserCheck,
   Monitor,
-  Share
+  Share,
+  UserPlus
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { EnhancedVisitRecording } from "@/components/enhanced-visit-recording";
@@ -50,13 +58,6 @@ import { PatientVitalsChart } from "@/components/patient-vitals-chart";
 import { useRole } from "@/components/role-guard";
 import { formatPatientName, getPatientInitials } from "@/lib/patient-utils";
 import type { Patient, Visit, LabResult, Prescription } from "@shared/schema";
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 
 interface Organization {
   id: number;
@@ -367,65 +368,48 @@ export default function PatientProfile() {
                     Quick Actions
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-1 px-3 pb-3">
-                  <Button 
-                    onClick={() => setShowVisitModal(true)}
-                    className="w-full justify-start h-8 text-xs bg-emerald-50/80 hover:bg-emerald-100/90 text-emerald-700 border-emerald-200/60 transition-all duration-200"
-                    variant="outline"
-                  >
-                    <Monitor className="h-3 w-3 mr-1" />
-                    New Visit
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => navigate(`/lab-orders?patientId=${patientId}`)}
-                    className="w-full justify-start h-8 text-xs bg-amber-50/80 hover:bg-amber-100/90 text-amber-700 border-amber-200/60 transition-all duration-200"
-                    variant="outline"
-                  >
-                    <FlaskRound className="h-3 w-3 mr-1" />
-                    Lab Order
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => setShowPrescriptionModal(true)}
-                    className="w-full justify-start h-8 text-xs transition-all duration-200"
-                    style={{ 
-                      backgroundColor: 'rgba(0, 81, 204, 0.08)', 
-                      borderColor: 'rgba(0, 81, 204, 0.3)', 
-                      color: '#0051CC' 
-                    }}
-                    variant="outline"
-                  >
-                    <Pill className="h-3 w-3 mr-1" />
-                    Prescribe
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => navigate(`/documents?patientId=${patientId}`)}
-                    className="w-full justify-start h-8 text-xs bg-violet-50/80 hover:bg-violet-100/90 text-violet-700 border-violet-200/60 transition-all duration-200"
-                    variant="outline"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Report
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => navigate(`/referral-letters?patientId=${patientId}`)}
-                    className="w-full justify-start h-8 text-xs bg-indigo-50/80 hover:bg-indigo-100/90 text-indigo-700 border-indigo-200/60 transition-all duration-200"
-                    variant="outline"
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Referral
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => navigate(`/appointments?action=schedule&patientId=${patientId}`)}
-                    className="w-full justify-start h-8 text-xs bg-cyan-50/80 hover:bg-cyan-100/90 text-cyan-700 border-cyan-200/60 transition-all duration-200"
-                    variant="outline"
-                  >
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Follow-up
-                  </Button>
+                <CardContent className="px-3 pb-3">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        className="w-full justify-between h-8 text-xs bg-blue-50/80 hover:bg-blue-100/90 text-blue-700 border-blue-200/60 transition-all duration-200"
+                        variant="outline"
+                      >
+                        <div className="flex items-center">
+                          <Plus className="h-3 w-3 mr-1" />
+                          Actions
+                        </div>
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={() => setShowVisitModal(true)}>
+                        <Monitor className="h-3 w-3 mr-2" />
+                        New Visit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/lab-orders?patientId=${patientId}`)}>
+                        <FlaskRound className="h-3 w-3 mr-2" />
+                        Lab Order
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setShowPrescriptionModal(true)}>
+                        <Pill className="h-3 w-3 mr-2" />
+                        Prescribe
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => navigate(`/documents?patientId=${patientId}`)}>
+                        <FileText className="h-3 w-3 mr-2" />
+                        Report
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/referral-letters?patientId=${patientId}`)}>
+                        <UserPlus className="h-3 w-3 mr-2" />
+                        Referral
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/appointments?action=schedule&patientId=${patientId}`)}>
+                        <Calendar className="h-3 w-3 mr-2" />
+                        Follow-up
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </CardContent>
               </Card>
 
