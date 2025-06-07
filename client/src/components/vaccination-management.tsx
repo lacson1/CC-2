@@ -135,7 +135,15 @@ export default function VaccinationManagement({ patientId, canEdit }: Vaccinatio
                         <FormItem>
                           <FormLabel>Date Administered</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input 
+                              type="date" 
+                              {...field}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Tab' || e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -191,7 +199,15 @@ export default function VaccinationManagement({ patientId, canEdit }: Vaccinatio
                         <FormItem>
                           <FormLabel>Next Due Date (Optional)</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} />
+                            <Input 
+                              type="date" 
+                              {...field}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Tab' || e.key === 'Enter') {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
