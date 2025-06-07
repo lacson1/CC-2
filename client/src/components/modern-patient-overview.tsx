@@ -11,6 +11,67 @@ import { PatientAlertsPanel } from './patient-alerts-panel';
 import { PatientSafetyAlertsRealtime, QuickSafetyIndicator } from './patient-safety-alerts-realtime';
 import PatientVitalSignsTracker from './patient-vital-signs-tracker';
 import { formatPatientName, getPatientInitials } from '@/lib/patient-utils';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { 
+  Stethoscope, 
+  Plus,
+  Sparkles
+} from "lucide-react";
+import { GlobalMedicationSearch } from "@/components/global-medication-search";
+
+// Comprehensive visit form schema
+const comprehensiveVisitSchema = z.object({
+  // Basic Visit Information
+  visitType: z.string().min(1, "Visit type is required"),
+  chiefComplaint: z.string().min(1, "Chief complaint is required"),
+  historyOfPresentIllness: z.string().default(""),
+  
+  // Vital Signs
+  bloodPressure: z.string().default(""),
+  heartRate: z.string().default(""),
+  temperature: z.string().default(""),
+  weight: z.string().default(""),
+  height: z.string().default(""),
+  respiratoryRate: z.string().default(""),
+  oxygenSaturation: z.string().default(""),
+  
+  // Physical Examination
+  generalAppearance: z.string().default(""),
+  cardiovascularSystem: z.string().default(""),
+  respiratorySystem: z.string().default(""),
+  gastrointestinalSystem: z.string().default(""),
+  neurologicalSystem: z.string().default(""),
+  musculoskeletalSystem: z.string().default(""),
+  
+  // Assessment and Plan
+  assessment: z.string().default(""),
+  diagnosis: z.string().min(1, "Primary diagnosis is required"),
+  secondaryDiagnoses: z.string().default(""),
+  treatmentPlan: z.string().min(1, "Treatment plan is required"),
+  medications: z.string().default(""),
+  
+  // Follow-up and Instructions
+  patientInstructions: z.string().default(""),
+  followUpDate: z.string().default(""),
+  followUpInstructions: z.string().default(""),
+  
+  // Additional Notes
+  additionalNotes: z.string().default(""),
+});
+
+type VisitFormData = z.infer<typeof comprehensiveVisitSchema>;
 
 import { PatientCommunicationHub } from './patient-communication-hub';
 import ConsultationFormSelector from './consultation-form-selector';
@@ -36,7 +97,7 @@ import { MedicationReviewAssignmentModal } from './medication-review-assignment-
 import { MedicationReviewAssignmentsList } from './medication-review-assignments-list';
 import VaccinationManagement from './vaccination-management';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, MoreVertical, Eye, Download, Share, FileText, Printer, X, Heart } from 'lucide-react';
+import { CheckCircle, MoreVertical, Eye, Download, Share, Printer } from 'lucide-react';
 import { LabResultPersonalityIntegration } from './LabResultPersonalityIntegration';
 import ConsentCapture from './consent-capture';
 import InsuranceManagement from './insurance-management';
@@ -453,6 +514,43 @@ export function ModernPatientOverview({
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [showMedicationReviewAssignmentModal, setShowMedicationReviewAssignmentModal] = useState(false);
   const [selectedPrescriptionForReview, setSelectedPrescriptionForReview] = useState<any>(null);
+  
+  // Visit Recording Form State
+  const [isVisitFormVisible, setIsVisitFormVisible] = useState(false);
+  const [additionalDiagnoses, setAdditionalDiagnoses] = useState<string[]>([]);
+  const [medicationList, setMedicationList] = useState<string[]>([]);
+  
+  // Visit form configuration
+  const visitForm = useForm<VisitFormData>({
+    resolver: zodResolver(comprehensiveVisitSchema),
+    defaultValues: {
+      visitType: "consultation",
+      chiefComplaint: "",
+      historyOfPresentIllness: "",
+      bloodPressure: "",
+      heartRate: "",
+      temperature: "",
+      weight: "",
+      height: "",
+      respiratoryRate: "",
+      oxygenSaturation: "",
+      generalAppearance: "",
+      cardiovascularSystem: "",
+      respiratorySystem: "",
+      gastrointestinalSystem: "",
+      neurologicalSystem: "",
+      musculoskeletalSystem: "",
+      assessment: "",
+      diagnosis: "",
+      secondaryDiagnoses: "",
+      treatmentPlan: "",
+      medications: "",
+      patientInstructions: "",
+      followUpDate: "",
+      followUpInstructions: "",
+      additionalNotes: "",
+    },
+  });
 
   // Combine visits only (exclude consultation records to prevent phantom entries)
   const combinedVisits = React.useMemo(() => {
