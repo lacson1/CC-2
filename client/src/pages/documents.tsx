@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { DocumentPreviewCarousel } from '@/components/document-preview-carousel';
 
-// AuthenticatedPDFViewer component for secure PDF viewing
+// Enhanced PDF Viewer with multiple viewing options
 function AuthenticatedPDFViewer({ document, onDownload }: { 
   document: Document; 
   onDownload: (fileName: string, originalName: string) => void; 
@@ -20,33 +20,48 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'iframe' | 'object' | 'embed'>('iframe');
+  const [retryCount, setRetryCount] = useState(0);
+
+  const loadPDF = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('clinic_token');
+      if (!token) {
+        setError('Authentication required');
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/files/medical/${document.fileName}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+        setRetryCount(0);
+      } else if (response.status === 401 && retryCount < 2) {
+        // Retry with fresh auth
+        setRetryCount(prev => prev + 1);
+        setTimeout(loadPDF, 1000);
+        return;
+      } else {
+        setError(`Failed to load PDF (${response.status})`);
+      }
+    } catch (err) {
+      setError('Network error loading PDF');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   React.useEffect(() => {
-    const loadPDF = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem('clinic_token');
-        const response = await fetch(`/api/files/medical/${document.fileName}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-        } else {
-          setError('Failed to load PDF');
-        }
-      } catch (err) {
-        setError('Error loading PDF');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadPDF();
 
     return () => {
@@ -54,7 +69,7 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [document.fileName]);
+  }, [document.fileName, retryCount]);
 
   if (isLoading) {
     return (
@@ -67,52 +82,92 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
     );
   }
 
+  const openInNewTab = async () => {
+    try {
+      const token = localStorage.getItem('clinic_token');
+      const response = await fetch(`/api/files/medical/${document.fileName}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
+    } catch (error) {
+      console.error('Error opening PDF:', error);
+    }
+  };
+
+  const renderPDFViewer = () => {
+    if (!pdfUrl) return null;
+
+    switch (viewMode) {
+      case 'object':
+        return (
+          <object
+            data={pdfUrl}
+            type="application/pdf"
+            className="w-full h-full"
+            style={{ height: 'calc(600px - 48px)' }}
+          >
+            <p>PDF cannot be displayed. <button onClick={openInNewTab} className="text-blue-600 underline">Open in new tab</button></p>
+          </object>
+        );
+      case 'embed':
+        return (
+          <embed
+            src={pdfUrl}
+            type="application/pdf"
+            className="w-full h-full"
+            style={{ height: 'calc(600px - 48px)' }}
+          />
+        );
+      default:
+        return (
+          <iframe
+            src={pdfUrl}
+            className="w-full h-full border-0"
+            title={document.originalName}
+            style={{ height: 'calc(600px - 48px)' }}
+          />
+        );
+    }
+  };
+
   if (error || !pdfUrl) {
     return (
       <div className="w-full h-[600px] flex flex-col items-center justify-center bg-gray-50 rounded border-2 border-dashed border-gray-300">
         <div className="text-center p-8">
           <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">{document.originalName}</h3>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-gray-500 mb-2">
             PDF Document • {(document.size / 1024 / 1024).toFixed(2)} MB
           </p>
-          <p className="text-xs text-gray-400 mb-6">
+          <p className="text-xs text-gray-400 mb-4">
             Uploaded {format(new Date(document.uploadedAt), 'MMM d, yyyy')}
           </p>
-          <div className="flex gap-3 justify-center">
-            <Button
-              onClick={async () => {
-                try {
-                  const token = localStorage.getItem('clinic_token');
-                  const response = await fetch(`/api/files/medical/${document.fileName}`, {
-                    headers: {
-                      'Authorization': `Bearer ${token}`
-                    }
-                  });
-                  
-                  if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
-                    setTimeout(() => URL.revokeObjectURL(url), 10000);
-                  }
-                } catch (error) {
-                  console.error('Error opening PDF:', error);
-                }
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+          <div className="flex gap-3 justify-center mb-4">
+            <Button onClick={openInNewTab} className="bg-blue-600 hover:bg-blue-700">
               <Eye className="w-4 h-4 mr-2" />
               Open in New Tab
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => onDownload(document.fileName, document.originalName)}
-            >
+            <Button variant="outline" onClick={() => onDownload(document.fileName, document.originalName)}>
               <Download className="w-4 h-4 mr-2" />
               Download
             </Button>
           </div>
+          {error && (
+            <Button variant="outline" size="sm" onClick={loadPDF}>
+              Retry Loading
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -120,11 +175,46 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
 
   return (
     <div className="w-full h-[600px] bg-white rounded border">
-      <iframe
-        src={pdfUrl}
-        className="w-full h-full border-0 rounded"
-        title={document.originalName}
-      />
+      <div className="flex justify-between items-center p-2 border-b bg-gray-50">
+        <span className="text-sm font-medium">{document.originalName}</span>
+        <div className="flex gap-2 items-center">
+          <div className="flex gap-1 mr-2">
+            <Button
+              size="sm"
+              variant={viewMode === 'iframe' ? 'default' : 'outline'}
+              onClick={() => setViewMode('iframe')}
+              className="text-xs px-2"
+            >
+              iFrame
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'object' ? 'default' : 'outline'}
+              onClick={() => setViewMode('object')}
+              className="text-xs px-2"
+            >
+              Object
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'embed' ? 'default' : 'outline'}
+              onClick={() => setViewMode('embed')}
+              className="text-xs px-2"
+            >
+              Embed
+            </Button>
+          </div>
+          <Button size="sm" variant="outline" onClick={openInNewTab}>
+            <Eye className="w-3 h-3 mr-1" />
+            New Tab
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => onDownload(document.fileName, document.originalName)}>
+            <Download className="w-3 h-3 mr-1" />
+            Download
+          </Button>
+        </div>
+      </div>
+      {renderPDFViewer()}
     </div>
   );
 }
