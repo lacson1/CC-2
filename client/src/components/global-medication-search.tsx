@@ -62,7 +62,7 @@ export function GlobalMedicationSearch({
     }
     
     // Otherwise use the traditional multi-medication selection
-    if (medicationName && onMedicationsChange && !selectedMedications.includes(medicationName)) {
+    if (medicationName && onMedicationsChange && selectedMedications && !selectedMedications.includes(medicationName)) {
       const updatedMedications = [...selectedMedications, medicationName];
       onMedicationsChange(updatedMedications);
       setSearchTerm('');
@@ -143,7 +143,7 @@ export function GlobalMedicationSearch({
                       >
                         <Check
                           className={`mr-2 h-4 w-4 ${
-                            selectedMedications.includes(medication.name) 
+                            selectedMedications && selectedMedications.includes(medication.name) 
                               ? "opacity-100" 
                               : "opacity-0"
                           }`}
@@ -223,7 +223,7 @@ export function GlobalMedicationSearch({
       )}
 
       {/* Selected medications display - only show for multi-selection mode */}
-      {selectedMedications.length > 0 && onMedicationsChange && (
+      {selectedMedications && selectedMedications.length > 0 && onMedicationsChange && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-medium text-gray-700">
