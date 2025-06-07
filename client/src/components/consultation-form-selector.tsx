@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Send, Clock, User, Calendar, Activity, Pill, Search, ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { FileText, Send, Clock, User, Calendar, Activity, Pill, Search, ChevronDown, ChevronUp, Filter, Pin, PinOff, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ConsultationHistoryDisplay from "./consultation-history-display";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -22,6 +22,7 @@ interface ConsultationForm {
     fields: FormField[];
   };
   isActive: boolean;
+  isPinned?: boolean;
 }
 
 interface FormField {
@@ -99,6 +100,44 @@ export default function ConsultationFormSelector({
       toast({
         title: "Error",
         description: error.message || "Failed to create consultation record",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Pin form mutation
+  const pinFormMutation = useMutation({
+    mutationFn: (formId: number) => apiRequest(`/api/consultation-forms/${formId}/pin`, 'POST'),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Form pinned successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/consultation-forms'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to pin form",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Unpin form mutation
+  const unpinFormMutation = useMutation({
+    mutationFn: (formId: number) => apiRequest(`/api/consultation-forms/${formId}/pin`, 'DELETE'),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Form unpinned successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/consultation-forms'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unpin form",
         variant: "destructive",
       });
     },

@@ -4840,10 +4840,33 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.get("/api/consultation-forms", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { specialistRole } = req.query;
-      const forms = await storage.getConsultationForms({
-        specialistRole: specialistRole as string,
-        isActive: true
-      });
+      const userId = req.user?.id;
+      const userOrgId = req.user?.organizationId;
+      
+      // Get all forms with pinned status for the current user
+      const forms = await db.select({
+        id: consultationForms.id,
+        name: consultationForms.name,
+        description: consultationForms.description,
+        sections: consultationForms.sections,
+        specialistRole: consultationForms.specialistRole,
+        organizationId: consultationForms.organizationId,
+        createdBy: consultationForms.createdBy,
+        createdAt: consultationForms.createdAt,
+        updatedAt: consultationForms.updatedAt,
+        isPinned: sql<boolean>`CASE WHEN ${pinnedConsultationForms.id} IS NOT NULL THEN true ELSE false END`
+      })
+      .from(consultationForms)
+      .leftJoin(pinnedConsultationForms, and(
+        eq(pinnedConsultationForms.consultationFormId, consultationForms.id),
+        eq(pinnedConsultationForms.userId, userId!)
+      ))
+      .where(and(
+        userOrgId ? eq(consultationForms.organizationId, userOrgId) : undefined,
+        specialistRole ? eq(consultationForms.specialistRole, specialistRole as string) : undefined
+      ))
+      .orderBy(desc(consultationForms.createdAt));
+      
       res.json(forms);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch specialty assessments" });
@@ -4913,6 +4936,112 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       res.json(form);
     } catch (error) {
       res.status(500).json({ message: "Failed to update consultation form" });
+    }
+  });
+
+  // Pin/Unpin consultation forms
+  app.post("/api/consultation-forms/:id/pin", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const consultationFormId = parseInt(req.params.id);
+      const userId = req.user?.id!;
+      const userOrgId = req.user?.organizationId;
+
+      // Check if form exists and user has access
+      const [form] = await db.select()
+        .from(consultationForms)
+        .where(and(
+          eq(consultationForms.id, consultationFormId),
+          userOrgId ? eq(consultationForms.organizationId, userOrgId) : undefined
+        ))
+        .limit(1);
+
+      if (!form) {
+        return res.status(404).json({ message: "Consultation form not found" });
+      }
+
+      // Check if already pinned
+      const [existingPin] = await db.select()
+        .from(pinnedConsultationForms)
+        .where(and(
+          eq(pinnedConsultationForms.userId, userId),
+          eq(pinnedConsultationForms.consultationFormId, consultationFormId)
+        ))
+        .limit(1);
+
+      if (existingPin) {
+        return res.status(400).json({ message: "Form is already pinned" });
+      }
+
+      // Create pin
+      const [pin] = await db.insert(pinnedConsultationForms)
+        .values({
+          userId,
+          consultationFormId,
+          organizationId: userOrgId
+        })
+        .returning();
+
+      res.status(201).json({ message: "Form pinned successfully", pin });
+    } catch (error) {
+      console.error('Error pinning consultation form:', error);
+      res.status(500).json({ message: "Failed to pin consultation form" });
+    }
+  });
+
+  app.delete("/api/consultation-forms/:id/pin", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const consultationFormId = parseInt(req.params.id);
+      const userId = req.user?.id!;
+
+      // Remove pin
+      const deletedPins = await db.delete(pinnedConsultationForms)
+        .where(and(
+          eq(pinnedConsultationForms.userId, userId),
+          eq(pinnedConsultationForms.consultationFormId, consultationFormId)
+        ))
+        .returning();
+
+      if (deletedPins.length === 0) {
+        return res.status(404).json({ message: "Pin not found" });
+      }
+
+      res.json({ message: "Form unpinned successfully" });
+    } catch (error) {
+      console.error('Error unpinning consultation form:', error);
+      res.status(500).json({ message: "Failed to unpin consultation form" });
+    }
+  });
+
+  // Get pinned consultation forms for current user
+  app.get("/api/consultation-forms/pinned", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user?.id!;
+      const userOrgId = req.user?.organizationId;
+
+      const pinnedForms = await db.select({
+        id: consultationForms.id,
+        name: consultationForms.name,
+        description: consultationForms.description,
+        sections: consultationForms.sections,
+        specialistRole: consultationForms.specialistRole,
+        organizationId: consultationForms.organizationId,
+        createdBy: consultationForms.createdBy,
+        createdAt: consultationForms.createdAt,
+        updatedAt: consultationForms.updatedAt,
+        pinnedAt: pinnedConsultationForms.createdAt
+      })
+      .from(pinnedConsultationForms)
+      .innerJoin(consultationForms, eq(pinnedConsultationForms.consultationFormId, consultationForms.id))
+      .where(and(
+        eq(pinnedConsultationForms.userId, userId),
+        userOrgId ? eq(consultationForms.organizationId, userOrgId) : undefined
+      ))
+      .orderBy(desc(pinnedConsultationForms.createdAt));
+
+      res.json(pinnedForms);
+    } catch (error) {
+      console.error('Error fetching pinned consultation forms:', error);
+      res.status(500).json({ message: "Failed to fetch pinned forms" });
     }
   });
 
