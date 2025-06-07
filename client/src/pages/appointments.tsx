@@ -335,7 +335,7 @@ export default function AppointmentsPage() {
     // Format date as YYYY-MM-DD for the backend
     const appointmentDate = selectedDate.toISOString().split('T')[0];
 
-    createAppointmentMutation.mutate({
+    const appointmentData = {
       patientId: selectedPatient,
       doctorId: selectedStaff,
       appointmentDate: appointmentDate,
@@ -345,7 +345,10 @@ export default function AppointmentsPage() {
       status: 'scheduled',
       priority: 'medium',
       notes: notes || undefined
-    });
+    };
+
+    console.log('Creating appointment with data:', appointmentData);
+    createAppointmentMutation.mutate(appointmentData);
   };
 
   const updateAppointmentStatus = (appointmentId: number, status: string) => {
