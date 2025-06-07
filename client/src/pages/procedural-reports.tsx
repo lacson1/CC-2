@@ -85,6 +85,30 @@ export default function ProceduralReports() {
   const [statusFilter, setStatusFilter] = useState("all");
   const { toast } = useToast();
 
+  // Check URL parameters for pre-filling from visit recording
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const patientId = urlParams.get('patientId');
+    const visitId = urlParams.get('visitId');
+    const shouldPrefill = urlParams.get('prefill') === 'true';
+
+    if (patientId && shouldPrefill) {
+      // Auto-open create modal and pre-fill patient
+      setIsCreateModalOpen(true);
+      form.setValue('patientId', parseInt(patientId));
+      
+      // Show helpful message
+      toast({
+        title: "Visit Context Loaded",
+        description: "Procedural report form pre-filled with patient information from recorded visit.",
+        duration: 4000,
+      });
+
+      // Clear URL parameters after processing
+      window.history.replaceState({}, '', '/procedural-reports');
+    }
+  }, []);
+
   // Fetch procedural reports
   const { data: reports = [], isLoading: reportsLoading } = useQuery({
     queryKey: ["/api/procedural-reports"],

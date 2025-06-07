@@ -118,6 +118,7 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shouldCreateProceduralReport, setShouldCreateProceduralReport] = useState(false);
   const [isFormVisible, setIsFormVisible] = useState(true);
   const [additionalDiagnoses, setAdditionalDiagnoses] = useState<string[]>([]);
   const [medicationList, setMedicationList] = useState<string[]>([]);
@@ -247,6 +248,25 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
           console.log('Medication review suggestion check failed:', error);
         }
       }
+
+      // Handle procedural report creation if requested
+      if (shouldCreateProceduralReport) {
+        toast({
+          title: "Redirecting to Procedural Report",
+          description: "Opening procedural report form with visit details pre-filled.",
+          duration: 3000,
+        });
+        
+        // Close the visit recording modal
+        if (onOpenChange) onOpenChange(false);
+        
+        // Navigate to procedural reports page with visit context
+        setTimeout(() => {
+          window.location.href = `/procedural-reports?patientId=${patientId}&visitId=${createdVisit.id}&prefill=true`;
+        }, 1000);
+        
+        return; // Exit early to prevent form reset
+      }
       
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/visits`] });
@@ -258,6 +278,7 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
       form.reset();
       setAdditionalDiagnoses([]);
       setMedicationList([]);
+      setShouldCreateProceduralReport(false);
       
       if (onSave) onSave();
     },
@@ -820,6 +841,45 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
                 />
               </div>
 
+              {/* Procedural Reports Integration Section */}
+              {(form.watch("diagnosis") || form.watch("treatment")) && (
+                <div className="space-y-4 border-t pt-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-purple-500" />
+                    Procedural Documentation
+                  </h3>
+                  
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                    <p className="text-sm text-purple-700 mb-3">
+                      Based on the diagnosis and treatment plan, you may need to document any procedures performed during this visit.
+                    </p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="createProceduralReport"
+                          checked={shouldCreateProceduralReport}
+                          onChange={(e) => setShouldCreateProceduralReport(e.target.checked)}
+                          className="rounded border-purple-300"
+                        />
+                        <label htmlFor="createProceduralReport" className="text-sm font-medium text-purple-800">
+                          Create procedural report after saving visit
+                        </label>
+                      </div>
+                      
+                      {shouldCreateProceduralReport && (
+                        <div className="mt-3 p-3 bg-purple-100 border border-purple-300 rounded">
+                          <p className="text-sm text-purple-800">
+                            <strong>Note:</strong> After saving this visit, you'll be redirected to create a detailed procedural report with the visit information pre-filled.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Medication Review Assignment Section */}
               {medicationList.length > 0 && (
                 <div className="space-y-4 border-t pt-6">
@@ -846,7 +906,7 @@ export function EnhancedVisitRecording({ patientId, open, onOpenChange, onSave }
                     
                     <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
                       <p className="text-sm text-yellow-800">
-                        💡 <strong>Suggestion:</strong> After saving this visit, navigate to the patient's medication review tab to create specific review assignments for complex medications or multiple drug regimens.
+                        <strong>Suggestion:</strong> After saving this visit, navigate to the patient's medication review tab to create specific review assignments for complex medications or multiple drug regimens.
                       </p>
                     </div>
                   </div>
