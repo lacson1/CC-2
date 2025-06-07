@@ -212,57 +212,7 @@ export function DocumentPreviewCarousel({
             </div>
           </div>
           <div className="flex-1 p-2">
-            <div className="w-full h-full flex flex-col items-center justify-center bg-white rounded border-2 border-dashed border-gray-300">
-              <div className="text-center p-8">
-                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">{doc.originalName}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  PDF Document • {(doc.size / 1024 / 1024).toFixed(2)} MB
-                </p>
-                <p className="text-xs text-gray-400 mb-6">
-                  Uploaded {format(new Date(doc.uploadedAt), 'MMM d, yyyy')}
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <Button
-                    onClick={async () => {
-                      try {
-                        const token = localStorage.getItem('clinic_token');
-                        const response = await fetch(`/api/files/medical/${doc.fileName}`, {
-                          headers: {
-                            'Authorization': `Bearer ${token}`
-                          }
-                        });
-                        
-                        if (response.ok) {
-                          const blob = await response.blob();
-                          const url = URL.createObjectURL(blob);
-                          window.open(url, '_blank');
-                          setTimeout(() => URL.revokeObjectURL(url), 10000);
-                        }
-                      } catch (error) {
-                        console.error('Error opening PDF:', error);
-                      }
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    Open PDF in New Tab
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = `${fileUrl}?download=true`;
-                      link.download = doc.originalName;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                    }}
-                  >
-                    Download PDF
-                  </Button>
-                </div>
-              </div>
-            </div>
+            <PDFViewer doc={doc} />
           </div>
         </div>
       );
