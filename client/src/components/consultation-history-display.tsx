@@ -48,13 +48,8 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
   // Combine consultation records and visits into unified timeline
   const combinedRecords = React.useMemo(() => {
     const records = [
-      // Transform consultation records - only include those with meaningful data
+      // Transform consultation records - include all records
       ...(consultationRecords as any[])
-        .filter((record: any) => 
-          record.formData && 
-          Object.keys(record.formData).length > 0 &&
-          Object.values(record.formData).some(value => value && value !== '')
-        )
         .map((record: any) => ({
           ...record,
           type: 'consultation',
@@ -64,12 +59,8 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
           role: record.conductedByRole || 'staff',
           uniqueKey: `consultation-${record.id}-${record.createdAt}`
         })),
-      // Transform visits - only include those with meaningful content
+      // Transform visits - include all visits
       ...(visits as any[])
-        .filter((visit: any) => 
-          visit.complaint || visit.diagnosis || visit.treatment || 
-          visit.bloodPressure || visit.heartRate || visit.temperature || visit.weight
-        )
         .map((visit: any) => ({
           ...visit,
           id: `visit-${visit.id}`,
@@ -86,19 +77,8 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
         }))
     ];
     
-    // Remove duplicates based on date and content similarity
-    const uniqueRecords = records.filter((record, index, arr) => {
-      const isDuplicate = arr.findIndex(r => 
-        r.uniqueKey !== record.uniqueKey &&
-        Math.abs(new Date(r.date).getTime() - new Date(record.date).getTime()) < 60000 && // Within 1 minute
-        r.title === record.title &&
-        r.conductedBy === record.conductedBy
-      ) < index;
-      return !isDuplicate;
-    });
-    
-    // Sort by date descending (newest first)
-    return uniqueRecords.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date descending (newest first) - show all records
+    return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [consultationRecords, visits]);
 
   // Apply filters to combined records
@@ -600,8 +580,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                           
                           <CardContent className="pt-0">
                             {/* Consultation content with View Full Note expandable */}
-                            {consultation.formData && (
-                              <div className="space-y-3">
+                            <div className="space-y-3">
                                 {/* Preview of key data - different display for consultations vs visits */}
                                 {consultation.type === 'consultation' && consultation.formData ? (
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -719,7 +698,6 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                                   </CollapsibleContent>
                                 </Collapsible>
                               </div>
-                            )}
                           </CardContent>
                         </Card>
                       </div>
