@@ -12,6 +12,39 @@ import { format } from 'date-fns';
 import { apiRequest } from '@/lib/queryClient';
 import { DocumentPreviewCarousel } from '@/components/document-preview-carousel';
 
+// PDF.js based viewer for maximum compatibility
+function PDFJSViewer({ pdfUrl, documentName }: { pdfUrl: string; documentName: string }) {
+  const [pdfError, setPdfError] = useState(false);
+  
+  // PDF.js viewer URL with the blob URL
+  const pdfJsUrl = `https://mozilla.github.io/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
+  
+  return (
+    <div className="w-full h-full">
+      {!pdfError ? (
+        <iframe
+          src={pdfJsUrl}
+          className="w-full h-full border-0"
+          title={documentName}
+          onError={() => setPdfError(true)}
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center h-full p-8 bg-gray-50">
+          <File className="w-16 h-16 text-gray-400 mb-4" />
+          <p className="text-gray-600 mb-4">PDF.js viewer failed to load</p>
+          <Button
+            onClick={() => window.open(pdfUrl, '_blank')}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Open PDF Directly
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Enhanced PDF Viewer with multiple viewing options
 function AuthenticatedPDFViewer({ document, onDownload }: { 
   document: Document; 
@@ -20,7 +53,7 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'iframe' | 'object' | 'embed'>('iframe');
+  const [viewMode, setViewMode] = useState<'iframe' | 'object' | 'embed' | 'pdfjs' | 'text'>('iframe');
   const [retryCount, setRetryCount] = useState(0);
 
   const loadPDF = async () => {
@@ -104,6 +137,8 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
     if (!pdfUrl) return null;
 
     switch (viewMode) {
+      case 'pdfjs':
+        return <PDFJSViewer pdfUrl={pdfUrl} documentName={document.originalName} />;
       case 'object':
         return (
           <object
@@ -123,6 +158,34 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
             className="w-full h-full"
             style={{ height: 'calc(600px - 48px)' }}
           />
+        );
+      case 'text':
+        return (
+          <div className="w-full h-full p-4 bg-gray-50 overflow-auto" style={{ height: 'calc(600px - 48px)' }}>
+            <div className="bg-white rounded p-6 shadow">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">PDF Document</h3>
+                  <p className="text-gray-600 mb-4">{document.originalName}</p>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Size: {(document.size / 1024 / 1024).toFixed(2)} MB<br/>
+                    Uploaded: {format(new Date(document.uploadedAt), 'MMM d, yyyy')}
+                  </p>
+                  <div className="flex gap-2 justify-center">
+                    <Button onClick={openInNewTab} size="sm">
+                      <Eye className="w-4 h-4 mr-2" />
+                      Open in New Tab
+                    </Button>
+                    <Button onClick={() => onDownload(document.fileName, document.originalName)} variant="outline" size="sm">
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         );
       default:
         return (
@@ -189,6 +252,14 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
             </Button>
             <Button
               size="sm"
+              variant={viewMode === 'pdfjs' ? 'default' : 'outline'}
+              onClick={() => setViewMode('pdfjs')}
+              className="text-xs px-2"
+            >
+              PDF.js
+            </Button>
+            <Button
+              size="sm"
               variant={viewMode === 'object' ? 'default' : 'outline'}
               onClick={() => setViewMode('object')}
               className="text-xs px-2"
@@ -202,6 +273,14 @@ function AuthenticatedPDFViewer({ document, onDownload }: {
               className="text-xs px-2"
             >
               Embed
+            </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'text' ? 'default' : 'outline'}
+              onClick={() => setViewMode('text')}
+              className="text-xs px-2"
+            >
+              Info
             </Button>
           </div>
           <Button size="sm" variant="outline" onClick={openInNewTab}>
