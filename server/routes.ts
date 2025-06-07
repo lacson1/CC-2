@@ -5551,7 +5551,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  // Get patient consultations with form details
+  // Get patient consultations with form details and complete staff information
   app.get("/api/patients/:id/consultations", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
@@ -5566,15 +5566,28 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
           createdAt: consultationRecords.createdAt,
           formName: consultationForms.name,
           specialistRole: consultationForms.specialistRole,
-          formDescription: consultationForms.description
+          formDescription: consultationForms.description,
+          // Complete staff information
+          conductedByFullName: sql<string>`COALESCE(${users.firstName} || ' ' || ${users.lastName}, ${users.username}, 'Healthcare Staff')`,
+          conductedByRole: users.role,
+          roleDisplayName: sql<string>`CASE 
+            WHEN ${users.role} = 'doctor' THEN 'Doctor'
+            WHEN ${users.role} = 'nurse' THEN 'Nurse'
+            WHEN ${users.role} = 'pharmacist' THEN 'Pharmacist'
+            WHEN ${users.role} = 'admin' THEN 'Administrator'
+            WHEN ${users.role} = 'lab_technician' THEN 'Lab Technician'
+            ELSE INITCAP(${users.role})
+          END`
         })
         .from(consultationRecords)
         .leftJoin(consultationForms, eq(consultationRecords.formId, consultationForms.id))
+        .leftJoin(users, eq(consultationRecords.filledBy, users.id))
         .where(eq(consultationRecords.patientId, patientId))
         .orderBy(desc(consultationRecords.createdAt));
       
       res.json(consultations);
     } catch (error) {
+      console.error('Error fetching patient consultations:', error);
       res.status(500).json({ message: "Failed to fetch patient consultations" });
     }
   });

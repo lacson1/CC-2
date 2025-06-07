@@ -477,8 +477,8 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
         <CollapsibleContent>
           <CardContent className="p-0">
             <div className="relative max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-blue-50 hover:scrollbar-thumb-blue-500 border-t border-gray-200">
-              {/* Timeline line */}
-              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500"></div>
+              {/* Enhanced Vertical Timeline line */}
+              <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-gray-300 rounded-full shadow-sm"></div>
               
               <div className="space-y-4 p-4">
                 {(consultationHistory as any[]).length === 0 ? (
@@ -488,94 +488,171 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                   </div>
                 ) : (
                   (consultationHistory as any[]).map((consultation: any, index: number) => (
-                    <div key={consultation.id} className="relative flex items-start" data-testid="consultation-record">
-                      {/* Timeline dot - smaller */}
-                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow">
-                        <FileText className="w-4 h-4 text-white" />
+                    <div key={consultation.id} className="relative flex items-start mb-6" data-testid="consultation-record">
+                      {/* Enhanced Timeline dot with specialty indication */}
+                      <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg border-4 border-white">
+                        <FileText className="w-5 h-5 text-white" />
                       </div>
                       
-                      {/* Consultation content - Very compact version */}
-                      <div className="ml-3 flex-1">
-                        <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-                          <CardContent className="p-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <div className="flex flex-col gap-0.5">
-                              <h4 className="font-semibold text-sm text-gray-900">
-                                {consultation.formName || 'Consultation'}
-                              </h4>
-                              <div className="flex items-center gap-1 text-xs">
-                                <span className="text-gray-600">By:</span>
-                                <span className="font-medium text-blue-800">
-                                  {consultation.conductedByFullName || 'Healthcare Staff'}
-                                </span>
-                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs px-1 py-0">
-                                  {consultation.roleDisplayName || 'Staff'}
-                                </Badge>
+                      {/* Enhanced Consultation content */}
+                      <div className="ml-4 flex-1">
+                        <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-all duration-200">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <h4 className="font-bold text-lg text-gray-900 flex items-center">
+                                    🩺 {consultation.formName || 'Consultation'}
+                                  </h4>
+                                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                    #{consultation.id}
+                                  </Badge>
+                                </div>
+                                
+                                {/* Enhanced metadata with emojis */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="h-4 w-4 text-blue-500" />
+                                    <div>
+                                      <span className="font-medium text-gray-700">📅 {new Date(consultation.createdAt).toLocaleDateString('en-US', {
+                                        weekday: 'short',
+                                        year: 'numeric',
+                                        month: 'short',
+                                        day: 'numeric'
+                                      })}</span>
+                                      <div className="text-xs text-gray-500">
+                                        🕐 {new Date(consultation.createdAt).toLocaleTimeString('en-US', { 
+                                          hour: '2-digit', 
+                                          minute: '2-digit' 
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-2">
+                                    <User className="h-4 w-4 text-green-500" />
+                                    <div>
+                                      <span className="font-medium text-gray-700">
+                                        👤 {consultation.conductedByFullName || 'Healthcare Staff'}
+                                      </span>
+                                      <div className="text-xs text-gray-500">
+                                        {consultation.roleDisplayName || 'Staff'}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-2">
+                                    <Activity className="h-4 w-4 text-purple-500" />
+                                    <div>
+                                      <span className="font-medium text-gray-700">
+                                        🏥 {consultation.specialistRole || consultation.roleDisplayName || 'General'}
+                                      </span>
+                                      <div className="text-xs text-gray-500">Specialty</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <ConsultationDropdownMenu 
+                                  consultation={consultation} 
+                                  patient={patient}
+                                  onView={handleViewConsultation}
+                                />
                               </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
-                                #{consultation.id}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {new Date(consultation.createdAt).toLocaleDateString()}
-                              </Badge>
-                              <ConsultationDropdownMenu 
-                                consultation={consultation} 
-                                patient={patient}
-                                onView={handleViewConsultation}
-                              />
-                            </div>
-                          </div>
+                          </CardHeader>
                           
-                          {/* Very compact consultation details */}
-                          <div className="space-y-1">
-                            <div className="text-xs text-gray-600">
-                              <strong>Date:</strong> {new Date(consultation.createdAt).toLocaleDateString()} at {new Date(consultation.createdAt).toLocaleTimeString('en-US', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                            </div>
-                            
-                            {/* Scrollable consultation content */}
+                          <CardContent className="pt-0">
+                            {/* Consultation content with View Full Note expandable */}
                             {consultation.formData && (
-                              <div className="mt-1 p-1.5 bg-gray-50 rounded border">
-                                <div className="max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 space-y-0.5 text-xs">
-                                  {/* Display all form data dynamically */}
-                                  {Object.entries(consultation.formData).map(([key, value]) => {
+                              <div className="space-y-3">
+                                {/* Preview of key consultation data */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {Object.entries(consultation.formData).slice(0, 4).map(([key, value]) => {
                                     if (!value || (typeof value === 'object' && !Object.values(value).some(v => v))) return null;
                                     
                                     return (
-                                      <div key={key} className="pb-1">
-                                        <span className="font-medium text-gray-700 capitalize">
+                                      <div key={key} className="bg-gray-50 p-3 rounded-lg border">
+                                        <span className="font-medium text-gray-700 capitalize text-sm block mb-1">
                                           {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
                                         </span>
-                                        <div className="ml-2 text-gray-600">
+                                        <div className="text-gray-600 text-sm">
                                           {typeof value === 'object' ? (
-                                            <div className="space-y-0.5">
-                                              {Object.entries(value).map(([subKey, subValue]) => 
+                                            <div className="space-y-1">
+                                              {Object.entries(value).slice(0, 2).map(([subKey, subValue]) => 
                                                 subValue ? (
-                                                  <div key={subKey}>
-                                                    <span className="font-medium">{subKey}:</span> {subValue}
+                                                  <div key={subKey} className="text-xs">
+                                                    <span className="font-medium">{subKey}:</span> {String(subValue).substring(0, 50)}
+                                                    {String(subValue).length > 50 && '...'}
                                                   </div>
                                                 ) : null
                                               )}
                                             </div>
                                           ) : (
-                                            <span>{value}</span>
+                                            <span>
+                                              {String(value).substring(0, 100)}
+                                              {String(value).length > 100 && '...'}
+                                            </span>
                                           )}
                                         </div>
                                       </div>
                                     );
                                   })}
                                 </div>
+                                
+                                {/* View Full Note expandable section */}
+                                <Collapsible>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="outline" size="sm" className="w-full justify-center">
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      View Full Note
+                                      <ChevronDown className="h-4 w-4 ml-2" />
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-4">
+                                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                      <h5 className="font-semibold text-blue-800 mb-3 flex items-center">
+                                        📋 Complete Consultation Record
+                                      </h5>
+                                      <div className="max-h-64 overflow-y-auto space-y-3">
+                                        {Object.entries(consultation.formData).map(([key, value]) => {
+                                          if (!value || (typeof value === 'object' && !Object.values(value).some(v => v))) return null;
+                                          
+                                          return (
+                                            <div key={key} className="bg-white p-3 rounded border">
+                                              <span className="font-medium text-gray-700 capitalize block mb-2">
+                                                {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}:
+                                              </span>
+                                              <div className="text-gray-600">
+                                                {typeof value === 'object' ? (
+                                                  <div className="space-y-2">
+                                                    {Object.entries(value).map(([subKey, subValue]) => 
+                                                      subValue ? (
+                                                        <div key={subKey} className="flex justify-between p-2 bg-gray-50 rounded">
+                                                          <span className="font-medium text-sm">{subKey}:</span>
+                                                          <span className="text-sm">{String(subValue)}</span>
+                                                        </div>
+                                                      ) : null
+                                                    )}
+                                                  </div>
+                                                ) : (
+                                                  <div className="whitespace-pre-wrap">{String(value)}</div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  </CollapsibleContent>
+                                </Collapsible>
                               </div>
                             )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </div>
                     </div>
-                  </div>
                   ))
                 )}
                 
