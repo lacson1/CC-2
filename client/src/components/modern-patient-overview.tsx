@@ -2368,13 +2368,6 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   <p className="text-sm text-gray-600 mb-4">
                     Document a new visit for {formatPatientName(patient)}
                   </p>
-                  <Button 
-                    onClick={() => navigate(`/patients/${patient.id}/record-visit`)}
-                    className="w-full"
-                  >
-                    <MedicalIcons.stethoscope className="h-4 w-4 mr-2" />
-                    Open Comprehensive Visit Recording
-                  </Button>
                 </div>
               </CardContent>
             </Card>
