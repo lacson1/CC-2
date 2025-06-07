@@ -1395,6 +1395,7 @@ export default function LaboratoryUnified() {
                   </CardContent>
                 </Card>
               ))}
+              </div>
             </div>
           )}
         </TabsContent>
@@ -1410,16 +1411,74 @@ export default function LaboratoryUnified() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4">
-              {filteredResults.map((result) => (
-                <Card key={result.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="p-2 bg-green-50 rounded-lg">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                          </div>
+            <div className="space-y-4">
+              {/* Results Selection Toolbar */}
+              <Card className="bg-green-50 border-green-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          checked={selectedResults.size === filteredResults.length && filteredResults.length > 0}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              selectAllResults();
+                            } else {
+                              clearResultSelection();
+                            }
+                          }}
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Select All ({filteredResults.length})
+                        </span>
+                      </div>
+                      {selectedResults.size > 0 && (
+                        <Badge variant="secondary">
+                          {selectedResults.size} selected
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {selectedResults.size > 0 && (
+                        <>
+                          <Button
+                            size="sm"
+                            onClick={printSelectedResults}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            <Printer className="w-4 h-4 mr-2" />
+                            Print Selected ({selectedResults.size})
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={clearResultSelection}
+                          >
+                            Clear Selection
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid gap-4">
+                {filteredResults.map((result) => (
+                  <Card key={result.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            checked={selectedResults.has(result.id)}
+                            onCheckedChange={() => toggleResultSelection(result.id)}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 bg-green-50 rounded-lg">
+                                <CheckCircle className="w-5 h-5 text-green-600" />
+                              </div>
                           <div>
                             <h3 className="font-semibold text-gray-900">
                               {result.patientName || 'Unknown Patient'}
@@ -1464,9 +1523,10 @@ export default function LaboratoryUnified() {
                             Reviewed by {result.reviewedBy} on {result.reviewedAt && format(new Date(result.reviewedAt), 'MMM dd, yyyy')}
                           </div>
                         )}
-                      </div>
+                          </div>
+                        </div>
 
-                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -1505,6 +1565,7 @@ export default function LaboratoryUnified() {
                   </CardContent>
                 </Card>
               ))}
+              </div>
             </div>
           )}
         </TabsContent>
