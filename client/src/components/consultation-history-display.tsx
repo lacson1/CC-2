@@ -56,8 +56,10 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
         type: 'visit',
         date: visit.visitDate || visit.createdAt,
         title: `${visit.visitType?.charAt(0).toUpperCase() + visit.visitType?.slice(1) || 'Medical Visit'}`,
-        conductedBy: visit.doctorName || 'Healthcare Staff',
-        role: 'doctor',
+        conductedBy: visit.doctorFirstName && visit.doctorLastName 
+          ? `${visit.doctorFirstName} ${visit.doctorLastName}`
+          : visit.doctorName || 'Healthcare Staff',
+        role: visit.doctorRole || 'doctor',
         formName: visit.visitType,
         complaint: visit.complaint,
         diagnosis: visit.diagnosis,

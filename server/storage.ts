@@ -244,7 +244,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getVisitsByPatient(patientId: number): Promise<Visit[]> {
-    return await db.select().from(visits)
+    return await db.select({
+      id: visits.id,
+      patientId: visits.patientId,
+      doctorId: visits.doctorId,
+      visitDate: visits.visitDate,
+      bloodPressure: visits.bloodPressure,
+      heartRate: visits.heartRate,
+      temperature: visits.temperature,
+      weight: visits.weight,
+      complaint: visits.complaint,
+      diagnosis: visits.diagnosis,
+      treatment: visits.treatment,
+      followUpDate: visits.followUpDate,
+      visitType: visits.visitType,
+      status: visits.status,
+      organizationId: visits.organizationId,
+      createdAt: visits.createdAt,
+      doctorName: users.username,
+      doctorFirstName: users.firstName,
+      doctorLastName: users.lastName,
+      doctorRole: users.role
+    }).from(visits)
+      .leftJoin(users, eq(visits.doctorId, users.id))
       .where(eq(visits.patientId, patientId))
       .orderBy(desc(visits.visitDate));
   }
