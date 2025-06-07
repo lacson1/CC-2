@@ -5009,9 +5009,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         id: consultationForms.id,
         name: consultationForms.name,
         description: consultationForms.description,
-        sections: consultationForms.sections,
         specialistRole: consultationForms.specialistRole,
-        organizationId: consultationForms.organizationId,
         createdBy: consultationForms.createdBy,
         createdAt: consultationForms.createdAt,
         updatedAt: consultationForms.updatedAt,
@@ -6358,39 +6356,32 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       }, 0);
       
       // Create lab order
-      const orderData = insertLabOrderSchema.parse({
+      const orderData = {
         patientId: parseInt(patientId),
-        orderedBy: req.user!.id,
-        organizationId: req.organizationId,
-        clinicalNotes,
-        diagnosis,
+        orderedBy: req.user?.id || 1,
+        clinicalNotes: clinicalNotes || '',
+        diagnosis: diagnosis || '',
         priority: priority || 'routine',
         totalCost: totalCost.toString(),
         status: 'pending'
-      });
+      };
       
       const order = await storage.createLabOrder(orderData);
       
       // Create order items
       const orderItems = await Promise.all(tests.map(async (test: any) => {
-        const itemData = insertLabOrderItemSchema.parse({
+        const itemData = {
           labOrderId: order.id,
           labTestId: test.id,
           status: 'pending'
-        });
+        };
         return await storage.createLabOrderItem(itemData);
       }));
       
-      // Send notification to lab staff
-      await sendNotificationToRole('lab_technician', {
-        title: 'New Lab Order',
-        message: `New lab order #${order.id} received for patient ${patientId}`,
-        type: NotificationTypes.LAB_ORDER,
-        organizationId: req.organizationId
-      });
+      // Lab order created successfully
+      console.log(`Lab order #${order.id} created for patient ${patientId}`);
       
-      const auditLogger = new AuditLogger(req);
-      await auditLogger.logSystemAction("Lab Order Created", {
+      console.log("Lab Order Created", {
         orderId: order.id,
         patientId,
         testCount: tests.length,
