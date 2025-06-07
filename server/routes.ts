@@ -5464,18 +5464,17 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         .select({
           id: labResults.id,
           type: sql<string>`'lab_result'`,
-          date: labResults.resultDate,
+          date: labResults.testDate,
           title: sql<string>`CONCAT('Lab Result: ', ${labResults.testName})`,
-          description: sql<string>`CONCAT(${labResults.result}, ' ', COALESCE(${labResults.units}, ''))`,
-          conductedBy: sql<string>`COALESCE(${labResults.reviewedBy}, 'Lab Technician')`,
+          description: sql<string>`CONCAT('Result: ', ${labResults.result})`,
+          conductedBy: sql<string>`'Lab Technician'`,
           conductedByRole: sql<string>`'lab_technician'`,
           data: sql<any>`json_build_object(
             'testName', ${labResults.testName},
             'result', ${labResults.result},
-            'units', ${labResults.units},
             'normalRange', ${labResults.normalRange},
             'status', ${labResults.status},
-            'category', ${labResults.category}
+            'notes', ${labResults.notes}
           )`
         })
         .from(labResults)

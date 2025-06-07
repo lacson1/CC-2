@@ -76,41 +76,119 @@ export function PatientTimeline({ events }: PatientTimelineProps) {
         <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200"></div>
         
         {sortedEvents.map((event, index) => (
-          <div key={event.id} className="relative flex items-start space-x-4 pb-4">
+          <div key={`${event.type}-${event.id}`} className="relative flex items-start space-x-4 pb-4">
             {/* Timeline dot */}
-            <div className={`flex-shrink-0 w-12 h-12 rounded-full ${getEventColor(event.type)} flex items-center justify-center relative z-10`}>
+            <div className={`flex-shrink-0 w-12 h-12 rounded-full ${getEventColor(event.type)} flex items-center justify-center relative z-10 border-2`}>
               {getEventIcon(event.type)}
             </div>
             
             {/* Event content */}
             <div className="flex-1 min-w-0">
-              <Card className="shadow-sm">
+              <Card className="shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-sm font-medium text-gray-900">{event.title}</h4>
-                    <span className="text-xs text-gray-500">
-                      {new Date(event.date).toLocaleDateString()}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-500">
+                        {new Date(event.date).toLocaleDateString()}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(event.date).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </span>
+                    </div>
                   </div>
                   
                   {event.description && (
                     <p className="text-sm text-gray-600 mb-2">{event.description}</p>
                   )}
-                  
-                  {event.status && (
-                    <Badge variant="secondary" className="text-xs">
-                      {event.status}
-                    </Badge>
+
+                  {/* Conducted by information */}
+                  {event.conductedBy && (
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        {event.conductedBy}
+                      </Badge>
+                      {event.conductedByRole && (
+                        <Badge variant="secondary" className="text-xs capitalize">
+                          {event.conductedByRole.replace('_', ' ')}
+                        </Badge>
+                      )}
+                    </div>
                   )}
                   
-                  {/* Additional details based on event type */}
-                  {event.type === 'visit' && event.details && (
-                    <div className="mt-2 text-xs text-gray-500 space-y-1">
-                      {event.details.bloodPressure && (
-                        <div>BP: {event.details.bloodPressure}</div>
+                  {/* Type-specific data display */}
+                  {event.data && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                      {event.type === 'visit' && (
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          {event.data.visitType && (
+                            <div><span className="font-medium">Type:</span> {event.data.visitType}</div>
+                          )}
+                          {event.data.bloodPressure && (
+                            <div><span className="font-medium">BP:</span> {event.data.bloodPressure}</div>
+                          )}
+                          {event.data.heartRate && (
+                            <div><span className="font-medium">HR:</span> {event.data.heartRate} bpm</div>
+                          )}
+                          {event.data.temperature && (
+                            <div><span className="font-medium">Temp:</span> {event.data.temperature}°C</div>
+                          )}
+                          {event.data.weight && (
+                            <div><span className="font-medium">Weight:</span> {event.data.weight} kg</div>
+                          )}
+                          {event.data.diagnosis && (
+                            <div className="col-span-2"><span className="font-medium">Diagnosis:</span> {event.data.diagnosis}</div>
+                          )}
+                        </div>
                       )}
-                      {event.details.temperature && (
-                        <div>Temp: {event.details.temperature}°C</div>
+
+                      {(event.type === 'lab' || event.type === 'lab_result') && (
+                        <div className="space-y-1 text-xs">
+                          {event.data.result && (
+                            <div><span className="font-medium">Result:</span> {event.data.result} {event.data.units || ''}</div>
+                          )}
+                          {event.data.normalRange && (
+                            <div><span className="font-medium">Normal Range:</span> {event.data.normalRange}</div>
+                          )}
+                          {event.data.status && (
+                            <Badge variant={event.data.status === 'abnormal' ? 'destructive' : 'secondary'} className="text-xs">
+                              {event.data.status}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {event.type === 'prescription' && (
+                        <div className="space-y-1 text-xs">
+                          {event.data.dosage && (
+                            <div><span className="font-medium">Dosage:</span> {event.data.dosage}</div>
+                          )}
+                          {event.data.frequency && (
+                            <div><span className="font-medium">Frequency:</span> {event.data.frequency}</div>
+                          )}
+                          {event.data.duration && (
+                            <div><span className="font-medium">Duration:</span> {event.data.duration}</div>
+                          )}
+                          {event.data.status && (
+                            <Badge variant={event.data.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                              {event.data.status}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {event.type === 'consultation' && (
+                        <div className="space-y-1 text-xs">
+                          {event.data.formName && (
+                            <div><span className="font-medium">Form:</span> {event.data.formName}</div>
+                          )}
+                          {event.data.specialistRole && (
+                            <div><span className="font-medium">Specialist:</span> {event.data.specialistRole}</div>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
