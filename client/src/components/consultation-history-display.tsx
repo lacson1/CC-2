@@ -281,6 +281,19 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
             
             {/* Filter Controls */}
             <div className="flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100">
+              {/* Search Input */}
+              <div className="flex items-center gap-2 min-w-48">
+                <label className="text-sm font-medium text-gray-600">Search:</label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-gray-400" />
+                  <Input
+                    placeholder="Search records..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-7 h-8 text-xs w-40"
+                  />
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 <label className="text-sm font-medium text-gray-600">Role:</label>
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -419,23 +432,40 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                 </Select>
               </div>
 
-              {(selectedRole !== 'all' || dateRange !== 'all' || selectedFormType !== 'all' || customDateFrom || customDateTo) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedRole('all');
-                    setDateRange('all');
-                    setSelectedFormType('all');
-                    setCustomDateFrom(undefined);
-                    setCustomDateTo(undefined);
-                    setSearchTerm('');
-                  }}
-                  className="h-8 px-2 text-gray-500 hover:text-gray-700"
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  Clear All
-                </Button>
+              {(selectedRole !== 'all' || dateRange !== 'all' || selectedFormType !== 'all' || customDateFrom || customDateTo || searchTerm) && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {[
+                      selectedRole !== 'all' && 'Role',
+                      dateRange !== 'all' && 'Timeline', 
+                      selectedFormType !== 'all' && 'Type',
+                      searchTerm && 'Search',
+                      (customDateFrom || customDateTo) && 'Custom Date'
+                    ].filter(Boolean).length} filter{[
+                      selectedRole !== 'all' && 'Role',
+                      dateRange !== 'all' && 'Timeline', 
+                      selectedFormType !== 'all' && 'Type',
+                      searchTerm && 'Search',
+                      (customDateFrom || customDateTo) && 'Custom Date'
+                    ].filter(Boolean).length !== 1 ? 's' : ''} active
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedRole('all');
+                      setDateRange('all');
+                      setSelectedFormType('all');
+                      setCustomDateFrom(undefined);
+                      setCustomDateTo(undefined);
+                      setSearchTerm('');
+                    }}
+                    className="h-8 px-2 text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Clear All
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
