@@ -278,8 +278,9 @@ export function MedicationReviewAssignmentsList({
                         <div className="flex items-center gap-2">
                           <Pill className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">
-                            {review.prescription.medicationName} - {review.prescription.dosage}
-                            {review.prescription.frequency && ` (${review.prescription.frequency})`}
+                            {review.prescription 
+                              ? `${review.prescription.medicationName} - ${review.prescription.dosage}${review.prescription.frequency ? ` (${review.prescription.frequency})` : ''}`
+                              : 'General medication review (no specific prescription)'}
                           </span>
                         </div>
 
