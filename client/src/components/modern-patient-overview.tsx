@@ -2353,14 +2353,6 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       <MedicalIcons.add className="w-4 h-4 mr-2" />
                       Start New Visit Recording
                     </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setShowMedicationReviewAssignmentModal(true)}
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                    >
-                      <MedicalIcons.patientProfile className="w-4 h-4 mr-2" />
-                      Assign Med Review
-                    </Button>
                   </div>
                 </div>
 
