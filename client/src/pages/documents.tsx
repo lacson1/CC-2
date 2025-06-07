@@ -71,24 +71,24 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
       } else if (response.status === 401 && retryCount < 2) {
         // Retry with fresh auth
         setRetryCount(prev => prev + 1);
-        setTimeout(loadPDF, 1000);
+        setTimeout(loadDocument, 1000);
         return;
       } else {
-        setError(`Failed to load PDF (${response.status})`);
+        setError(`Failed to load document (${response.status})`);
       }
     } catch (err) {
-      setError('Network error loading PDF');
+      setError('Network error loading document');
     } finally {
       setIsLoading(false);
     }
   };
 
-  React.useEffect(() => {
-    loadPDF();
+  useEffect(() => {
+    loadDocument();
 
     return () => {
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
+      if (fileUrl) {
+        URL.revokeObjectURL(fileUrl);
       }
     };
   }, [document.fileName, retryCount]);
@@ -98,7 +98,7 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
       <div className="w-full h-[600px] flex items-center justify-center bg-gray-50 rounded">
         <div className="text-center">
           <File className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-600">Loading PDF...</p>
+          <p className="text-sm text-gray-600">Loading {isImage ? 'image' : 'document'}...</p>
         </div>
       </div>
     );
@@ -118,22 +118,34 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
         setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
     } catch (error) {
-      console.error('Error opening PDF:', error);
+      console.error('Error opening document:', error);
     }
   };
 
-  // Simple PDF rendering without complex blob handling
+  const renderDocumentViewer = () => {
+    if (!fileUrl) return null;
 
-  const renderPDFViewer = () => {
-    if (!pdfUrl) return null;
+    // Render images
+    if (isImage) {
+      return (
+        <div className="flex justify-center items-center h-full p-4">
+          <img 
+            src={fileUrl} 
+            alt={document.originalName}
+            className="max-w-full max-h-full object-contain rounded shadow-lg"
+          />
+        </div>
+      );
+    }
 
+    // Render PDFs
     switch (viewMode) {
       case 'pdfjs':
-        return <SimplePDFViewer pdfUrl={pdfUrl} documentName={document.originalName} />;
+        return <SimplePDFViewer pdfUrl={fileUrl} documentName={document.originalName} />;
       case 'object':
         return (
           <object
-            data={pdfUrl}
+            data={fileUrl}
             type="application/pdf"
             className="w-full h-full"
             style={{ height: 'calc(600px - 48px)' }}
@@ -151,7 +163,7 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
       case 'embed':
         return (
           <embed
-            src={pdfUrl}
+            src={fileUrl}
             type="application/pdf"
             className="w-full h-full"
             style={{ height: 'calc(600px - 48px)' }}
@@ -164,10 +176,11 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
                   <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">PDF Document</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Document</h3>
                   <p className="text-gray-600 mb-4">{document.originalName}</p>
                   <p className="text-sm text-gray-500 mb-6">
                     Size: {(document.size / 1024 / 1024).toFixed(2)} MB<br/>
+                    Type: {document.mimeType}<br/>
                     Uploaded: {format(new Date(document.uploadedAt), 'MMM d, yyyy')}
                   </p>
                   <div className="flex gap-2 justify-center">
@@ -189,7 +202,7 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
         // Standard iframe PDF viewer
         return (
           <iframe
-            src={pdfUrl}
+            src={fileUrl}
             className="w-full h-full border-0"
             title={document.originalName}
             style={{ height: 'calc(600px - 48px)' }}
@@ -198,14 +211,14 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
     }
   };
 
-  if (error || !pdfUrl) {
+  if (error || !fileUrl) {
     return (
       <div className="w-full h-[600px] flex flex-col items-center justify-center bg-gray-50 rounded border-2 border-dashed border-gray-300">
         <div className="text-center p-8">
           <File className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">{document.originalName}</h3>
           <p className="text-sm text-gray-500 mb-2">
-            PDF Document • {(document.size / 1024 / 1024).toFixed(2)} MB
+            {document.mimeType} • {(document.size / 1024 / 1024).toFixed(2)} MB
           </p>
           <p className="text-xs text-gray-400 mb-4">
             Uploaded {format(new Date(document.uploadedAt), 'MMM d, yyyy')}
@@ -226,7 +239,7 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
             </Button>
           </div>
           {error && (
-            <Button variant="outline" size="sm" onClick={loadPDF}>
+            <Button variant="outline" size="sm" onClick={loadDocument}>
               Retry Loading
             </Button>
           )}
@@ -292,7 +305,7 @@ function AuthenticatedDocumentViewer({ document, onDownload }: {
           </Button>
         </div>
       </div>
-      {renderPDFViewer()}
+      {renderDocumentViewer()}
     </div>
   );
 }
@@ -749,7 +762,7 @@ export default function DocumentsPage() {
             
             <div className="flex-1 p-4">
               {previewDocument.mimeType === 'application/pdf' ? (
-                <AuthenticatedPDFViewer document={previewDocument} onDownload={handleDownload} />
+                <AuthenticatedDocumentViewer document={previewDocument} onDownload={handleDownload} />
               ) : previewDocument.mimeType.startsWith('image/') ? (
                 <div className="text-center">
                   <img
