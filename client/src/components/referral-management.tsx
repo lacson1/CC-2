@@ -123,10 +123,7 @@ export default function ReferralManagement({ patientId }: ReferralManagementProp
   // Create referral mutation
   const createReferralMutation = useMutation({
     mutationFn: (data: ReferralFormData) =>
-      apiRequest(`/api/patients/${patientId}/referrals`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      }),
+      apiRequest(`/api/patients/${patientId}/referrals`, 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/referrals`] });
       toast({
@@ -148,10 +145,7 @@ export default function ReferralManagement({ patientId }: ReferralManagementProp
   // Update referral mutation
   const updateReferralMutation = useMutation({
     mutationFn: (data: ReferralFormData) =>
-      apiRequest(`/api/patients/${patientId}/referrals/${editingReferral?.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data)
-      }),
+      apiRequest(`/api/patients/${patientId}/referrals/${editingReferral?.id}`, 'PATCH', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/referrals`] });
       toast({
@@ -174,9 +168,7 @@ export default function ReferralManagement({ patientId }: ReferralManagementProp
   // Delete referral mutation
   const deleteReferralMutation = useMutation({
     mutationFn: (referralId: number) =>
-      apiRequest(`/api/patients/${patientId}/referrals/${referralId}`, {
-        method: 'DELETE'
-      }),
+      apiRequest(`/api/patients/${patientId}/referrals/${referralId}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/referrals`] });
       toast({
