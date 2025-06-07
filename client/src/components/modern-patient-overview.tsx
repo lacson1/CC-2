@@ -117,7 +117,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useApiErrorHandler } from "@/hooks/useApiErrorHandler";
-import { MedicalIcons, MedicalContext, getStatusStyling, IconSizes } from '@/lib/medical-icons';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -432,21 +432,21 @@ const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectio
   const getDocumentIcon = (category: string) => {
     switch (category.toLowerCase()) {
       case 'lab-result':
-        return <MedicalIcons.bloodTest className="w-5 h-5" />;
+        return <BloodTest className="w-5 h-5" />;
       case 'imaging':
-        return <MedicalIcons.image className="w-5 h-5" />;
+        return <Image className="w-5 h-5" />;
       case 'prescription':
-        return <MedicalIcons.medication className="w-5 h-5" />;
+        return <Medication className="w-5 h-5" />;
       case 'medical-record':
-        return <MedicalIcons.medicalRecord className="w-5 h-5" />;
+        return <MedicalRecord className="w-5 h-5" />;
       case 'discharge-summary':
-        return <MedicalIcons.document className="w-5 h-5" />;
+        return <Document className="w-5 h-5" />;
       case 'referral':
-        return <MedicalIcons.referral className="w-5 h-5" />;
+        return <Referral className="w-5 h-5" />;
       case 'insurance':
-        return <MedicalIcons.card className="w-5 h-5" />;
+        return <CardIcon className="w-5 h-5" />;
       default:
-        return <MedicalIcons.document className="w-5 h-5" />;
+        return <Document className="w-5 h-5" />;
     }
   };
 
@@ -468,7 +468,7 @@ const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectio
                 onClick={() => onViewDocument(index)}
                 className="h-8 w-8 p-0 hover:bg-blue-50"
               >
-                <MedicalIcons.maximize className="w-4 h-4" />
+                <Maximize className="w-4 h-4" />
               </Button>
             </div>
             
@@ -1526,51 +1526,51 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
       <Tabs defaultValue="overview" className="w-full h-full">
         <TabsList className="grid w-full grid-cols-12 mb-8 h-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border-2 border-blue-200/60 rounded-2xl p-3 shadow-2xl backdrop-blur-lg ring-1 ring-blue-100/50">
           <TabsTrigger value="overview" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.patient className="w-6 h-6 group-data-[state=active]:text-blue-600" />
+            <Patient className="w-6 h-6 group-data-[state=active]:text-blue-600" />
             <span className="font-semibold">Overview</span>
           </TabsTrigger>
           <TabsTrigger value="medications" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.medication className="w-6 h-6 group-data-[state=active]:text-purple-600" />
+            <Medication className="w-6 h-6 group-data-[state=active]:text-purple-600" />
             <span className="font-semibold">Medications</span>
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.medicalRecord className="w-6 h-6 group-data-[state=active]:text-emerald-600" />
+            <MedicalRecord className="w-6 h-6 group-data-[state=active]:text-emerald-600" />
             <span className="font-semibold">Documents</span>
           </TabsTrigger>
           <TabsTrigger value="labs" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.bloodTest className="w-6 h-6 group-data-[state=active]:text-red-600" />
+            <BloodTest className="w-6 h-6 group-data-[state=active]:text-red-600" />
             <span className="font-semibold">Labs</span>
           </TabsTrigger>
           <TabsTrigger value="timeline" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.vitals className="w-6 h-6 group-data-[state=active]:text-teal-600" />
+            <Vitals className="w-6 h-6 group-data-[state=active]:text-teal-600" />
             <span className="font-semibold">Timeline</span>
           </TabsTrigger>
           <TabsTrigger value="safety" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.heartRate className="w-6 h-6 group-data-[state=active]:text-rose-600" />
+            <HeartRate className="w-6 h-6 group-data-[state=active]:text-rose-600" />
             <span className="font-semibold">Safety</span>
           </TabsTrigger>
           <TabsTrigger value="vitals" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.monitor className="w-6 h-6 group-data-[state=active]:text-amber-600" />
+            <Monitor className="w-6 h-6 group-data-[state=active]:text-amber-600" />
             <span className="font-semibold">Vitals</span>
           </TabsTrigger>
           <TabsTrigger value="vaccinations" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.injection className="w-6 h-6 group-data-[state=active]:text-green-600" />
+            <Injection className="w-6 h-6 group-data-[state=active]:text-green-600" />
             <span className="font-semibold">Vaccines</span>
           </TabsTrigger>
           <TabsTrigger value="record-visit" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.calendar className="w-6 h-6 group-data-[state=active]:text-indigo-600" />
+            <Calendar className="w-6 h-6 group-data-[state=active]:text-indigo-600" />
             <span className="font-semibold">Visit</span>
           </TabsTrigger>
           <TabsTrigger value="consultation" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.consultation className="w-6 h-6 group-data-[state=active]:text-cyan-600" />
+            <Stethoscope className="w-6 h-6 group-data-[state=active]:text-cyan-600" />
             <span className="font-semibold">Specialty</span>
           </TabsTrigger>
           <TabsTrigger value="med-reviews" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.prescription className="w-6 h-6 group-data-[state=active]:text-orange-600" />
+            <FileText className="w-6 h-6 group-data-[state=active]:text-orange-600" />
             <span className="font-semibold">Reviews</span>
           </TabsTrigger>
           <TabsTrigger value="communication" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalIcons.message className="w-6 h-6 group-data-[state=active]:text-violet-600" />
+            <Message className="w-6 h-6 group-data-[state=active]:text-violet-600" />
             <span className="font-semibold">Chat</span>
           </TabsTrigger>
         </TabsList>
@@ -1580,7 +1580,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MedicalIcons.medication className="h-5 w-5 text-purple-500" />
+                <Medication className="h-5 w-5 text-purple-500" />
                 Medications & Prescriptions
               </CardTitle>
             </CardHeader>
@@ -1589,19 +1589,19 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                 <div className="flex items-center justify-between mb-4">
                   <TabsList className="grid w-full grid-cols-4 max-w-2xl">
                     <TabsTrigger value="current" className="flex items-center gap-2">
-                      <MedicalIcons.medication className="w-4 h-4" />
+                      <Medication className="w-4 h-4" />
                       Current ({activeMedications.length})
                     </TabsTrigger>
                     <TabsTrigger value="past" className="flex items-center gap-2">
-                      <MedicalIcons.clock className="w-4 h-4" />
+                      <Clock className="w-4 h-4" />
                       Past ({discontinuedMedications.length})
                     </TabsTrigger>
                     <TabsTrigger value="repeat" className="flex items-center gap-2">
-                      <MedicalIcons.refresh className="w-4 h-4" />
+                      <Refresh className="w-4 h-4" />
                       Repeat ({repeatMedications.length})
                     </TabsTrigger>
                     <TabsTrigger value="summary" className="flex items-center gap-2">
-                      <MedicalIcons.prescription className="w-4 h-4" />
+                      <FileText className="w-4 h-4" />
                       Summary
                     </TabsTrigger>
                   </TabsList>
@@ -1610,7 +1610,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     size="sm" 
                     className="bg-purple-600 hover:bg-purple-700"
                   >
-                    <MedicalIcons.add className="w-4 h-4 mr-2" />
+                    <Plus className="w-4 h-4 mr-2" />
                     Add Medication
                   </Button>
                 </div>
@@ -1629,7 +1629,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         variant="outline"
                         size="sm"
                       >
-                        <MedicalIcons.refresh className="w-4 h-4 mr-2" />
+                        <Refresh className="w-4 h-4 mr-2" />
                         Retry Loading
                       </Button>
                     </div>
@@ -1681,7 +1681,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               {prescription.instructions && (
                                 <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
                                   <span className="font-medium text-slate-700 flex items-center gap-2">
-                                    <MedicalIcons.prescription className="w-4 h-4" />
+                                    <FileText className="w-4 h-4" />
                                     Special Instructions
                                   </span>
                                   <p className="text-slate-800 mt-2">{prescription.instructions}</p>
@@ -1691,12 +1691,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                                 <div className="flex items-center space-x-4 text-xs text-slate-500">
                                   <div className="flex items-center gap-1">
-                                    <MedicalIcons.calendar className="w-3 h-3" />
+                                    <Calendar className="w-3 h-3" />
                                     <span>Started: {prescription.startDate ? new Date(prescription.startDate).toLocaleDateString() : 'Not specified'}</span>
                                   </div>
                                   {prescription.endDate && (
                                     <div className="flex items-center gap-1">
-                                      <MedicalIcons.calendar className="w-3 h-3" />
+                                      <Calendar className="w-3 h-3" />
                                       <span>Ends: {new Date(prescription.endDate).toLocaleDateString()}</span>
                                     </div>
                                   )}
@@ -1705,42 +1705,42 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-800">
-                                        <MedicalIcons.menu className="w-3 h-3" />
+                                        <Menu className="w-3 h-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[180px]">
                                       <DropdownMenuItem onClick={() => handleEditPrescription(prescription)}>
-                                        <MedicalIcons.edit className="w-3 h-3 mr-2" />
+                                        <Edit className="w-3 h-3 mr-2" />
                                         Edit Details
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
-                                        <MedicalIcons.print className="w-3 h-3 mr-2" />
+                                        <Print className="w-3 h-3 mr-2" />
                                         Print
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleGenerateQRCode(prescription)}>
-                                        <MedicalIcons.qrCode className="w-3 h-3 mr-2" />
+                                        <QrCode className="w-3 h-3 mr-2" />
                                         Generate QR Code
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem onClick={() => handleSendToRepeatMedications(prescription)}>
-                                        <MedicalIcons.refresh className="w-3 h-3 mr-2 text-blue-600" />
+                                        <Refresh className="w-3 h-3 mr-2 text-blue-600" />
                                         Add to Repeat Medications
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleSendToDispensary(prescription)}>
-                                        <MedicalIcons.pharmacy className="w-3 h-3 mr-2 text-green-600" />
+                                        <Plus className="w-3 h-3 mr-2 text-green-600" />
                                         Send to Dispensary
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'completed')}>
-                                        <MedicalIcons.success className="w-3 h-3 mr-2 text-blue-600" />
+                                        <Success className="w-3 h-3 mr-2 text-blue-600" />
                                         Mark Completed
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'discontinued')}>
-                                        <MedicalIcons.close className="w-3 h-3 mr-2 text-orange-600" />
+                                        <Close className="w-3 h-3 mr-2 text-orange-600" />
                                         Discontinue
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'active')}>
-                                        <MedicalIcons.refresh className="w-3 h-3 mr-2 text-green-600" />
+                                        <Refresh className="w-3 h-3 mr-2 text-green-600" />
                                         Reactivate
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
@@ -1754,11 +1754,11 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                 ) : (
                   <div className="text-center py-12 text-gray-500">
-                    <MedicalIcons.medication className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <Medication className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                     <h3 className="text-lg font-medium text-gray-700 mb-2">No Active Prescriptions</h3>
                     <p className="text-sm text-gray-500 mb-4">Start by adding the first prescription for this patient</p>
                     <Button onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700">
-                      <MedicalIcons.add className="w-4 h-4 mr-2" />
+                      <Plus className="w-4 h-4 mr-2" />
                       Add First Prescription
                     </Button>
                   </div>
@@ -1820,7 +1820,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-blue-600 hover:text-blue-800 border-blue-200"
                                     onClick={() => handleReorderMedication(prescription)}
                                   >
-                                    <MedicalIcons.refresh className="w-3 h-3 mr-1" />
+                                    <Refresh className="w-3 h-3 mr-1" />
                                     Reorder
                                   </Button>
                                   <Button 
@@ -1829,7 +1829,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-gray-600 hover:text-gray-800"
                                     onClick={() => handlePrintPrescription(prescription)}
                                   >
-                                    <MedicalIcons.print className="w-3 h-3 mr-1" />
+                                    <Print className="w-3 h-3 mr-1" />
                                     Print
                                   </Button>
                                 </div>
@@ -1841,7 +1841,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.calendar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <Calendar className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">No Past Medications</h3>
                       <p className="text-sm text-gray-500">Historical medications will appear here when available</p>
                     </div>
@@ -1921,7 +1921,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               {prescription.instructions && (
                                 <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
                                   <span className="font-medium text-gray-700 flex items-center gap-2">
-                                    <MedicalIcons.medicalRecord className="w-4 h-4" />
+                                    <MedicalRecord className="w-4 h-4" />
                                     Instructions
                                   </span>
                                   <p className="text-gray-800 mt-2">{prescription.instructions}</p>
@@ -1931,12 +1931,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               <div className="flex items-center justify-between mt-4 pt-3 border-t border-green-200">
                                 <div className="flex items-center space-x-4 text-xs text-gray-500">
                                   <div className="flex items-center gap-1">
-                                    <MedicalIcons.appointment className="w-3 h-3" />
+                                    <Calendar className="w-3 h-3" />
                                     <span>Started: {new Date(prescription.startDate).toLocaleDateString()}</span>
                                   </div>
                                   {prescription.lastReviewDate && (
                                     <div className="flex items-center gap-1">
-                                      <MedicalIcons.calendar className="w-3 h-3" />
+                                      <Calendar className="w-3 h-3" />
                                       <span>Last Review: {new Date(prescription.lastReviewDate).toLocaleDateString()}</span>
                                     </div>
                                   )}
@@ -1948,7 +1948,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-blue-600 hover:text-blue-800 border-blue-200"
                                     onClick={() => handleScheduleReview(prescription.id, prescription.medicationName)}
                                   >
-                                    <MedicalIcons.patientProfile className="w-3 h-3 mr-1" />
+                                    <PatientProfile className="w-3 h-3 mr-1" />
                                     Schedule Review
                                   </Button>
                                   <Button 
@@ -1957,22 +1957,22 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                     className="text-green-600 hover:text-green-800 border-green-200"
                                     onClick={() => handleIssueRepeat(prescription.id, prescription.medicationName)}
                                   >
-                                    <MedicalIcons.refresh className="w-3 h-3 mr-1" />
+                                    <Refresh className="w-3 h-3 mr-1" />
                                     Issue Repeat
                                   </Button>
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                       <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                                        <MedicalIcons.menu className="w-3 h-3" />
+                                        <Menu className="w-3 h-3" />
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-[180px]">
                                       <DropdownMenuItem onClick={() => handleEditPrescription(prescription)}>
-                                        <MedicalIcons.edit className="w-3 h-3 mr-2" />
+                                        <Edit className="w-3 h-3 mr-2" />
                                         Edit Repeat
                                       </DropdownMenuItem>
                                       <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
-                                        <MedicalIcons.print className="w-3 h-3 mr-2" />
+                                        <Print className="w-3 h-3 mr-2" />
                                         Print
                                       </DropdownMenuItem>
                                       <DropdownMenuSeparator />
@@ -1991,7 +1991,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.refresh className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <Refresh className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">No Repeat Prescriptions</h3>
                       <p className="text-sm text-gray-500 mb-4">
                         Repeat prescriptions are long-term medications that require regular review.
@@ -2090,7 +2090,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => setShowMedicationReviewAssignmentModal(true)}
                       >
-                        <MedicalIcons.patientProfile className="w-4 h-4 mr-2" />
+                        <PatientProfile className="w-4 h-4 mr-2" />
                         Assign Review
                       </Button>
                       <Button 
@@ -2103,7 +2103,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           });
                         }}
                       >
-                        <MedicalIcons.appointment className="w-4 h-4 mr-2" />
+                        <Calendar className="w-4 h-4 mr-2" />
                         Schedule Follow-up
                       </Button>
                     </div>
@@ -2172,7 +2172,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             size="sm" 
                             className="w-full bg-purple-600 hover:bg-purple-700"
                           >
-                            <MedicalIcons.add className="w-4 h-4 mr-2" />
+                            <Plus className="w-4 h-4 mr-2" />
                             Add New Medication
                           </Button>
                           {activeMedications.length > 0 && (
@@ -2182,7 +2182,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               size="sm" 
                               className="w-full"
                             >
-                              <MedicalIcons.print className="w-4 h-4 mr-2" />
+                              <Print className="w-4 h-4 mr-2" />
                               Print Recent Prescription
                             </Button>
                           )}
@@ -2201,7 +2201,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <MedicalIcons.vitals className="h-5 w-5 text-red-500" />
+                <Vitals className="h-5 w-5 text-red-500" />
                 Patient Safety Information
               </CardTitle>
             </CardHeader>
@@ -2226,7 +2226,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <MedicalIcons.vitals className="w-4 h-4 text-blue-500" />
+                    <Vitals className="w-4 h-4 text-blue-500" />
                     <span className="text-sm">Total Visits</span>
                   </div>
                   <Badge variant="secondary">{visits.length}</Badge>
@@ -2234,7 +2234,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <MedicalIcons.bloodTest className="w-4 h-4 text-green-500" />
+                    <BloodTest className="w-4 h-4 text-green-500" />
                     <span className="text-sm">Lab Results</span>
                   </div>
                   <Badge variant="secondary">{recentLabs.length}</Badge>
@@ -2242,7 +2242,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <MedicalIcons.medication className="w-4 h-4 text-purple-500" />
+                    <Medication className="w-4 h-4 text-purple-500" />
                     <span className="text-sm">Active Meds</span>
                   </div>
                   <Badge variant="secondary">{displayPrescriptions.length}</Badge>
@@ -2308,7 +2308,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <MedicalIcons.vitals className="w-4 h-4 text-red-500" />
+                  <Vitals className="w-4 h-4 text-red-500" />
                   Safety Status
                 </CardTitle>
               </CardHeader>
@@ -2328,16 +2328,16 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                 <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <MedicalIcons.medicalRecord className="h-5 w-5 text-gray-600" />
+                      <MedicalRecord className="h-5 w-5 text-gray-600" />
                       Recent Visits & Consultations
                       <Badge variant="secondary" className="ml-2">
                         {combinedVisits.length}
                       </Badge>
                     </CardTitle>
                     {isConsultationHistoryOpen ? (
-                      <MedicalIcons.chevronDown className="h-4 w-4 text-gray-500" />
+                      <ChevronDown className="h-4 w-4 text-gray-500" />
                     ) : (
-                      <MedicalIcons.chevronRight className="h-4 w-4 text-gray-500" />
+                      <ChevronRight className="h-4 w-4 text-gray-500" />
                     )}
                   </div>
                 </CardHeader>
@@ -2379,7 +2379,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MedicalIcons.menu className="h-4 w-4" />
+                                  <Menu className="h-4 w-4" />
                                   <span className="sr-only">Open menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
@@ -2387,35 +2387,35 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                 {item.type === 'visit' ? (
                                   <>
                                     <DropdownMenuItem onClick={() => handleViewVisit(item.id)}>
-                                      <MedicalIcons.vision className="mr-2 h-4 w-4" />
+                                      <Vision className="mr-2 h-4 w-4" />
                                       View Details
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleEditVisit(item.id)}>
-                                      <MedicalIcons.edit className="mr-2 h-4 w-4" />
+                                      <Edit className="mr-2 h-4 w-4" />
                                       Edit Visit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleCopyVisit(item)}>
-                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
-                                      MedicalIcons.copy Details
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Copy Details
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
                                       onClick={() => handleDeleteVisit(item.id)}
                                       className="text-red-600 focus:text-red-600"
                                     >
-                                      <MedicalIcons.delete className="mr-2 h-4 w-4" />
+                                      <Delete className="mr-2 h-4 w-4" />
                                       Delete Visit
                                     </DropdownMenuItem>
                                   </>
                                 ) : (
                                   <>
                                     <DropdownMenuItem onClick={() => handleViewConsultation(item.id)}>
-                                      <MedicalIcons.vision className="mr-2 h-4 w-4" />
+                                      <Vision className="mr-2 h-4 w-4" />
                                       View Consultation
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => navigator.clipboard.writeText(JSON.stringify(item.responses, null, 2))}>
-                                      <MedicalIcons.copy className="mr-2 h-4 w-4" />
-                                      MedicalIcons.copy Responses
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      Copy Responses
                                     </DropdownMenuItem>
                                   </>
                                 )}
@@ -2427,7 +2427,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      <MedicalIcons.stethoscope className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <Stethoscope className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                       <h3 className="font-medium text-gray-600 mb-1">No visits or consultations recorded yet</h3>
                       <p className="text-sm">Start by recording the first visit for this patient</p>
                     </div>
@@ -2465,7 +2465,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-blue-100 rounded-full flex items-center justify-center">
-                          <MedicalIcons.vitals className="w-2 h-2 text-blue-600" />
+                          <Vitals className="w-2 h-2 text-blue-600" />
                         </div>
                         <label htmlFor="filter-visits" className="text-xs cursor-pointer">Visits</label>
                       </div>
@@ -2478,7 +2478,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-100 rounded-full flex items-center justify-center">
-                          <MedicalIcons.bloodTest className="w-2 h-2 text-green-600" />
+                          <BloodTest className="w-2 h-2 text-green-600" />
                         </div>
                         <label htmlFor="filter-labs" className="text-xs cursor-pointer">Lab Results</label>
                       </div>
@@ -2491,7 +2491,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-orange-100 rounded-full flex items-center justify-center">
-                          <MedicalIcons.medicalRecord className="w-2 h-2 text-orange-600" />
+                          <MedicalRecord className="w-2 h-2 text-orange-600" />
                         </div>
                         <label htmlFor="filter-consultations" className="text-xs cursor-pointer">Consultations</label>
                       </div>
@@ -2504,7 +2504,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-purple-100 rounded-full flex items-center justify-center">
-                          <MedicalIcons.medication className="w-2 h-2 text-purple-600" />
+                          <Medication className="w-2 h-2 text-purple-600" />
                         </div>
                         <label htmlFor="filter-prescriptions" className="text-xs cursor-pointer">Prescriptions</label>
                       </div>
@@ -3114,7 +3114,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MedicalIcons.medicalRecord className="h-5 w-5 text-emerald-600" />
+                  <MedicalRecord className="h-5 w-5 text-emerald-600" />
                   Patient Documents & Medical Records
                 </CardTitle>
               </CardHeader>
@@ -3122,19 +3122,19 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                 <Tabs defaultValue="medical-records" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-6">
                     <TabsTrigger value="medical-records" className="flex items-center gap-2">
-                      <MedicalIcons.medicalRecord className="w-4 h-4" />
+                      <MedicalRecord className="w-4 h-4" />
                       Medical Records
                     </TabsTrigger>
                     <TabsTrigger value="consent-forms" className="flex items-center gap-2">
-                      <MedicalIcons.document className="w-4 h-4" />
+                      <Document className="w-4 h-4" />
                       Consent Forms
                     </TabsTrigger>
                     <TabsTrigger value="insurance" className="flex items-center gap-2">
-                      <MedicalIcons.billing className="w-4 h-4" />
+                      <FileText className="w-4 h-4" />
                       Insurance
                     </TabsTrigger>
                     <TabsTrigger value="referrals" className="flex items-center gap-2">
-                      <MedicalIcons.referral className="w-4 h-4" />
+                      <Referral className="w-4 h-4" />
                       Referrals
                     </TabsTrigger>
                   </TabsList>
@@ -3154,14 +3154,14 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
                         <DialogTrigger asChild>
                           <Button className="bg-emerald-600 hover:bg-emerald-700">
-                            <MedicalIcons.upload className="w-4 h-4 mr-2" />
+                            <Upload className="w-4 h-4 mr-2" />
                             Upload Document
                           </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-md">
                           <DialogHeader>
                             <DialogTitle className="flex items-center gap-2">
-                              <MedicalIcons.upload className="w-5 h-5 text-emerald-600" />
+                              <Upload className="w-5 h-5 text-emerald-600" />
                               Upload Medical Document
                             </DialogTitle>
                           </DialogHeader>
@@ -3219,12 +3219,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               >
                                 {uploadDocumentMutation.isPending ? (
                                   <>
-                                    <MedicalIcons.clock className="w-4 h-4 mr-2 animate-spin" />
+                                    <Clock className="w-4 h-4 mr-2 animate-spin" />
                                     Uploading...
                                   </>
                                 ) : (
                                   <>
-                                    <MedicalIcons.upload className="w-4 h-4 mr-2" />
+                                    <Upload className="w-4 h-4 mr-2" />
                                     Upload
                                   </>
                                 )}
@@ -3245,7 +3245,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
                   <TabsContent value="consent-forms" className="space-y-4">
                     <div className="text-center py-12 text-gray-500">
-                      <MedicalIcons.document className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <Document className="mx-auto h-16 w-16 text-gray-300 mb-4" />
                       <h3 className="text-lg font-medium text-gray-700 mb-2">Consent Forms</h3>
                       <p className="text-sm text-gray-500 mb-4">Manage patient consent and authorization forms</p>
                       <ConsentCapture
@@ -3253,7 +3253,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         patientName={formatPatientName(patient)}
                         trigger={
                           <Button className="bg-blue-600 hover:bg-blue-700">
-                            <MedicalIcons.add className="w-4 h-4 mr-2" />
+                            <Plus className="w-4 h-4 mr-2" />
                             New Consent Form
                           </Button>
                         }
@@ -3284,7 +3284,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MedicalIcons.bloodTest className="h-5 w-5 text-red-600" />
+                  <BloodTest className="h-5 w-5 text-red-600" />
                   Laboratory Tests & Results
                 </CardTitle>
               </CardHeader>
@@ -3292,23 +3292,23 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                 <Tabs defaultValue="orders" className="w-full">
                   <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6">
                     <TabsTrigger value="orders" className="flex items-center gap-2">
-                      <MedicalIcons.labOrder className="w-4 h-4" />
+                      <BloodTest className="w-4 h-4" />
                       Lab Orders
                     </TabsTrigger>
                     <TabsTrigger value="results" className="flex items-center gap-2">
-                      <MedicalIcons.bloodTest className="w-4 h-4" />
+                      <BloodTest className="w-4 h-4" />
                       Results
                     </TabsTrigger>
                     <TabsTrigger value="reviewed" className="flex items-center gap-2">
-                      <MedicalIcons.success className="w-4 h-4" />
+                      <Success className="w-4 h-4" />
                       Reviewed
                     </TabsTrigger>
                     <TabsTrigger value="pending" className="flex items-center gap-2">
-                      <MedicalIcons.clock className="w-4 h-4" />
+                      <Clock className="w-4 h-4" />
                       Pending
                     </TabsTrigger>
                     <TabsTrigger value="history" className="flex items-center gap-2">
-                      <MedicalIcons.history className="w-4 h-4" />
+                      <History className="w-4 h-4" />
                       History
                     </TabsTrigger>
                   </TabsList>
@@ -3353,7 +3353,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           size="sm"
                           onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
                         >
-                          <MedicalIcons.refresh className="w-4 h-4 mr-2" />
+                          <Refresh className="w-4 h-4 mr-2" />
                           Refresh
                         </Button>
                       </div>
@@ -3371,7 +3371,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             size="sm"
                             onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
                           >
-                            <MedicalIcons.refresh className="w-4 h-4 mr-2" />
+                            <Refresh className="w-4 h-4 mr-2" />
                             Refresh
                           </Button>
                           <Button 
@@ -3379,7 +3379,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             size="sm"
                             onClick={() => handlePrintLabHistory()}
                           >
-                            <MedicalIcons.print className="w-4 h-4 mr-2" />
+                            <Print className="w-4 h-4 mr-2" />
                             Print
                           </Button>
                         </div>
@@ -3411,7 +3411,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MedicalIcons.vitals className="h-5 w-5 text-green-500" />
+                  <Vitals className="h-5 w-5 text-green-500" />
                   Vaccination History & Management
                 </CardTitle>
               </CardHeader>
