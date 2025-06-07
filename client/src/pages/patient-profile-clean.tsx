@@ -429,59 +429,7 @@ export default function PatientProfile() {
                 </CardContent>
               </Card>
 
-              {/* Compact Patient Summary */}
-              <Card className="bg-white/90 backdrop-blur-sm shadow-lg border-0 ring-1 ring-gray-200/50">
-                <CardHeader className="pb-1 px-3 pt-3">
-                  <CardTitle className="text-sm font-semibold text-gray-900 flex items-center">
-                    <User className="h-3 w-3 mr-1" style={{ color: '#0051CC' }} />
-                    Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 px-3 pb-3">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Registration</span>
-                      <span className="text-xs font-medium text-gray-800">
-                        {new Date(patient?.createdAt || '').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Blood Type</span>
-                      <Badge variant="outline" className="text-xs text-red-600 border-red-300/60 h-5 bg-red-50/80">
-                        A+
-                      </Badge>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Phone</span>
-                      <span className="text-xs font-medium text-gray-800 truncate max-w-20">
-                        {patient?.phone || 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs text-gray-600">Insurance</span>
-                      <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300/60 h-5 bg-emerald-50/80">
-                        Active
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-2 border-t border-gray-200/60">
-                    <h4 className="text-xs font-medium text-gray-900 mb-1">Allergies</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {patient?.allergies ? (
-                        <Badge variant="secondary" className="text-xs bg-red-50/90 text-red-700 border border-red-200/60 h-5">
-                          {patient.allergies.length > 12 ? patient.allergies.substring(0, 12) + '...' : patient.allergies}
-                        </Badge>
-                      ) : (
-                        <span className="text-xs text-gray-500">None</span>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+
             </div>
           </div>
         </div>
