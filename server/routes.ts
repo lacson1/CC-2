@@ -1738,10 +1738,15 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.post("/api/patients/:id/vaccinations", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
-      const validatedData = insertVaccinationSchema.parse({
+      
+      // Process the data to handle empty date strings
+      const processedData = {
         ...req.body,
-        patientId
-      });
+        patientId,
+        nextDueDate: req.body.nextDueDate === '' ? null : req.body.nextDueDate
+      };
+      
+      const validatedData = insertVaccinationSchema.parse(processedData);
       
       const [newVaccination] = await db.insert(vaccinations)
         .values(validatedData)

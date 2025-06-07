@@ -21,7 +21,7 @@ const vaccinationSchema = z.object({
   batchNumber: z.string().optional(),
   manufacturer: z.string().optional(),
   notes: z.string().optional(),
-  nextDueDate: z.string().optional(),
+  nextDueDate: z.string().optional().transform(val => val === '' ? undefined : val),
 });
 
 type VaccinationForm = z.infer<typeof vaccinationSchema>;
