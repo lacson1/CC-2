@@ -63,13 +63,31 @@ export function DocumentPreviewCarousel({
     setCurrentIndex(index);
   };
 
-  const downloadDocument = (doc: Document) => {
-    const link = document.createElement('a');
-    link.href = `/api/files/medical/${doc.fileName}?download=true`;
-    link.download = doc.originalName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const downloadDocument = async (doc: Document) => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/files/medical/${doc.fileName}?download=true`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download document');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = doc.originalName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+    }
   };
 
   const getDocumentIcon = (category: string) => {

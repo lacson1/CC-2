@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ export default function ProceduralReports() {
   const { toast } = useToast();
 
   // Check URL parameters for pre-filling from visit recording
-  React.useEffect(() => {
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const patientId = urlParams.get('patientId');
     const visitId = urlParams.get('visitId');
