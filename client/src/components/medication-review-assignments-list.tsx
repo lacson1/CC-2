@@ -69,22 +69,16 @@ interface MedicationReview {
   };
   findings?: string;
   recommendations?: string;
-  createdAt: string;
-  startedAt?: string;
-  completedAt?: string;
-  prescription: Prescription;
-  assignedByUser: {
-    id: number;
-    username: string;
-    firstName?: string;
-    lastName?: string;
-  };
-  assignedToUser?: {
-    id: number;
-    username: string;
-    firstName?: string;
-    lastName?: string;
-    role: string;
+}
+
+interface MedicationReviewResponse {
+  assignments: MedicationReview[];
+  availablePrescriptions: Prescription[];
+  summary: {
+    totalAssignments: number;
+    pendingReviews: number;
+    completedReviews: number;
+    unassignedPrescriptions: number;
   };
 }
 
@@ -98,10 +92,19 @@ export function MedicationReviewAssignmentsList({
   const queryClient = useQueryClient();
 
   // Fetch medication reviews for the patient
-  const { data: reviews = [], isLoading } = useQuery({
+  const { data: reviewData, isLoading } = useQuery<MedicationReviewResponse>({
     queryKey: [`/api/patients/${patientId}/medication-reviews`],
     enabled: !!patientId
   });
+
+  const reviews = reviewData?.assignments || [];
+  const availablePrescriptions = reviewData?.availablePrescriptions || [];
+  const summary = reviewData?.summary || {
+    totalAssignments: 0,
+    pendingReviews: 0,
+    completedReviews: 0,
+    unassignedPrescriptions: 0
+  };
 
   // Update review status mutation
   const updateReviewMutation = useMutation({
@@ -225,6 +228,26 @@ export function MedicationReviewAssignmentsList({
           )}
         </div>
         
+        {/* Summary Statistics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="text-sm text-blue-600 font-medium">Total Reviews</div>
+            <div className="text-xl font-bold text-blue-800">{summary.totalAssignments}</div>
+          </div>
+          <div className="bg-orange-50 p-3 rounded-lg">
+            <div className="text-sm text-orange-600 font-medium">Pending</div>
+            <div className="text-xl font-bold text-orange-800">{summary.pendingReviews}</div>
+          </div>
+          <div className="bg-green-50 p-3 rounded-lg">
+            <div className="text-sm text-green-600 font-medium">Completed</div>
+            <div className="text-xl font-bold text-green-800">{summary.completedReviews}</div>
+          </div>
+          <div className="bg-purple-50 p-3 rounded-lg">
+            <div className="text-sm text-purple-600 font-medium">Unassigned</div>
+            <div className="text-xl font-bold text-purple-800">{summary.unassignedPrescriptions}</div>
+          </div>
+        </div>
+        
         {filteredReviews.length > 0 && (
           <div className="flex items-center gap-4">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -292,13 +315,43 @@ export function MedicationReviewAssignmentsList({
                         </div>
 
                         {/* Prescription Details */}
-                        <div className="flex items-center gap-2">
-                          <Pill className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">
-                            {review.prescription 
-                              ? `${review.prescription.medicationName} - ${review.prescription.dosage}${review.prescription.frequency ? ` (${review.prescription.frequency})` : ''}`
-                              : 'General medication review (no specific prescription)'}
-                          </span>
+                        {review.prescription && (
+                          <div className="bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Pill className="h-4 w-4 text-blue-600" />
+                              <span className="font-medium text-blue-800">
+                                {review.prescription.medicationName}
+                              </span>
+                              <Badge variant="outline" className="text-xs">
+                                {review.prescription.status}
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                              <div>
+                                <span className="font-medium">Dosage:</span> {review.prescription.dosage}
+                              </div>
+                              <div>
+                                <span className="font-medium">Frequency:</span> {review.prescription.frequency}
+                              </div>
+                              {review.prescription.duration && (
+                                <div>
+                                  <span className="font-medium">Duration:</span> {review.prescription.duration}
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-medium">Prescribed:</span> {format(new Date(review.prescription.prescribedDate), 'MMM dd, yyyy')}
+                              </div>
+                            </div>
+                            {review.prescription.instructions && (
+                              <div className="mt-2 text-sm text-gray-600">
+                                <span className="font-medium">Instructions:</span> {review.prescription.instructions}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Assignment Details */}
+                        <div className="space-y-2">
                         </div>
 
                         {/* Assigned To */}
