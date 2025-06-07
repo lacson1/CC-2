@@ -2340,22 +2340,6 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <h3 className="font-medium text-blue-900 mb-2">Visit Recording Interface</h3>
-                  <p className="text-sm text-blue-700 mb-4">
-                    Record comprehensive visit details including vital signs, symptoms, diagnosis, and treatment plans.
-                  </p>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={() => navigate(`/patients/${patient.id}/record-visit`)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <MedicalIcons.add className="w-4 h-4 mr-2" />
-                      Start New Visit Recording
-                    </Button>
-                  </div>
-                </div>
-
                 {/* Visit Recording Quick Access */}
                 <div className="space-y-3">
                   <h4 className="font-medium text-gray-900">Quick Visit Access</h4>
