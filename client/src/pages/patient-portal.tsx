@@ -614,10 +614,10 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
                     <div className="space-y-2 text-sm">
-                      <p><strong>Name:</strong> {patientProfile.title} {patientProfile.firstName} {patientProfile.lastName}</p>
-                      <p><strong>Date of Birth:</strong> {new Date(patientProfile.dateOfBirth).toLocaleDateString()}</p>
-                      <p><strong>Gender:</strong> {patientProfile.gender}</p>
-                      <p><strong>Patient ID:</strong> {patientProfile.id}</p>
+                      <p><strong>Name:</strong> {patient.title} {patient.firstName} {patient.lastName}</p>
+                      <p><strong>Date of Birth:</strong> {new Date(patient.dateOfBirth).toLocaleDateString()}</p>
+                      <p><strong>Gender:</strong> {patient.gender}</p>
+                      <p><strong>Patient ID:</strong> {patient.id}</p>
                     </div>
                   </div>
                   <div>
@@ -625,24 +625,24 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
                     <div className="space-y-2 text-sm">
                       <p className="flex items-center gap-2">
                         <Phone className="h-4 w-4" />
-                        {patientProfile.phone || "Not provided"}
+                        {patient.phone || "Not provided"}
                       </p>
                       <p className="flex items-center gap-2">
                         <Mail className="h-4 w-4" />
-                        {patientProfile.email || "Not provided"}
+                        {patient.email || "Not provided"}
                       </p>
                       <p className="flex items-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        {patientProfile.address || "Not provided"}
+                        {patient.address || "Not provided"}
                       </p>
                     </div>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Medical Information</h4>
                     <div className="space-y-2 text-sm">
-                      <p><strong>Allergies:</strong> {patientProfile.allergies || "None reported"}</p>
-                      <p><strong>Medical History:</strong> {patientProfile.medicalHistory || "None reported"}</p>
-                      <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact || "Not provided"}</p>
+                      <p><strong>Allergies:</strong> {patient.allergies || "None reported"}</p>
+                      <p><strong>Medical History:</strong> {patient.medicalHistory || "None reported"}</p>
+                      <p><strong>Emergency Contact:</strong> {patient.emergencyContact || "Not provided"}</p>
                     </div>
                   </div>
                 </div>
