@@ -369,14 +369,6 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
     }
   };
 
-  const onRequestAppointment = (data: z.infer<typeof appointmentRequestSchema>) => {
-    appointmentRequestMutation.mutate(data);
-  };
-
-  const onSendMessage = (data: z.infer<typeof messageSchema>) => {
-    sendMessageMutation.mutate(data);
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -386,9 +378,14 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
             <User className="h-8 w-8 text-blue-600" />
             Patient Portal
           </h1>
-          <p className="text-gray-600 mt-1">Access your health information and communicate with your care team</p>
+          <p className="text-gray-600 mt-1">Welcome, {patient?.firstName} {patient?.lastName}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={onLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+          
           <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -401,7 +398,7 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
                 <DialogTitle>Send Message to Healthcare Provider</DialogTitle>
               </DialogHeader>
               <Form {...messageForm}>
-                <form onSubmit={messageForm.handleSubmit(onSendMessage)} className="space-y-4">
+                <form onSubmit={messageForm.handleSubmit((data) => sendMessageMutation.mutate(data))} className="space-y-4">
                   <FormField
                     control={messageForm.control}
                     name="category"
@@ -471,7 +468,7 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
                 <DialogTitle>Request New Appointment</DialogTitle>
               </DialogHeader>
               <Form {...appointmentForm}>
-                <form onSubmit={appointmentForm.handleSubmit(onRequestAppointment)} className="space-y-4">
+                <form onSubmit={appointmentForm.handleSubmit((data) => appointmentRequestMutation.mutate(data))} className="space-y-4">
                   <FormField
                     control={appointmentForm.control}
                     name="type"
@@ -601,107 +598,82 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Patient Profile Card */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <User className="h-5 w-5" />
-                Patient Profile
+                Patient Information
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {patientProfile ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Personal Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Name:</strong> {patientProfile.title} {patientProfile.firstName} {patientProfile.lastName}</p>
-                      <p><strong>Date of Birth:</strong> {new Date(patientProfile.dateOfBirth).toLocaleDateString()}</p>
-                      <p><strong>Gender:</strong> {patientProfile.gender}</p>
-                      <p><strong>Patient ID:</strong> {patientProfile.id}</p>
-                    </div>
+                    <p className="text-sm font-medium text-gray-500">Full Name</p>
+                    <p className="text-lg">{patient?.firstName} {patient?.lastName}</p>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Contact Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <p className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {patientProfile.phone || "Not provided"}
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        {patientProfile.email || "Not provided"}
-                      </p>
-                      <p className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {patientProfile.address || "Not provided"}
-                      </p>
-                    </div>
+                    <p className="text-sm font-medium text-gray-500">Date of Birth</p>
+                    <p className="text-lg">{patient?.dateOfBirth}</p>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Medical Information</h4>
-                    <div className="space-y-2 text-sm">
-                      <p><strong>Allergies:</strong> {patientProfile.allergies || "None reported"}</p>
-                      <p><strong>Medical History:</strong> {patientProfile.medicalHistory || "None reported"}</p>
-                      <p><strong>Emergency Contact:</strong> {patientProfile.emergencyContact || "Not provided"}</p>
-                    </div>
+                    <p className="text-sm font-medium text-gray-500">Gender</p>
+                    <p className="text-lg">{patient?.gender}</p>
                   </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Loading profile...</p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Phone</p>
+                    <p className="text-lg">{patient?.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p className="text-lg">{patient?.email || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Address</p>
+                    <p className="text-lg">{patient?.address || 'Not provided'}</p>
+                  </div>
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Upcoming Appointments</p>
-                    <p className="text-2xl font-bold text-gray-900">{appointments.filter((apt: any) => apt.status === 'confirmed').length}</p>
-                  </div>
-                  <Calendar className="h-8 w-8 text-blue-600" />
+              <CardContent className="flex items-center p-6">
+                <Calendar className="h-8 w-8 text-blue-500 mr-4" />
+                <div>
+                  <p className="text-2xl font-bold">{Array.isArray(appointments) ? appointments.length : 0}</p>
+                  <p className="text-sm text-gray-500">Upcoming Appointments</p>
                 </div>
               </CardContent>
             </Card>
-
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Active Prescriptions</p>
-                    <p className="text-2xl font-bold text-gray-900">{prescriptions.filter((rx: any) => rx.status === 'active').length}</p>
-                  </div>
-                  <Pill className="h-8 w-8 text-green-600" />
+              <CardContent className="flex items-center p-6">
+                <Pill className="h-8 w-8 text-green-500 mr-4" />
+                <div>
+                  <p className="text-2xl font-bold">{Array.isArray(prescriptions) ? prescriptions.length : 0}</p>
+                  <p className="text-sm text-gray-500">Active Prescriptions</p>
                 </div>
               </CardContent>
             </Card>
-
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Recent Lab Results</p>
-                    <p className="text-2xl font-bold text-gray-900">{labResults.length}</p>
-                  </div>
-                  <TestTube className="h-8 w-8 text-purple-600" />
+              <CardContent className="flex items-center p-6">
+                <TestTube className="h-8 w-8 text-purple-500 mr-4" />
+                <div>
+                  <p className="text-2xl font-bold">{Array.isArray(labResults) ? labResults.length : 0}</p>
+                  <p className="text-sm text-gray-500">Recent Lab Results</p>
                 </div>
               </CardContent>
             </Card>
-
             <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Unread Messages</p>
-                    <p className="text-2xl font-bold text-gray-900">{messages.filter((msg: any) => !msg.read).length}</p>
-                  </div>
-                  <MessageCircle className="h-8 w-8 text-orange-600" />
+              <CardContent className="flex items-center p-6">
+                <MessageCircle className="h-8 w-8 text-orange-500 mr-4" />
+                <div>
+                  <p className="text-2xl font-bold">{Array.isArray(messages) ? messages.length : 0}</p>
+                  <p className="text-sm text-gray-500">Messages</p>
                 </div>
               </CardContent>
             </Card>
@@ -709,212 +681,181 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
         </TabsContent>
 
         {/* Appointments Tab */}
-        <TabsContent value="appointments" className="space-y-4">
-          <div className="grid gap-4">
-            {appointments.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
+        <TabsContent value="appointments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Appointments</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(appointments) && appointments.length > 0 ? (
+                <div className="space-y-4">
+                  {appointments.map((appointment: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{appointment.type || 'Appointment'}</h3>
+                          <p className="text-gray-600">{appointment.date} at {appointment.time}</p>
+                          <p className="text-sm text-gray-500">{appointment.reason}</p>
+                        </div>
+                        <Badge className={getStatusColor(appointment.status)}>
+                          {appointment.status || 'Scheduled'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No appointments scheduled</p>
-                  <Button className="mt-4" onClick={() => setIsAppointmentDialogOpen(true)}>
-                    Request Appointment
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              appointments.map((appointment: any) => (
-                <Card key={appointment.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{appointment.type}</h3>
-                        <p className="text-sm text-gray-600">Dr. {appointment.doctorName}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(appointment.date).toLocaleDateString()}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {appointment.time}
-                          </span>
-                        </div>
-                      </div>
-                      <Badge className={getStatusColor(appointment.status)}>
-                        {appointment.status}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                  <p className="text-sm text-gray-400">Click "Request Appointment" to schedule a visit</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Prescriptions Tab */}
-        <TabsContent value="prescriptions" className="space-y-4">
-          <div className="grid gap-4">
-            {prescriptions.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No active prescriptions</p>
-                </CardContent>
-              </Card>
-            ) : (
-              prescriptions.map((prescription: any) => (
-                <Card key={prescription.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{prescription.medicationName}</h3>
-                        <p className="text-sm text-gray-600">{prescription.dosage} - {prescription.frequency}</p>
-                        <p className="text-sm text-gray-500 mt-1">{prescription.instructions}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>Prescribed: {new Date(prescription.createdAt).toLocaleDateString()}</span>
-                          {prescription.endDate && (
-                            <span>Until: {new Date(prescription.endDate).toLocaleDateString()}</span>
-                          )}
+        <TabsContent value="prescriptions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Prescriptions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(prescriptions) && prescriptions.length > 0 ? (
+                <div className="space-y-4">
+                  {prescriptions.map((prescription: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{prescription.medicationName}</h3>
+                          <p className="text-gray-600">{prescription.dosage} - {prescription.frequency}</p>
+                          <p className="text-sm text-gray-500">{prescription.instructions}</p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            Prescribed: {prescription.startDate} | Duration: {prescription.duration}
+                          </p>
                         </div>
-                      </div>
-                      <div className="text-right">
                         <Badge className={getStatusColor(prescription.status)}>
-                          {prescription.status}
+                          {prescription.status || 'Active'}
                         </Badge>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No active prescriptions</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Lab Results Tab */}
-        <TabsContent value="lab-results" className="space-y-4">
-          <div className="grid gap-4">
-            {labResults.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
+        <TabsContent value="lab-results">
+          <Card>
+            <CardHeader>
+              <CardTitle>Lab Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(labResults) && labResults.length > 0 ? (
+                <div className="space-y-4">
+                  {labResults.map((result: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{result.testName}</h3>
+                          <p className="text-gray-600">Result: {result.value} {result.unit}</p>
+                          <p className="text-sm text-gray-500">Reference Range: {result.referenceRange}</p>
+                          <p className="text-xs text-gray-400 mt-2">Date: {result.date}</p>
+                        </div>
+                        <Badge className={getStatusColor(result.status)}>
+                          {result.status || 'Normal'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
                   <TestTube className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No lab results available</p>
-                </CardContent>
-              </Card>
-            ) : (
-              labResults.map((result: any) => (
-                <Card key={result.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{result.testName}</h3>
-                        <p className="text-sm text-gray-600">Ordered by: Dr. {result.doctorName}</p>
-                        <div className="grid grid-cols-3 gap-4 mt-3">
-                          <div>
-                            <p className="text-xs text-gray-500">Result</p>
-                            <p className="font-medium">{result.value} {result.unit}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Reference Range</p>
-                            <p className="text-sm">{result.referenceRange}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Date</p>
-                            <p className="text-sm">{new Date(result.date).toLocaleDateString()}</p>
-                          </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Medical Records Tab */}
+        <TabsContent value="records">
+          <Card>
+            <CardHeader>
+              <CardTitle>Medical Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(medicalRecords) && medicalRecords.length > 0 ? (
+                <div className="space-y-4">
+                  {medicalRecords.map((record: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{record.title || 'Medical Record'}</h3>
+                          <p className="text-gray-600">{record.description}</p>
+                          <p className="text-xs text-gray-400 mt-2">Date: {record.date}</p>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(result.status)}>
-                          {result.status}
-                        </Badge>
-                        <Button variant="outline" size="sm" className="mt-2">
+                        <Button variant="outline" size="sm">
                           <Download className="h-4 w-4 mr-2" />
                           Download
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
-        </TabsContent>
-
-        {/* Medical Records Tab */}
-        <TabsContent value="records" className="space-y-4">
-          <div className="grid gap-4">
-            {medicalRecords.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
                   <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-500">No medical records available</p>
-                </CardContent>
-              </Card>
-            ) : (
-              medicalRecords.map((record: any) => (
-                <Card key={record.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{record.title}</h3>
-                        <p className="text-sm text-gray-600">{record.type}</p>
-                        <p className="text-sm text-gray-500 mt-1">{record.description}</p>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {new Date(record.date).toLocaleDateString()} - Dr. {record.provider}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Messages Tab */}
-        <TabsContent value="messages" className="space-y-4">
-          <div className="grid gap-4">
-            {messages.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No messages</p>
-                  <Button className="mt-4" onClick={() => setIsMessageDialogOpen(true)}>
-                    Send Message
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              messages.map((message: any) => (
-                <Card key={message.id} className={!message.read ? "border-blue-200 bg-blue-50" : ""}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-medium text-gray-900">{message.subject}</h3>
-                          {!message.read && <Badge variant="secondary">New</Badge>}
+        <TabsContent value="messages">
+          <Card>
+            <CardHeader>
+              <CardTitle>Messages</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {Array.isArray(messages) && messages.length > 0 ? (
+                <div className="space-y-4">
+                  {messages.map((message: any, index: number) => (
+                    <div key={index} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{message.subject}</h3>
+                          <p className="text-gray-600">{message.message}</p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            From: {message.staffName} | {message.sentAt}
+                          </p>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{message.message}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span>From: {message.sender}</span>
-                          <span>{new Date(message.date).toLocaleDateString()}</span>
-                          <Badge variant="outline">{message.category}</Badge>
-                        </div>
+                        <Badge className={getStatusColor(message.status)}>
+                          {message.status || 'Unread'}
+                        </Badge>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No messages</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
