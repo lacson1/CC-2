@@ -61,7 +61,8 @@ const statusIcons = {
   normal: CheckCircle,
   high: TrendingUp,
   low: TrendingDown,
-  critical: AlertTriangle
+  critical: AlertTriangle,
+  warning: AlertTriangle
 };
 
 const iconComponents = {
