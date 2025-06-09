@@ -339,10 +339,10 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
 
   const sendMessageMutation = useMutation({
     mutationFn: async (data: z.infer<typeof messageSchema>) => {
-      // Add target organization ID (default to 2 for Lagos Island Hospital)
+      // Add target organization ID (default to 4 for Enugu clinic where staff can see messages)
       const messageData = {
         ...data,
-        targetOrganizationId: 2
+        targetOrganizationId: 4
       };
       return authenticatedFetch("/api/patient-portal/messages", {
         method: "POST",
