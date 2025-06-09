@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import EnhancedBloodTestResults from "@/components/EnhancedBloodTestResults";
+import EnhancedMedicationManager from "@/components/EnhancedMedicationManager";
 import {
   User,
   Calendar,
@@ -810,47 +811,12 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
           </div>
         </TabsContent>
 
-        {/* Prescriptions Tab */}
+        {/* Prescriptions Tab - Enhanced Medication Manager */}
         <TabsContent value="prescriptions" className="space-y-4">
-          <div className="grid gap-4">
-            {prescriptions.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <Pill className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No active prescriptions</p>
-                </CardContent>
-              </Card>
-            ) : (
-              prescriptions.map((prescription: any) => (
-                <Card key={prescription.id}>
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">{prescription.medicationName}</h3>
-                        <p className="text-sm text-gray-600">{prescription.dosage} - {prescription.frequency}</p>
-                        <p className="text-sm text-gray-500 mt-1">{prescription.instructions}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                          <span>Prescribed: {new Date(prescription.createdAt).toLocaleDateString()}</span>
-                          {prescription.endDate && (
-                            <span>Until: {new Date(prescription.endDate).toLocaleDateString()}</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(prescription.status)}>
-                          {prescription.status}
-                        </Badge>
-                        <Button variant="outline" size="sm" className="mt-2">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+          <EnhancedMedicationManager 
+            prescriptions={prescriptions}
+            className="w-full"
+          />
         </TabsContent>
 
         {/* Lab Results Tab - Enhanced Blood Test Dashboard */}
