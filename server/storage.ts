@@ -483,6 +483,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Check if username already exists
+    const existingUser = await db.select()
+      .from(users)
+      .where(eq(users.username, insertUser.username))
+      .limit(1);
+    
+    if (existingUser.length > 0) {
+      throw new Error('Username already exists');
+    }
+    
+    // Check if email already exists (if email is provided)
+    if (insertUser.email) {
+      const existingEmail = await db.select()
+        .from(users)
+        .where(eq(users.email, insertUser.email))
+        .limit(1);
+      
+      if (existingEmail.length > 0) {
+        throw new Error('Email already exists');
+      }
+    }
+
     const [user] = await db
       .insert(users)
       .values(insertUser)

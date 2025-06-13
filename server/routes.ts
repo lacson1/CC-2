@@ -2970,8 +2970,12 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid user data", errors: error.errors });
       } else if (error instanceof Error) {
-        // Check for specific database errors
-        if (error.message.includes('duplicate key') || error.message.includes('UNIQUE constraint')) {
+        // Check for specific user creation errors
+        if (error.message === 'Username already exists') {
+          res.status(400).json({ message: "Username already exists. Please choose a different username." });
+        } else if (error.message === 'Email already exists') {
+          res.status(400).json({ message: "Email already exists. Please use a different email address." });
+        } else if (error.message.includes('duplicate key') || error.message.includes('UNIQUE constraint')) {
           res.status(400).json({ message: "Username or email already exists" });
         } else {
           res.status(500).json({ message: "Failed to create user", error: error.message });
