@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
+import { SecurityManager, checkSessionTimeout } from './security';
 
 // Extend session types
 declare module 'express-session' {
@@ -28,20 +29,23 @@ export interface AuthRequest extends Request {
 
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    // Check if user is authenticated via session
-    const sessionUser = (req.session as any)?.user;
-    if (!sessionUser) {
-      return res.status(401).json({ message: 'Authentication required' });
-    }
+    // Apply session timeout check
+    checkSessionTimeout(req, res, () => {
+      // Check if user is authenticated via session
+      const sessionUser = (req.session as any)?.user;
+      if (!sessionUser) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 
-    // Set user from session
-    req.user = {
-      id: sessionUser.id,
-      username: sessionUser.username,
-      role: sessionUser.role,
-      organizationId: sessionUser.organizationId || undefined
-    };
-    next();
+      // Set user from session
+      req.user = {
+        id: sessionUser.id,
+        username: sessionUser.username,
+        role: sessionUser.role,
+        organizationId: sessionUser.organizationId || undefined
+      };
+      next();
+    });
   } catch (error) {
     console.error('Authentication error:', error);
     return res.status(500).json({ message: 'Authentication failed' });

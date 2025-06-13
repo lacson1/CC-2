@@ -72,6 +72,13 @@ export const users = pgTable('users', {
   photoUrl: varchar('photo_url', { length: 255 }),
   organizationId: integer('organization_id').references(() => organizations.id),
   isActive: boolean('is_active').default(true),
+  lastLoginAt: timestamp('last_login_at'),
+  failedLoginAttempts: integer('failed_login_attempts').default(0),
+  lockedUntil: timestamp('locked_until'),
+  passwordResetToken: varchar('password_reset_token', { length: 100 }),
+  passwordResetExpires: timestamp('password_reset_expires'),
+  twoFactorSecret: varchar('two_factor_secret', { length: 100 }),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow()
 });
