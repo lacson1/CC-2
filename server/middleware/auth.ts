@@ -3,6 +3,18 @@ import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
 
+// Extend session types
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: number;
+      username: string;
+      role: string;
+      organizationId?: number;
+    };
+  }
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'clinic-secret-key-2024';
 
 export interface AuthRequest extends Request {
@@ -16,34 +28,20 @@ export interface AuthRequest extends Request {
 
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (!token) {
-      return res.status(401).json({ message: 'Access token required' });
+    // Check if user is authenticated via session
+    const sessionUser = (req.session as any)?.user;
+    if (!sessionUser) {
+      return res.status(401).json({ message: 'Authentication required' });
     }
 
-    // Use synchronous verification for better error handling
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
-      req.user = {
-        id: decoded.id,
-        username: decoded.username,
-        role: decoded.role,
-        organizationId: decoded.organizationId || undefined
-      };
-      next();
-    } catch (jwtError: any) {
-      console.error('JWT verification failed:', jwtError.message);
-      if (jwtError.name === 'TokenExpiredError') {
-        return res.status(401).json({ message: 'Token expired' });
-      }
-      if (jwtError.name === 'JsonWebTokenError') {
-        return res.status(401).json({ message: 'Invalid token format' });
-      }
-      return res.status(403).json({ message: 'Token invalid' });
-    }
+    // Set user from session
+    req.user = {
+      id: sessionUser.id,
+      username: sessionUser.username,
+      role: sessionUser.role,
+      organizationId: sessionUser.organizationId || undefined
+    };
+    next();
   } catch (error) {
     console.error('Authentication error:', error);
     return res.status(500).json({ message: 'Authentication failed' });
