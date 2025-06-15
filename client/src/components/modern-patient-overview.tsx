@@ -162,12 +162,14 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
       if (!response.ok) {
         throw new Error('Failed to fetch reviewed results');
       }
-      return response.json();
+      const data = await response.json();
+      // Handle both array and object responses
+      return Array.isArray(data) ? data : (data.data || []);
     }
   });
 
   // Results are already filtered by patient ID in the backend
-  const patientResults = reviewedResults;
+  const patientResults = Array.isArray(reviewedResults) ? reviewedResults : [];
 
   // Handler functions for dropdown actions
   const handleViewResultDetails = (result: CompletedLabResult) => {

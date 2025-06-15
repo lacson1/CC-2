@@ -12,6 +12,14 @@ A comprehensive digital health platform specializing in advanced medical communi
 - Comprehensive patient communication and data management system
 
 ## Recent Changes
+**June 15, 2025 - Fixed Critical Runtime Errors ✅**
+- Fixed organization creation API parameter order error (apiRequest parameter sequence)
+- Resolved patientResults.map runtime error in patient overview components
+- Updated API response handling to support both array and object formats
+- Enhanced error handling for lab results API responses
+- Corrected frontend-backend communication inconsistencies
+- Patient overview page now loads without runtime errors
+
 **June 14, 2025 - Complete Mock Data Removal ✅**
 - Successfully removed all mock/test data from the entire healthcare system
 - Cleared all test users (24 accounts), organizations (3), and patients (11) 
