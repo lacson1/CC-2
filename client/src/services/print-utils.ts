@@ -2,7 +2,9 @@ import { PrintableDocument, PrintService } from './print-service';
 
 export async function fetchPrintData() {
   // Fetch current user info
-  const userResponse = await fetch('/api/profile');
+  const userResponse = await fetch('/api/profile', {
+    credentials: 'include'
+  });
   const currentUser = await userResponse.json();
   
   // Fetch organization data from dedicated print endpoint
@@ -16,7 +18,9 @@ export async function fetchPrintData() {
   };
   
   try {
-    const orgResponse = await fetch('/api/print/organization');
+    const orgResponse = await fetch('/api/print/organization', {
+      credentials: 'include'
+    });
     if (orgResponse.ok) {
       const orgData = await orgResponse.json();
       organization = {

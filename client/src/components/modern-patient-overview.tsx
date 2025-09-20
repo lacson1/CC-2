@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -389,6 +390,18 @@ function PatientReviewedResults({ patientId }: { patientId: number }) {
           ))}
         </div>
       )}
+
+      {/* Confirm Delete Visit Dialog */}
+      <ConfirmDialog
+        open={showDeleteVisitConfirm}
+        onOpenChange={setShowDeleteVisitConfirm}
+        title="Delete Visit Record"
+        description="Are you sure you want to delete this visit record? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="destructive"
+        onConfirm={confirmDeleteVisit}
+      />
     </div>
   );
 }
@@ -687,7 +700,19 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   };
 
   const handleDeleteVisit = async (visitId: number) => {
-    if (confirm('Are you sure you want to delete this visit record?')) {
+    setVisitToDelete(visitId);
+    setShowDeleteVisitConfirm(true);
+  };
+
+  const confirmDeleteVisit = () => {
+    if (visitToDelete) {
+      // Delete visit logic here
+      setVisitToDelete(null);
+    }
+  };
+
+  const handleDeleteVisitConfirm = (visitId: number) => {
+    if (true) { // Replaced confirm with modal logic
       try {
         // Implementation would go here
         toast({
@@ -837,6 +862,8 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   // Document upload state
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [showDeleteVisitConfirm, setShowDeleteVisitConfirm] = useState(false);
+  const [visitToDelete, setVisitToDelete] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState('');
   const [documentDescription, setDocumentDescription] = useState('');
   
