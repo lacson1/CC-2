@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -68,6 +68,13 @@ export default function PrescriptionModal({
   const [selectedPatientId, setSelectedPatientId] = useState<number | undefined>(patientId);
   const [selectedMedicine, setSelectedMedicine] = useState<Medication | null>(null);
   const [manualMedicationName, setManualMedicationName] = useState<string>("");
+
+  // Update selectedPatientId when patientId prop changes or modal opens
+  React.useEffect(() => {
+    if (open && patientId) {
+      setSelectedPatientId(patientId);
+    }
+  }, [open, patientId]);
 
   const { data: patients } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
