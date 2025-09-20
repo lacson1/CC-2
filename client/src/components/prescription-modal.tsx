@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -70,7 +70,7 @@ export default function PrescriptionModal({
   const [manualMedicationName, setManualMedicationName] = useState<string>("");
 
   // Update selectedPatientId when patientId prop changes or modal opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (open && patientId) {
       setSelectedPatientId(patientId);
     }
