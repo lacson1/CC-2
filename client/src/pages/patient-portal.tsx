@@ -78,23 +78,21 @@ const messageSchema = z.object({
   category: z.enum(["general", "medical", "billing", "prescription"])
 });
 
-// Custom fetch function with authentication
+// Secure fetch function with session-based authentication
 const authenticatedFetch = async (url: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('patientToken');
-  
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': token ? `Bearer ${token}` : '',
       'Content-Type': 'application/json',
       ...options.headers,
     },
+    credentials: 'include', // Use secure session cookies
   });
 
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem('patientToken');
-      localStorage.removeItem('patientData');
+      // Session expired, redirect to login
+      window.location.reload();
       throw new Error('Session expired. Please log in again.');
     }
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -134,10 +132,8 @@ const PatientLogin = ({ onLogin }: { onLogin: (data: any) => void }) => {
       }
 
       const result = await response.json();
-      
-      localStorage.setItem('patientToken', result.token);
-      localStorage.setItem('patientData', JSON.stringify(result.patient));
-      
+      // Session cookies are automatically set by the server
+      // No need to store tokens in localStorage
       onLogin(result);
       
       toast({
@@ -409,9 +405,15 @@ const PatientPortalContent = ({ patient, onLogout }: { patient: any; onLogout: (
     sendMessageMutation.mutate(data);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('patientToken');
-    localStorage.removeItem('patientData');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/patient-auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     
     toast({
       title: 'Logged Out',
@@ -952,11 +954,18 @@ export default function PatientPortal() {
     setPatient(data.patient);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/patient-auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+    
     setIsAuthenticated(false);
     setPatient(null);
-    localStorage.removeItem('patientToken');
-    localStorage.removeItem('patientData');
   };
 
   if (!isAuthenticated) {

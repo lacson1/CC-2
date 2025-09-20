@@ -853,12 +853,10 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   // Document upload mutation
   const uploadDocumentMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const token = localStorage.getItem('clinic_token');
+      // Using session-based authentication via cookies
       const response = await fetch(`/api/patients/${patient.id}/documents`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
+        credentials: 'include', // Use secure session cookies
         body: formData,
       });
       

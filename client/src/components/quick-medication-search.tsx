@@ -55,12 +55,11 @@ export function QuickMedicationSearch({
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('clinic_token');
         const response = await fetch(`/api/suggestions/medications?q=${encodeURIComponent(query.trim())}`, {
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          credentials: 'include' // Use secure session cookies
         });
         if (response.ok) {
           const data = await response.json();
