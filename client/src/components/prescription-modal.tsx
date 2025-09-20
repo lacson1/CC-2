@@ -85,8 +85,8 @@ export default function PrescriptionModal({
     queryKey: ["/api/pharmacies"],
   });
 
-  const form = useForm<Omit<InsertPrescription, "patientId" | "medicineId">>({
-    resolver: zodResolver(insertPrescriptionSchema.omit({ patientId: true, medicineId: true })),
+  const form = useForm<Omit<InsertPrescription, "patientId" | "medicationId">>({
+    resolver: zodResolver(insertPrescriptionSchema.omit({ patientId: true, medicationId: true })),
     defaultValues: {
       visitId: visitId || undefined,
       dosage: "",
@@ -272,58 +272,51 @@ export default function PrescriptionModal({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Patient Selection */}
             {!patientId && (
-              <FormField
-                control={form.control}
-                name="patientId"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Patient</FormLabel>
-                    <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={patientSearchOpen}
-                          className="w-full justify-between"
-                        >
-                          {selectedPatient 
-                            ? `${selectedPatient.firstName} ${selectedPatient.lastName}` 
-                            : "Select patient..."}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput placeholder="Search patients..." />
-                          <CommandEmpty>No patient found.</CommandEmpty>
-                          <CommandList>
-                            <CommandGroup>
-                              {patients?.map((patient) => (
-                                <CommandItem
-                                  key={patient.id}
-                                  onSelect={() => {
-                                    setSelectedPatientId(patient.id);
-                                    setPatientSearchOpen(false);
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      selectedPatientId === patient.id ? "opacity-100" : "opacity-0"
-                                    )}
-                                  />
-                                  {patient.firstName} {patient.lastName}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Patient</label>
+                <Popover open={patientSearchOpen} onOpenChange={setPatientSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={patientSearchOpen}
+                      className="w-full justify-between"
+                    >
+                      {selectedPatient 
+                        ? `${selectedPatient.firstName} ${selectedPatient.lastName}` 
+                        : "Select patient..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="Search patients..." />
+                      <CommandEmpty>No patient found.</CommandEmpty>
+                      <CommandList>
+                        <CommandGroup>
+                          {patients?.map((patient) => (
+                            <CommandItem
+                              key={patient.id}
+                              onSelect={() => {
+                                setSelectedPatientId(patient.id);
+                                setPatientSearchOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  selectedPatientId === patient.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {patient.firstName} {patient.lastName}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
             )}
 
             {/* Medication Input Method Toggle */}
@@ -368,8 +361,9 @@ export default function PrescriptionModal({
                 <div>
                   <QuickMedicationSearch
                     onSelect={(medication) => {
-                      setSelectedMedicine(medication);
-                      handleMedicationSelect(medication);
+                      const fullMedication = medication as Medication;
+                      setSelectedMedicine(fullMedication);
+                      handleMedicationSelect(fullMedication);
                     }}
                     placeholder="Search medications by name, category, or description..."
                     showDetails={false}
@@ -395,6 +389,7 @@ export default function PrescriptionModal({
                             className="focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 
                                      border-orange-300 hover:border-orange-400"
                             {...field}
+                            value={field.value || ''}
                             onChange={(e) => {
                               field.onChange(e);
                               setManualMedicationName(e.target.value || "manual");
@@ -598,7 +593,8 @@ export default function PrescriptionModal({
                     <Textarea 
                       placeholder="Detailed instructions for the patient (e.g., Take with food, Avoid alcohol, Do not drive while taking this medication, Complete the full course)"
                       rows={4}
-                      {...field} 
+                      {...field}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <p className="text-xs text-slate-500 mt-1">
@@ -610,7 +606,7 @@ export default function PrescriptionModal({
             />
 
             {/* Auto-Fill Preview with Animation */}
-            {selectedMedicine && (selectedMedicine.defaultDosage || selectedMedicine.defaultInstructions) && (
+            {selectedMedicine && (selectedMedicine.dosageAdult || selectedMedicine.indications) && (
               <div className="bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg p-4 
                             animate-in slide-in-from-top-2 duration-300 ease-out">
                 <div className="flex items-center gap-2 mb-2">
@@ -626,22 +622,22 @@ export default function PrescriptionModal({
                   You can modify any values as needed.
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {selectedMedicine.defaultDosage && (
+                  {selectedMedicine.dosageAdult && (
                     <Badge variant="outline" className="text-blue-700 border-blue-300 bg-white/50 
                                                       animate-in fade-in duration-500 delay-100">
-                      Dosage: {selectedMedicine.defaultDosage}
+                      Dosage: {selectedMedicine.dosageAdult}
                     </Badge>
                   )}
-                  {selectedMedicine.defaultFrequency && (
+                  {selectedMedicine.frequency && (
                     <Badge variant="outline" className="text-blue-700 border-blue-300 bg-white/50
                                                       animate-in fade-in duration-500 delay-200">
-                      Frequency: {selectedMedicine.defaultFrequency}
+                      Frequency: {selectedMedicine.frequency}
                     </Badge>
                   )}
-                  {selectedMedicine.defaultDuration && (
+                  {selectedMedicine.dosageChild && (
                     <Badge variant="outline" className="text-blue-700 border-blue-300 bg-white/50
                                                       animate-in fade-in duration-500 delay-300">
-                      Duration: {selectedMedicine.defaultDuration}
+                      Duration: {selectedMedicine.dosageChild || 'As prescribed'}
                     </Badge>
                   )}
                 </div>
