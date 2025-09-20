@@ -135,6 +135,7 @@ function AuthenticatedApp() {
                   <Route path="/exercise-leaflets" component={ExerciseLeafletsPage} />
                   <Route path="/medical-certificates" component={MedicalCertificatesPage} />
                   <Route path="/referral-letters" component={ReferralLettersPage} />
+                  <Route path="/prescriptions" component={EnhancedPrescriptionForm} />
                   <Route path="/enhanced-prescription" component={EnhancedPrescriptionForm} />
                   <Route path="/security-demo" component={SecurityDemo} />
                   <Route path="/laboratory-enhanced" component={LaboratoryUnified} />

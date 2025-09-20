@@ -14,6 +14,7 @@ const availableRoutes = [
   { path: "/lab-results", name: "Lab Results", description: "Laboratory test results" },
   { path: "/lab-orders", name: "Lab Orders", description: "Order laboratory tests" },
   { path: "/pharmacy", name: "Pharmacy", description: "Medication and inventory management" },
+  { path: "/prescriptions", name: "Prescriptions", description: "Prescription management and forms" },
   { path: "/referrals", name: "Referrals", description: "Patient referral system" },
   { path: "/documents", name: "Documents", description: "Medical documents and files" },
   { path: "/analytics", name: "Analytics", description: "Revenue and business analytics" },
