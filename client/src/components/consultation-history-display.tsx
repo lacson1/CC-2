@@ -213,7 +213,7 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
 
             <CardContent className="px-4 pb-4">
               {/* Professional Timeline Display */}
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-[500px] overflow-y-auto scroll-smooth">
                 {isLoading ? (
                   <div className="flex items-center justify-center py-6">
                     <div className="text-slate-500 text-sm">Loading medical history...</div>
@@ -291,10 +291,10 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                                       </span>
                                       <span className="text-slate-600 ml-1">
                                         {typeof value === 'object' 
-                                          ? Object.values(value).slice(0, 1).join(', ')
-                                          : String(value).substring(0, 60)
+                                          ? Object.values(value).slice(0, 2).join(', ')
+                                          : String(value).substring(0, 120)
                                         }
-                                        {(typeof value === 'object' ? Object.values(value).join('').length : String(value).length) > 60 && '...'}
+                                        {(typeof value === 'object' ? Object.values(value).join('').length : String(value).length) > 120 && '...'}
                                       </span>
                                     </div>
                                   );
@@ -305,13 +305,13 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                                 {record.complaint && (
                                   <div className="text-xs">
                                     <span className="font-medium text-slate-700">Chief Complaint:</span>
-                                    <span className="text-slate-600 ml-1">{record.complaint.substring(0, 60)}{record.complaint.length > 60 && '...'}</span>
+                                    <span className="text-slate-600 ml-1">{record.complaint.substring(0, 100)}{record.complaint.length > 100 && '...'}</span>
                                   </div>
                                 )}
                                 {record.diagnosis && (
                                   <div className="text-xs">
                                     <span className="font-medium text-slate-700">Diagnosis:</span>
-                                    <span className="text-slate-600 ml-1">{record.diagnosis.substring(0, 60)}{record.diagnosis.length > 60 && '...'}</span>
+                                    <span className="text-slate-600 ml-1">{record.diagnosis.substring(0, 100)}{record.diagnosis.length > 100 && '...'}</span>
                                   </div>
                                 )}
                               </div>
@@ -325,9 +325,9 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                             {(record.type === 'consultation' && record.formData) && (
                               <Collapsible>
                                 <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full justify-start p-1 h-6 mt-2 text-xs text-slate-600 hover:text-slate-800">
+                                  <Button variant="ghost" className="w-full justify-start p-2 h-8 mt-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50">
                                     <ChevronDown className="h-3 w-3 mr-1" />
-                                    View Full Details
+                                    Read Full Consultation
                                   </Button>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent className="mt-2">
