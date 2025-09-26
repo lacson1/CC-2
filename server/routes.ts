@@ -2670,7 +2670,9 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         ...req.body,
         assignedTo: parseInt(req.body.assignedTo),
         assignedBy: req.user!.id,
-        organizationId: userOrgId
+        organizationId: userOrgId,
+        // Only include prescriptionId if it's a valid number and exists in prescriptions table
+        prescriptionId: req.body.prescriptionId && req.body.prescriptionId !== req.body.patientId ? parseInt(req.body.prescriptionId) : null
       };
 
       // Remove undefined assignedBy from req.body if it exists

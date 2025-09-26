@@ -116,7 +116,9 @@ export function MedicationReviewAssignmentModal({
 
     const submitData = {
       ...formData,
-      dueDate: format(selectedDate, "yyyy-MM-dd")
+      dueDate: format(selectedDate, "yyyy-MM-dd"),
+      // Only include prescriptionId if it's a valid number, not the patient ID
+      prescriptionId: formData.prescriptionId && formData.prescriptionId !== patientId ? formData.prescriptionId : undefined
     };
 
     createAssignmentMutation.mutate(submitData);
