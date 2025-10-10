@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import { Router } from "express";
 import { authenticateToken, requireAnyRole, type AuthRequest } from "../middleware/auth";
 import { storage } from "../storage";
 import { insertPatientSchema, insertVisitSchema, patients, visits, vaccinations, prescriptions, labResults, labOrders } from "@shared/schema";
@@ -6,14 +6,16 @@ import { z } from "zod";
 import { db } from "../db";
 import { eq, desc, or, ilike, and, sql } from "drizzle-orm";
 
+const router = Router();
+
 /**
  * Patient management routes
  * Handles: patient CRUD, visits, medical records, search functionality
  */
-export function setupPatientRoutes(app: Express): void {
+export function setupPatientRoutes(): Router {
   
   // Create patient
-  app.post("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+  router.post("/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       // Add the staff member's organization ID to ensure proper attribution
       const patientData = insertPatientSchema.parse({
@@ -32,7 +34,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Enhanced patients endpoint with analytics
-  app.get("/api/patients/enhanced", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  router.get("/patients/enhanced", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const patients = await storage.getPatients();
       res.json(patients);
@@ -43,7 +45,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Patient analytics endpoint
-  app.get("/api/patients/analytics", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  router.get("/patients/analytics", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const patients = await storage.getPatients();
       res.json(patients);
@@ -54,7 +56,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Main patients listing
-  app.get("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  router.get("/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
       if (!userOrgId) {
@@ -97,7 +99,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Search patients for autocomplete
-  app.get("/api/patients/search", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  router.get("/patients/search", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
       if (!userOrgId) {
@@ -132,7 +134,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Get patient by ID
-  app.get("/api/patients/:id", async (req, res) => {
+  router.get("/patients/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const patient = await storage.getPatient(id);
@@ -168,7 +170,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Quick patient summary for doctor workflow
-  app.get("/api/patients/:id/summary", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/patients/:id/summary", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
       
@@ -219,7 +221,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Update patient information
-  app.patch("/api/patients/:id", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+  router.patch("/patients/:id", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const updateData = req.body;
@@ -250,7 +252,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Archive/unarchive patient
-  app.patch("/api/patients/:id/archive", authenticateToken, requireAnyRole(['doctor', 'admin']), async (req: AuthRequest, res) => {
+  router.patch("/patients/:id/archive", authenticateToken, requireAnyRole(['doctor', 'admin']), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       const { archived } = req.body;
@@ -281,7 +283,7 @@ export function setupPatientRoutes(app: Express): void {
   // === VISIT ROUTES ===
 
   // Create visit
-  app.post("/api/patients/:id/visits", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+  router.post("/patients/:id/visits", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
       console.log('=== VISIT CREATION DEBUG ===');
@@ -337,7 +339,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Get patient visits
-  app.get("/api/patients/:id/visits", async (req, res) => {
+  router.get("/patients/:id/visits", async (req, res) => {
     try {
       const patientId = parseInt(req.params.id);
       const visits = await storage.getVisitsByPatient(patientId);
@@ -348,7 +350,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Get individual visit
-  app.get("/api/patients/:patientId/visits/:visitId", authenticateToken, async (req: AuthRequest, res) => {
+  router.get("/patients/:patientId/visits/:visitId", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.patientId);
       const visitId = parseInt(req.params.visitId);
@@ -365,7 +367,7 @@ export function setupPatientRoutes(app: Express): void {
   });
 
   // Update visit
-  app.patch("/api/patients/:patientId/visits/:visitId", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+  router.patch("/patients/:patientId/visits/:visitId", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.patientId);
       const visitId = parseInt(req.params.visitId);
@@ -404,7 +406,7 @@ export function setupPatientRoutes(app: Express): void {
   // === GLOBAL SEARCH (Patient-centric) ===
 
   // Enhanced global search endpoint - includes patients, vaccinations, prescriptions, lab results
-  app.get("/api/search/global", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  router.get("/search/global", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
       if (!userOrgId) {
@@ -529,4 +531,6 @@ export function setupPatientRoutes(app: Express): void {
       res.status(500).json({ message: "Search failed" });
     }
   });
+
+  return router;
 }

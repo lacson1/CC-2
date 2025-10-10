@@ -21,7 +21,8 @@ export function setupRoutes(app: Express): void {
   
   // Core healthcare functionality - ONLY modules that exist
   console.log("Setting up patient routes...");
-  setupPatientRoutes(app);
+  const patientRouter = setupPatientRoutes();
+  app.use('/api', patientRouter);
   
   console.log("Setting up laboratory routes...");
   const laboratoryRouter = setupLaboratoryRoutes();
