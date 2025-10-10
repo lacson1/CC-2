@@ -284,17 +284,17 @@ export default function EnhancedPharmacyPage() {
       {/* Main Content with Tabs */}
       <div className="flex-1 overflow-hidden">
         <Tabs defaultValue="inventory" className="h-full flex flex-col">
-          <div className="px-6 py-3 bg-gray-50 border-b">
-            <TabsList className="grid w-full grid-cols-3 max-w-md">
-              <TabsTrigger value="inventory" className="flex items-center gap-2">
+          <div className="px-6 py-3 bg-gradient-to-r from-background/95 to-muted/30 backdrop-blur-sm border-b border-border/60">
+            <TabsList className="grid w-full grid-cols-3 max-w-xl bg-muted/60 backdrop-blur-sm border border-border/50">
+              <TabsTrigger value="inventory" className="flex items-center gap-2 font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
                 <Package className="w-4 h-4" />
                 Inventory
               </TabsTrigger>
-              <TabsTrigger value="activities" className="flex items-center gap-2">
+              <TabsTrigger value="activities" className="flex items-center gap-2 font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
                 <Activity className="w-4 h-4" />
                 Activities
               </TabsTrigger>
-              <TabsTrigger value="reviews" className="flex items-center gap-2">
+              <TabsTrigger value="reviews" className="flex items-center gap-2 font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg transition-all duration-200">
                 <FileText className="w-4 h-4" />
                 Reviews
               </TabsTrigger>
