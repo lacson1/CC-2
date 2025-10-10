@@ -340,7 +340,7 @@ export default function UserManagementEnhanced() {
         <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-800">User Management</h1>
+              <h1 className="text-3xl font-bold text-slate-800">User Management</h1>
               <p className="text-slate-600 mt-1">Manage clinic staff accounts and permissions</p>
             </div>
             <div className="flex items-center space-x-3">

@@ -197,7 +197,7 @@ export default function EditVisit() {
               <div className="flex items-center gap-3">
                 <Stethoscope className="h-6 w-6 text-blue-600" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">Edit Visit</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Edit Visit</h1>
                   <p className="text-sm text-gray-500">
                     {patient.firstName} {patient.lastName} • {new Date(visit.visitDate).toLocaleDateString()}
                   </p>
