@@ -17,7 +17,7 @@ import {
   Filter, SortAsc, Download, Upload, Eye, AlertTriangle,
   Bookmark, BookmarkCheck, TrendingUp, Star, ChevronDown,
   ChevronUp, TestTube, Clipboard, Calendar as CalendarIcon,
-  ScrollText, Thermometer
+  ScrollText, Thermometer, MoreVertical
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { getDisplayName, getInitials } from "@/utils/name-utils";
@@ -46,9 +46,6 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
   const [dateFilter, setDateFilter] = useState<"all" | "today" | "week" | "month">("all");
   const [organizationFilter, setOrganizationFilter] = useState<string>("all");
   const [selectedPatients, setSelectedPatients] = useState<Set<number>>(new Set());
-  const [isStatsOpen, setIsStatsOpen] = useState(true);
-  const [isFiltersOpen, setIsFiltersOpen] = useState(true);
-  const [isPatientsOpen, setIsPatientsOpen] = useState(true);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -112,325 +109,324 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
   const handlePatientAction = (action: string, patient: PatientWithStats) => {
     switch (action) {
       case 'consultation':
-        // Navigate to form builder for consultations
         setLocation(`/form-builder?patientId=${patient.id}`);
         break;
       case 'vitals':
-        // Navigate to patient detail page to record vitals
         setLocation(`/patients/${patient.id}`);
         break;
       case 'lab-tests':
-        // Navigate to lab orders page with patient pre-filled
         setLocation(`/lab-orders?patientId=${patient.id}`);
         break;
       case 'prescription':
-        // Navigate to patient profile where prescriptions can be managed
-        setLocation(`/patients/${patient.id}`);
+        setLocation(`/patients/${patient.id}?tab=medications`);
         break;
       case 'history':
-        // Navigate to patient detail page to view history
-        setLocation(`/patients/${patient.id}`);
+        setLocation(`/patients/${patient.id}?tab=timeline`);
         break;
       case 'appointment':
-        // Navigate to appointments page with patient pre-filled
         setLocation(`/appointments?patientId=${patient.id}`);
         break;
       case 'report':
-        // Navigate to patient detail page for reports
-        setLocation(`/patients/${patient.id}`);
+        toast({
+          title: "Generate Report",
+          description: "Report generation feature coming soon.",
+        });
+        break;
+      default:
         break;
     }
   };
 
-  const calculateAge = (dateOfBirth: string) => {
+  // Utility functions
+  const formatPatientName = (patient: Patient) => {
+    return getDisplayName({ 
+      firstName: patient.firstName, 
+      lastName: patient.lastName,
+      title: patient.title || undefined 
+    });
+  };
+
+  const getPatientInitials = (patient: Patient) => {
+    return getInitials({
+      firstName: patient.firstName,
+      lastName: patient.lastName
+    });
+  };
+
+  const calculateAge = (dob: string) => {
     const today = new Date();
-    const birthDate = new Date(dateOfBirth);
+    const birthDate = new Date(dob);
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
     return age;
   };
 
-  const getPatientInitials = (patient: Patient) => {
-    return `${patient.firstName[0]}${patient.lastName[0]}`.toUpperCase();
-  };
-
-  const formatPatientName = (patient: Patient) => {
-    return `${patient.title ? `${patient.title} ` : ''}${patient.firstName} ${patient.lastName}`;
-  };
-
   const getRiskIndicatorColor = (riskLevel: string) => {
     switch (riskLevel) {
-      case 'high': return 'bg-red-400';
-      case 'medium': return 'bg-yellow-400';
-      default: return 'bg-green-400';
+      case 'high': return 'bg-red-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': default: return 'bg-green-500';
     }
   };
 
-  // Enhanced filtering and sorting
+  // Filtering and sorting logic
   const filteredAndSortedPatients = useMemo(() => {
-    let filtered = patients.filter(patient => {
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = patient.firstName.toLowerCase().includes(searchLower) ||
-                           patient.lastName.toLowerCase().includes(searchLower) ||
-                           patient.phone.includes(searchQuery) ||
-                           (patient.email && patient.email.toLowerCase().includes(searchLower));
+    let filtered = [...patients];
 
-      // Apply organization filter
-      const matchesOrganization = organizationFilter === "all" || 
-                                 (organizationFilter === "current" && patient.organizationId === user?.organizationId) ||
-                                 (organizationFilter === "unassigned" && !patient.organizationId) ||
-                                 patient.organizationId?.toString() === organizationFilter;
+    // Search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(patient => 
+        formatPatientName(patient).toLowerCase().includes(query) ||
+        patient.phone?.includes(query) ||
+        patient.email?.toLowerCase().includes(query)
+      );
+    }
 
-      // Apply date filter
+    // Category filter
+    if (filterBy !== 'all') {
+      filtered = filtered.filter(patient => {
+        if (filterBy === 'priority') return patient.isPriority;
+        if (filterBy === 'highrisk') return patient.riskLevel === 'high';
+        if (filterBy === 'recent') {
+          const visitDate = patient.lastVisit ? new Date(patient.lastVisit) : null;
+          return visitDate && (Date.now() - visitDate.getTime()) < 7 * 24 * 60 * 60 * 1000;
+        }
+        return true;
+      });
+    }
+
+    // Date filter
+    if (dateFilter !== 'all') {
       const now = new Date();
-      const patientCreatedDate = new Date(patient.createdAt);
-      let matchesDate = true;
-      
-      switch (dateFilter) {
-        case 'today':
-          matchesDate = patientCreatedDate.toDateString() === now.toDateString();
-          break;
-        case 'week':
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          matchesDate = patientCreatedDate >= weekAgo;
-          break;
-        case 'month':
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          matchesDate = patientCreatedDate >= monthAgo;
-          break;
-        default:
-          matchesDate = true;
+      filtered = filtered.filter(patient => {
+        const visitDate = patient.lastVisit ? new Date(patient.lastVisit) : null;
+        if (!visitDate) return false;
+        
+        const diffTime = now.getTime() - visitDate.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        
+        if (dateFilter === 'today') return diffDays < 1;
+        if (dateFilter === 'week') return diffDays < 7;
+        if (dateFilter === 'month') return diffDays < 30;
+        return true;
+      });
+    }
+
+    // Organization filter
+    if (organizationFilter !== 'all') {
+      if (organizationFilter === 'current') {
+        filtered = filtered.filter(p => p.organizationId === user?.organizationId);
+      } else if (organizationFilter === 'unassigned') {
+        filtered = filtered.filter(p => !p.organizationId);
+      } else {
+        filtered = filtered.filter(p => p.organizationId?.toString() === organizationFilter);
       }
+    }
 
-      const baseMatch = matchesSearch && matchesOrganization && matchesDate;
-
-      switch (filterBy) {
-        case 'priority':
-          return baseMatch && patient.isPriority;
-        case 'recent':
-          return baseMatch && patient.lastVisit && 
-                 new Date(patient.lastVisit) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        case 'highrisk':
-          return baseMatch && patient.riskLevel === 'high';
-        default:
-          return baseMatch;
-      }
-    });
-
-    return filtered.sort((a, b) => {
-      let comparison = 0;
+    // Sorting
+    filtered.sort((a, b) => {
+      let compareValue = 0;
       
       switch (sortBy) {
+        case 'name':
+          compareValue = formatPatientName(a).localeCompare(formatPatientName(b));
+          break;
         case 'age':
-          comparison = calculateAge(a.dateOfBirth) - calculateAge(b.dateOfBirth);
+          compareValue = calculateAge(a.dateOfBirth) - calculateAge(b.dateOfBirth);
           break;
         case 'lastVisit':
-          comparison = new Date(b.lastVisit || 0).getTime() - new Date(a.lastVisit || 0).getTime();
+          const aDate = a.lastVisit ? new Date(a.lastVisit).getTime() : 0;
+          const bDate = b.lastVisit ? new Date(b.lastVisit).getTime() : 0;
+          compareValue = aDate - bDate;
           break;
         case 'riskLevel':
           const riskOrder = { high: 3, medium: 2, low: 1 };
-          comparison = (riskOrder[b.riskLevel || 'low'] || 1) - (riskOrder[a.riskLevel || 'low'] || 1);
+          compareValue = riskOrder[a.riskLevel || 'low'] - riskOrder[b.riskLevel || 'low'];
           break;
         case 'dateCreated':
-          comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          break;
-        case 'name':
-        default:
-          comparison = a.firstName.localeCompare(b.firstName);
+          compareValue = new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
           break;
       }
       
-      return sortOrder === 'desc' ? comparison : -comparison;
+      return sortOrder === 'asc' ? compareValue : -compareValue;
     });
-  }, [patients, searchQuery, filterBy, sortBy, sortOrder, organizationFilter, dateFilter]);
 
+    return filtered;
+  }, [patients, searchQuery, filterBy, dateFilter, sortBy, sortOrder, organizationFilter, user]);
+
+  // Calculate stats
   const stats = useMemo(() => ({
     total: patients.length,
     priority: patients.filter(p => p.isPriority).length,
     highRisk: patients.filter(p => p.riskLevel === 'high').length,
-    recentVisits: patients.filter(p => p.lastVisit && 
-      new Date(p.lastVisit) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length
+    recentVisits: patients.filter(p => {
+      const visitDate = p.lastVisit ? new Date(p.lastVisit) : null;
+      return visitDate && (Date.now() - visitDate.getTime()) < 7 * 24 * 60 * 60 * 1000;
+    }).length
   }), [patients]);
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-pulse space-y-4 w-full max-w-6xl p-6">
+          <div className="h-8 bg-muted rounded w-1/4"></div>
+          <div className="grid grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-muted rounded"></div>
+            ))}
+          </div>
+          <div className="h-64 bg-muted rounded"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Patient Management</h1>
-          <p className="text-gray-600 mt-1">Enhanced patient care and management dashboard</p>
-        </div>
-        <div className="flex gap-3">
-          <Button onClick={() => setShowRegistrationModal(true)} className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Register Patient
-          </Button>
-          <Button variant="outline" onClick={() => handleBulkAction('export')}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Data
-          </Button>
-        </div>
-      </div>
-
-      {/* Quick Stats - Collapsible */}
-      <Collapsible open={isStatsOpen} onOpenChange={setIsStatsOpen}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Quick Statistics
-          </h3>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2">
-              {isStatsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <CollapsibleContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center">
-                  <Users className="h-8 w-8 text-blue-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Total Patients</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center">
-                  <Star className="h-8 w-8 text-purple-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Priority Patients</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.priority}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center">
-                  <AlertTriangle className="h-8 w-8 text-red-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">High Risk</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.highRisk}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center">
-                  <Clock className="h-8 w-8 text-green-600" />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">Recent Visits</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.recentVisits}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Patient Management</h1>
+            <p className="text-gray-600 mt-1">Enhanced patient care and management</p>
           </div>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Search and Filters - Collapsible */}
-      <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Search & Filters
-          </h3>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2">
-              {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          <div className="flex gap-3">
+            <Button onClick={() => setShowRegistrationModal(true)} className="gap-2">
+              <UserPlus className="w-4 h-4" />
+              Register Patient
             </Button>
-          </CollapsibleTrigger>
+            <Button variant="outline" onClick={() => handleBulkAction('export')} className="gap-2">
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+          </div>
         </div>
-        <CollapsibleContent>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="Search patients by name, phone, or email..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="healthcare-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
-                
-                <div className="flex gap-3 flex-wrap">
-                  <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Filter by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Patients</SelectItem>
-                      <SelectItem value="priority">Priority Only</SelectItem>
-                      <SelectItem value="recent">Recent Visits</SelectItem>
-                      <SelectItem value="highrisk">High Risk</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Patients</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="healthcare-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-xl">
+                  <Star className="h-6 w-6 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Priority</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.priority}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="healthcare-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-destructive/10 rounded-xl">
+                  <AlertTriangle className="h-6 w-6 text-destructive" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">High Risk</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.highRisk}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="healthcare-card">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-success/10 rounded-xl">
+                  <Clock className="h-6 w-6 text-success" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Recent Visits</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.recentVisits}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-                  <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Date range..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Time</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="week">This Week</SelectItem>
-                      <SelectItem value="month">This Month</SelectItem>
-                    </SelectContent>
-                  </Select>
+        {/* Search & Filters */}
+        <Card className="healthcare-card">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search patients by name, phone, or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 h-11"
+                />
+              </div>
+              
+              {/* Filters Row */}
+              <div className="flex flex-wrap gap-3">
+                <Select value={filterBy} onValueChange={(value: any) => setFilterBy(value)}>
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Filter by..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Patients</SelectItem>
+                    <SelectItem value="priority">Priority Only</SelectItem>
+                    <SelectItem value="recent">Recent Visits</SelectItem>
+                    <SelectItem value="highrisk">High Risk</SelectItem>
+                  </SelectContent>
+                </Select>
 
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Sort by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="dateCreated">Most Recent</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="age">Age</SelectItem>
-                      <SelectItem value="lastVisit">Last Visit</SelectItem>
-                      <SelectItem value="riskLevel">Risk Level</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Time..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Time</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="week">This Week</SelectItem>
+                    <SelectItem value="month">This Month</SelectItem>
+                  </SelectContent>
+                </Select>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    className="px-3"
-                  >
-                    {sortOrder === 'desc' ? (
-                      <SortAsc className="h-4 w-4" />
-                    ) : (
-                      <SortAsc className="h-4 w-4 rotate-180" />
-                    )}
-                  </Button>
+                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Sort..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dateCreated">Most Recent</SelectItem>
+                    <SelectItem value="name">Name</SelectItem>
+                    <SelectItem value="age">Age</SelectItem>
+                    <SelectItem value="lastVisit">Last Visit</SelectItem>
+                    <SelectItem value="riskLevel">Risk Level</SelectItem>
+                  </SelectContent>
+                </Select>
 
-                  <Select value={organizationFilter} onValueChange={(value: string) => setOrganizationFilter(value)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="px-3"
+                >
+                  <SortAsc className={`h-4 w-4 ${sortOrder === 'asc' ? 'rotate-180' : ''}`} />
+                </Button>
+
+                {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                  <Select value={organizationFilter} onValueChange={setOrganizationFilter}>
                     <SelectTrigger className="w-[160px]">
                       <SelectValue placeholder="Organization..." />
                     </SelectTrigger>
@@ -438,54 +434,40 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
                       <SelectItem value="all">All Organizations</SelectItem>
                       <SelectItem value="current">My Organization</SelectItem>
                       <SelectItem value="unassigned">Unassigned</SelectItem>
-                      <SelectItem value="2">Lagos Island Hospital</SelectItem>
-                      <SelectItem value="4">Enugu</SelectItem>
-                      <SelectItem value="1">Grace Clinic</SelectItem>
+                      {organizations.map((org: any) => (
+                        <SelectItem key={org.id} value={org.id.toString()}>{org.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+                )}
 
-                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Sort by..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="age">Age</SelectItem>
-                      <SelectItem value="lastVisit">Last Visit</SelectItem>
-                      <SelectItem value="riskLevel">Risk Level</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <div className="flex rounded-md overflow-hidden border">
-                    <Button
-                      variant={viewMode === "grid" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setViewMode("grid")}
-                      className="rounded-none"
-                    >
-                      <LayoutGrid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === "list" ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setViewMode("list")}
-                      className="rounded-none"
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="ml-auto flex gap-2">
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === "list" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
               {/* Bulk Actions */}
               {selectedPatients.size > 0 && (
-                <div className="flex items-center justify-between mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm font-medium text-blue-800">
+                <div className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-sm font-medium">
                     {selectedPatients.size} patient(s) selected
                   </p>
-                  <div className="flex gap-2 ml-auto">
+                  <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => handleBulkAction('export')}>
-                      Export Selected
+                      Export
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleBulkAction('priority')}>
                       Mark Priority
@@ -496,129 +478,112 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
                   </div>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Patient List */}
-      <Collapsible open={isPatientsOpen} onOpenChange={setIsPatientsOpen}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Patient List ({filteredAndSortedPatients.length})
-          </h3>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="p-2">
-              {isPatientsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <CollapsibleContent>
-          {filteredAndSortedPatients.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">
-                {searchQuery ? 'No patients found matching your search.' : 'No patients found.'}
-              </p>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Patient List */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Patient List ({filteredAndSortedPatients.length})
+            </h3>
+          </div>
+          
+          {filteredAndSortedPatients.length === 0 ? (
+            <Card className="healthcare-card">
+              <CardContent className="p-12 text-center">
+                <Users className="h-12 w-12 text-muted mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  {searchQuery ? 'No patients found matching your search.' : 'No patients found.'}
+                </p>
+              </CardContent>
+            </Card>
           ) : (
             <>
               {viewMode === "grid" ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredAndSortedPatients.map((patient) => (
-                    <Card key={patient.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation(`/patients/${patient.id}`)}>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Avatar className="h-10 w-10 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all">
-                                  <AvatarFallback className="bg-blue-100 text-blue-600">
-                                    {getPatientInitials(patient)}
-                                  </AvatarFallback>
-                                </Avatar>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start" className="w-56">
-                                <div className="px-2 py-1.5 text-sm font-medium text-slate-900">
-                                  {formatPatientName(patient)}
-                                </div>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/patients/${patient.id}`} className="flex items-center">
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    View Profile
-                                  </Link>
-                                </DropdownMenuItem>
-                                {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
-                                  <>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('consultation', patient)}>
-                                      <Stethoscope className="mr-2 h-4 w-4" />
-                                      New Consultation
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('vitals', patient)}>
-                                      <Thermometer className="mr-2 h-4 w-4" />
-                                      Record Vitals
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('lab-tests', patient)}>
-                                      <TestTube className="mr-2 h-4 w-4" />
-                                      Order Lab Tests
-                                    </DropdownMenuItem>
-                                  </>
-                                )}
-                                {(user?.role === 'admin' || user?.role === 'doctor') && (
-                                  <DropdownMenuItem onClick={() => handlePatientAction('prescription', patient)}>
-                                    <Pill className="mr-2 h-4 w-4" />
-                                    Prescribe Medication
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handlePatientAction('history', patient)}>
-                                  <ScrollText className="mr-2 h-4 w-4" />
-                                  View History
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handlePatientAction('appointment', patient)}>
-                                  <CalendarIcon className="mr-2 h-4 w-4" />
-                                  Schedule Appointment
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handlePatientAction('report', patient)}>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  Generate Report
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            <div className="ml-3">
-                              <h3 className="font-medium text-slate-900">
+                    <Card key={patient.id} className="healthcare-card group hover:shadow-lg transition-all cursor-pointer" onClick={() => setLocation(`/patients/${patient.id}`)}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3 flex-1">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {getPatientInitials(patient)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-foreground truncate">
                                 {formatPatientName(patient)}
                               </h3>
-                              <p className="text-sm text-slate-500">Age: {calculateAge(patient.dateOfBirth)}</p>
+                              <p className="text-sm text-muted-foreground">Age: {calculateAge(patient.dateOfBirth)}</p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 ${getRiskIndicatorColor(patient.riskLevel || 'low')} rounded-full opacity-70`} 
-                                 title={`Risk Level: ${patient.riskLevel?.toUpperCase() || 'LOW'}`}></div>
-                            {patient.isPriority && (
-                              <div className="w-2 h-2 bg-purple-400 rounded-full opacity-60" title="Priority Patient"></div>
-                            )}
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/patients/${patient.id}`} className="flex items-center">
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Profile
+                                </Link>
+                              </DropdownMenuItem>
+                              {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('consultation', patient); }}>
+                                    <Stethoscope className="mr-2 h-4 w-4" />
+                                    New Consultation
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('vitals', patient); }}>
+                                    <Thermometer className="mr-2 h-4 w-4" />
+                                    Record Vitals
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('lab-tests', patient); }}>
+                                    <TestTube className="mr-2 h-4 w-4" />
+                                    Order Lab Tests
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {(user?.role === 'admin' || user?.role === 'doctor') && (
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('prescription', patient); }}>
+                                  <Pill className="mr-2 h-4 w-4" />
+                                  Prescribe Medication
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('appointment', patient); }}>
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                Schedule Appointment
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('history', patient); }}>
+                                <ScrollText className="mr-2 h-4 w-4" />
+                                View History
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         
-                        <div className="space-y-2 text-sm text-slate-600">
-                          <div className="flex items-center">
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center text-muted-foreground">
                             <Phone className="h-3 w-3 mr-2" />
                             {patient.phone}
                           </div>
-                          {patient.email && (
-                            <div className="flex items-center">
-                              <Calendar className="h-3 w-3 mr-2" />
-                              {patient.email}
+                          <div className="flex items-center justify-between pt-3 border-t">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 ${getRiskIndicatorColor(patient.riskLevel || 'low')} rounded-full`} 
+                                   title={`Risk: ${patient.riskLevel?.toUpperCase() || 'LOW'}`}></div>
+                              {patient.isPriority && (
+                                <Star className="w-3 h-3 text-purple-500 fill-purple-500" title="Priority Patient" />
+                              )}
                             </div>
-                          )}
-                          <div className="flex items-center justify-between mt-3">
-                            <span className="text-xs text-slate-400">
-                              Last visit: {patient.lastVisit || 'No visits'}
-                            </span>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="secondary" className="text-xs">
                               {patient.totalVisits} visits
                             </Badge>
                           </div>
@@ -628,25 +593,45 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
                   ))}
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {filteredAndSortedPatients.map((patient) => (
-                    <Card key={patient.id} className="hover:shadow-sm transition-shadow cursor-pointer" onClick={() => window.location.href = `/patients/${patient.id}`}>
+                    <Card key={patient.id} className="healthcare-card hover:shadow-md transition-shadow cursor-pointer" onClick={() => setLocation(`/patients/${patient.id}`)}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center">
+                          <div className="flex items-center gap-4 flex-1">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {getPatientInitials(patient)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {formatPatientName(patient)}
+                              </h3>
+                              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <span>Age: {calculateAge(patient.dateOfBirth)}</span>
+                                <span className="flex items-center">
+                                  <Phone className="h-3 w-3 mr-1" />
+                                  {patient.phone}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 ${getRiskIndicatorColor(patient.riskLevel || 'low')} rounded-full`}></div>
+                              {patient.isPriority && <Star className="w-3 h-3 text-purple-500 fill-purple-500" />}
+                            </div>
+                            <Badge variant="secondary" className="text-xs">
+                              {patient.totalVisits} visits
+                            </Badge>
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all">
-                                  <AvatarFallback className="bg-blue-100 text-blue-600">
-                                    {getPatientInitials(patient)}
-                                  </AvatarFallback>
-                                </Avatar>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="start" className="w-56">
-                                <div className="px-2 py-1.5 text-sm font-medium text-slate-900">
-                                  {formatPatientName(patient)}
-                                </div>
-                                <DropdownMenuSeparator />
+                              <DropdownMenuContent align="end" className="w-56">
                                 <DropdownMenuItem asChild>
                                   <Link href={`/patients/${patient.id}`} className="flex items-center">
                                     <Eye className="mr-2 h-4 w-4" />
@@ -655,68 +640,38 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
                                 </DropdownMenuItem>
                                 {(user?.role === 'admin' || user?.role === 'doctor' || user?.role === 'nurse') && (
                                   <>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('consultation', patient)}>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('consultation', patient); }}>
                                       <Stethoscope className="mr-2 h-4 w-4" />
                                       New Consultation
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('vitals', patient)}>
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('vitals', patient); }}>
                                       <Thermometer className="mr-2 h-4 w-4" />
                                       Record Vitals
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handlePatientAction('lab-tests', patient)}>
+                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('lab-tests', patient); }}>
                                       <TestTube className="mr-2 h-4 w-4" />
                                       Order Lab Tests
                                     </DropdownMenuItem>
                                   </>
                                 )}
                                 {(user?.role === 'admin' || user?.role === 'doctor') && (
-                                  <DropdownMenuItem onClick={() => handlePatientAction('prescription', patient)}>
+                                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('prescription', patient); }}>
                                     <Pill className="mr-2 h-4 w-4" />
                                     Prescribe Medication
                                   </DropdownMenuItem>
                                 )}
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handlePatientAction('history', patient)}>
-                                  <ScrollText className="mr-2 h-4 w-4" />
-                                  View History
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handlePatientAction('appointment', patient)}>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('appointment', patient); }}>
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   Schedule Appointment
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handlePatientAction('report', patient)}>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  Generate Report
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePatientAction('history', patient); }}>
+                                  <ScrollText className="mr-2 h-4 w-4" />
+                                  View History
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
-                            <div className="ml-3">
-                              <h3 className="font-medium text-slate-900">
-                                {formatPatientName(patient)}
-                              </h3>
-                              <div className="flex items-center gap-4 text-sm text-slate-500">
-                                <span>Age: {calculateAge(patient.dateOfBirth)}</span>
-                                <div className="flex items-center">
-                                  <Phone className="h-3 w-3 mr-1" />
-                                  {patient.phone}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 ${getRiskIndicatorColor(patient.riskLevel || 'low')} rounded-full opacity-70`} 
-                                   title={`Risk Level: ${patient.riskLevel?.toUpperCase() || 'LOW'}`}></div>
-                              {patient.isPriority && (
-                                <div className="w-2 h-2 bg-purple-400 rounded-full opacity-60" title="Priority Patient"></div>
-                              )}
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              {patient.totalVisits} visits
-                            </Badge>
-                            <span className="text-xs text-slate-400">
-                              {patient.lastVisit}
-                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -726,8 +681,8 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
               )}
             </>
           )}
-        </CollapsibleContent>
-      </Collapsible>
+        </div>
+      </div>
 
       <PatientRegistrationModal 
         open={showRegistrationModal} 
