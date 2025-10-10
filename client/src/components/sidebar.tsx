@@ -214,14 +214,14 @@ export default function Sidebar({ onStartTour }: SidebarProps = {}) {
         </Button>
 
         {/* Logo Section */}
-        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-slate-200 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 transition-all duration-300`}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
-              <Heart className="text-white h-6 w-6" />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Heart className="text-white h-7 w-7" />
             </div>
             <div className={`transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-              <h1 className="text-lg font-bold text-slate-800 whitespace-nowrap">Bluequee</h1>
-              <p className="text-sm text-slate-500 whitespace-nowrap">Clinical Management</p>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">Bluequee</h1>
+              <p className="text-xs font-medium text-slate-600 whitespace-nowrap">Healthcare Management System</p>
             </div>
           </div>
           
@@ -235,41 +235,77 @@ export default function Sidebar({ onStartTour }: SidebarProps = {}) {
 
         {/* Navigation Menu */}
         <nav className={`flex-1 ${isCollapsed ? 'p-2' : 'p-4'} transition-all duration-300 overflow-y-auto`}>
-          <div className="space-y-2">
-            {navigationGroups.map((group) => (
-              <div key={group.name}>
-                <Collapsible 
-                  open={openGroups.has(group.name)} 
-                  onOpenChange={() => toggleGroup(group.name)}
-                >
-                  <CollapsibleTrigger asChild>
-                    <button 
-                      className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200 group relative`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleGroup(group.name);
-                      }}
-                    >
-                      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-2'}`}>
-                        <group.icon className="w-4 h-4 flex-shrink-0" />
-                        <span className={`transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                          {group.name}
-                        </span>
-                      </div>
-                      {!isCollapsed && (
-                        openGroups.has(group.name) ? 
-                          <ChevronDown className="w-4 h-4" /> : 
-                          <ChevronRight className="w-4 h-4" />
-                      )}
-
-                      {/* Tooltip for collapsed state */}
-                      {isCollapsed && (
-                        <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none">
-                          {group.name}
+          <div className="space-y-1">
+            {navigationGroups.map((group, index) => {
+              // Get color classes based on group type
+              const getGroupStyles = (name: string) => {
+                if (name.includes('Dashboard') || name.includes('Overview')) 
+                  return { hover: 'hover:bg-blue-50', active: 'text-blue-700 bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', chevron: 'text-blue-600' };
+                if (name.includes('Patient')) 
+                  return { hover: 'hover:bg-indigo-50', active: 'text-indigo-700 bg-indigo-50', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600', chevron: 'text-indigo-600' };
+                if (name.includes('Clinical')) 
+                  return { hover: 'hover:bg-emerald-50', active: 'text-emerald-700 bg-emerald-50', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', chevron: 'text-emerald-600' };
+                if (name.includes('Specialized') || name.includes('Care')) 
+                  return { hover: 'hover:bg-rose-50', active: 'text-rose-700 bg-rose-50', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', chevron: 'text-rose-600' };
+                if (name.includes('Document')) 
+                  return { hover: 'hover:bg-amber-50', active: 'text-amber-700 bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', chevron: 'text-amber-600' };
+                if (name.includes('Inventory') || name.includes('Operations')) 
+                  return { hover: 'hover:bg-orange-50', active: 'text-orange-700 bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', chevron: 'text-orange-600' };
+                if (name.includes('Financial')) 
+                  return { hover: 'hover:bg-green-50', active: 'text-green-700 bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600', chevron: 'text-green-600' };
+                if (name.includes('Analytics') || name.includes('Reports')) 
+                  return { hover: 'hover:bg-purple-50', active: 'text-purple-700 bg-purple-50', iconBg: 'bg-purple-100', iconColor: 'text-purple-600', chevron: 'text-purple-600' };
+                if (name.includes('System') || name.includes('Administration')) 
+                  return { hover: 'hover:bg-slate-50', active: 'text-slate-700 bg-slate-50', iconBg: 'bg-slate-100', iconColor: 'text-slate-600', chevron: 'text-slate-600' };
+                return { hover: 'hover:bg-slate-50', active: 'text-slate-700 bg-slate-50', iconBg: 'bg-slate-100', iconColor: 'text-slate-600', chevron: 'text-slate-600' };
+              };
+              
+              const styles = getGroupStyles(group.name);
+              const isOpen = openGroups.has(group.name);
+              
+              return (
+                <div key={group.name}>
+                  {/* Section divider for visual clarity */}
+                  {index > 0 && !isCollapsed && ['Patient Management', 'Clinical Services', 'Financial Management', 'System Administration'].includes(group.name) && (
+                    <div className="my-3 border-t border-slate-200"></div>
+                  )}
+                  
+                  <Collapsible 
+                    open={isOpen} 
+                    onOpenChange={() => toggleGroup(group.name)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button 
+                        className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 text-sm font-semibold rounded-lg transition-all duration-200 group relative ${
+                          isOpen ? styles.active : `text-slate-600 ${styles.hover}`
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleGroup(group.name);
+                        }}
+                      >
+                        <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-2.5'}`}>
+                          <div className={`p-1.5 rounded-lg ${isOpen ? styles.iconBg : 'bg-slate-100'}`}>
+                            <group.icon className={`w-4 h-4 flex-shrink-0 ${isOpen ? styles.iconColor : 'text-slate-600'}`} />
+                          </div>
+                          <span className={`transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                            {group.name}
+                          </span>
                         </div>
-                      )}
-                    </button>
-                  </CollapsibleTrigger>
+                        {!isCollapsed && (
+                          isOpen ? 
+                            <ChevronDown className={`w-4 h-4 ${styles.chevron}`} /> : 
+                            <ChevronRight className="w-4 h-4 text-slate-400" />
+                        )}
+
+                        {/* Tooltip for collapsed state */}
+                        {isCollapsed && (
+                          <div className="absolute left-full ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
+                            {group.name}
+                          </div>
+                        )}
+                      </button>
+                    </CollapsibleTrigger>
                   
                   <CollapsibleContent className={`${isCollapsed ? 'hidden' : 'block'}`}>
                     <div className="ml-4 mt-1 space-y-1">
@@ -330,21 +366,21 @@ export default function Sidebar({ onStartTour }: SidebarProps = {}) {
                           <Link
                             key={item.name}
                             href={item.href}
-                            className={`group relative flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            className={`group relative flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                               isActive(item.href)
-                                ? "bg-primary/10 text-primary"
-                                : "text-slate-600 hover:bg-slate-100"
+                                ? "bg-blue-50 text-blue-700 shadow-sm border-l-2 border-blue-500"
+                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                             }`}
                             onClick={handleMobileLinkClick}
                           >
-                            <Icon className="w-4 h-4 flex-shrink-0" />
+                            <Icon className={`w-4 h-4 flex-shrink-0 ${isActive(item.href) ? 'text-blue-600' : 'text-slate-500'}`} />
                             <span className={`transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
                               {item.name}
                             </span>
                             
                             {/* Tooltip for collapsed state */}
                             {isCollapsed && (
-                              <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none">
+                              <div className="absolute left-full ml-2 px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50 pointer-events-none shadow-lg">
                                 {item.name}
                               </div>
                             )}
@@ -355,7 +391,8 @@ export default function Sidebar({ onStartTour }: SidebarProps = {}) {
                   </CollapsibleContent>
                 </Collapsible>
               </div>
-            ))}
+            );
+          })}
           </div>
         </nav>
 
