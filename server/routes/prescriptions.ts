@@ -4,7 +4,7 @@ import { storage } from "../storage";
 import { insertMedicineSchema, insertPrescriptionSchema, medicines, prescriptions, patients, users, organizations } from "@shared/schema";
 import { z } from "zod";
 import { db } from "../db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { AuditLogger } from "../audit";
 
 const router = Router();
@@ -161,13 +161,13 @@ export function setupPrescriptionRoutes(): Router {
         return res.json([]);
       }
 
-      const medicines = await db.select()
+      const searchResults = await db.select()
         .from(medicines)
         .where(sql`${medicines.name} ILIKE ${'%' + searchTerm + '%'}`)
         .limit(10)
         .orderBy(medicines.name);
 
-      res.json(medicines);
+      res.json(searchResults);
     } catch (error) {
       console.error("Error searching medicines:", error);
       res.status(500).json({ message: "Failed to search medicines" });
