@@ -69,12 +69,12 @@ export default function TelemedicinePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: sessions, isLoading } = useQuery({
+  const { data: sessions = [], isLoading } = useQuery<TeleconsultationSession[]>({
     queryKey: ['/api/telemedicine/sessions'],
     enabled: true
   });
 
-  const { data: patients } = useQuery({
+  const { data: patients = [] } = useQuery<any[]>({
     queryKey: ['/api/patients'],
     enabled: true
   });
