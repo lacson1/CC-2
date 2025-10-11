@@ -67,6 +67,8 @@ import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 import ConsultationRecordDetails from "@/pages/consultation-record-details";
 import HelpAndSupport from "@/pages/help-support";
+import RoleManagement from "@/pages/role-management";
+import StaffAccessControl from "@/pages/staff-access-control";
 
 function AuthenticatedApp() {
   const { user } = useAuth();
@@ -166,6 +168,8 @@ function AuthenticatedApp() {
                   <Route path="/superadmin/analytics" component={SuperAdminAnalytics} />
                   <Route path="/super-admin-control-panel" component={SuperAdminControlPanel} />
                   <Route path="/super-admin-control" component={SuperAdminControl} />
+                  <Route path="/role-management" component={RoleManagement} />
+                  <Route path="/staff-access-control" component={StaffAccessControl} />
                   <Route component={NotFound} />
                 </Switch>
               </div>
