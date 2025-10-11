@@ -43,6 +43,45 @@ router.get('/roles', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
+// Get single role by ID with permissions
+router.get('/roles/:id', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const roleId = parseInt(req.params.id);
+
+    const [role] = await db
+      .select({
+        id: roles.id,
+        name: roles.name,
+        description: roles.description,
+        createdAt: roles.createdAt,
+        userCount: sql<number>`(SELECT COUNT(*) FROM ${users} WHERE role_id = ${roles.id})`
+      })
+      .from(roles)
+      .where(eq(roles.id, roleId));
+
+    if (!role) {
+      return res.status(404).json({ message: 'Role not found' });
+    }
+
+    // Get permissions for the role
+    const rolePermissionsList = await db
+      .select({
+        id: permissions.id,
+        name: permissions.name,
+        description: permissions.description
+      })
+      .from(rolePermissions)
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(eq(rolePermissions.roleId, role.id))
+      .orderBy(permissions.name);
+
+    res.json({ ...role, permissions: rolePermissionsList });
+  } catch (error) {
+    console.error("Error fetching role:", error);
+    res.status(500).json({ message: "Failed to fetch role" });
+  }
+});
+
 // Get all permissions grouped by category
 router.get('/permissions', authenticateToken, async (req: AuthRequest, res) => {
   try {

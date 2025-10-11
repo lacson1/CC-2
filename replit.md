@@ -29,6 +29,7 @@ The system adopts a mobile-first responsive design with a clean, professional in
 - **User Management System:** Role-based user creation, permission-based access control, organization-aware operations, and audit logging.
 - **Patient Management:** Redesigned interface for improved usability with streamlined controls, grid/list views, search, filters, and sorting.
 - **Patient Portal:** Secure patient authentication, dashboard, lab results, medications, and appointments, all mobile-responsive.
+- **Staff Access Control System:** Comprehensive RBAC system with 63+ granular permissions across 11 categories (Patient Management, Clinical, Laboratory, Pharmacy, Billing, Reports, User Management, Records, System, Appointments, Analytics). Features role management UI for creating/editing roles with custom permission sets, individual and bulk staff role assignment, permission matrix view, and complete audit logging for all access control changes. Supports organization-scoped access control with multi-admin role compatibility (admin, superadmin, super_admin).
 
 ## External Dependencies
 - **Replit Auth:** For OpenID Connect-based social authentication (Google, GitHub, X, Apple, Email).
