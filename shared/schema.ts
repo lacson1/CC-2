@@ -1,5 +1,5 @@
-import { pgTable, text, serial, integer, date, timestamp, decimal, boolean, varchar, json, numeric } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, serial, integer, date, timestamp, decimal, boolean, varchar, json, numeric, index } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -58,8 +58,24 @@ export const rolePermissions = pgTable('role_permissions', {
   permissionId: integer('permission_id').references(() => permissions.id).notNull()
 });
 
+// Session storage table for Replit Auth
+// Reference: blueprint:javascript_log_in_with_replit
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: json("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
+  // Replit Auth integration - Reference: blueprint:javascript_log_in_with_replit
+  replitAuthId: varchar('replit_auth_id', { length: 100 }).unique(), // Maps to Replit user ID (claims.sub)
+  profileImageUrl: varchar('profile_image_url', { length: 255 }), // From Replit Auth
+  // Existing fields
   username: varchar('username', { length: 50 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
   role: varchar('role', { length: 20 }).notNull(), // Keep for backward compatibility
@@ -874,9 +890,19 @@ export const insertWorksheetItemSchema = createInsertSchema(worksheetItems).omit
   createdAt: true,
 });
 
+// Replit Auth upsert schema - Reference: blueprint:javascript_log_in_with_replit
+export const upsertReplitAuthUserSchema = z.object({
+  replitAuthId: z.string(),
+  email: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  profileImageUrl: z.string().nullable(),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertReplitAuthUser = z.infer<typeof upsertReplitAuthUserSchema>;
 export type UpdateProfile = z.infer<typeof updateProfileSchema>;
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
