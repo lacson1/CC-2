@@ -2,6 +2,10 @@ import type { Express } from "express";
 import { setupPatientRoutes } from "./patients";
 import { setupLaboratoryRoutes } from "./laboratory";
 import { setupPrescriptionRoutes } from "./prescriptions";
+import publicApiRouter from "./public-api";
+import mobileApiRouter from "./mobile-api";
+import apiKeysRouter from "./api-keys";
+import apiDocsRouter from "./api-docs";
 // import { setupAppointmentRoutes } from "./appointments";
 // import { setupAuthRoutes } from "./auth";
 // import { setupAnalyticsRoutes } from "./analytics";
@@ -31,6 +35,22 @@ export function setupRoutes(app: Express): void {
   console.log("Setting up prescription routes...");
   const prescriptionRouter = setupPrescriptionRoutes();
   app.use('/api', prescriptionRouter);
+  
+  // Public REST API routes
+  console.log("Setting up public API routes...");
+  app.use('/api/v1', publicApiRouter);
+  
+  // Mobile-optimized API routes
+  console.log("Setting up mobile API routes...");
+  app.use('/api/mobile', mobileApiRouter);
+  
+  // API Keys management routes
+  console.log("Setting up API keys management routes...");
+  app.use('/api/api-keys', apiKeysRouter);
+  
+  // API Documentation routes
+  console.log("Setting up API documentation routes...");
+  app.use('/api/docs', apiDocsRouter);
   
   // TODO: Add remaining modules as they are created:
   // setupAppointmentRoutes(app);

@@ -1559,3 +1559,29 @@ export const insertTelemedicineSessionSchema = createInsertSchema(telemedicineSe
 
 export type TelemedicineSession = typeof telemedicineSessions.$inferSelect;
 export type InsertTelemedicineSession = z.infer<typeof insertTelemedicineSessionSchema>;
+
+// API Keys for Public API Access
+export const apiKeys = pgTable('api_keys', {
+  id: serial('id').primaryKey(),
+  key: varchar('key', { length: 64 }).notNull().unique(), // SHA-256 hash of the key
+  name: varchar('name', { length: 100 }).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  userId: integer('user_id').references(() => users.id), // Optional: who created it
+  permissions: json('permissions').$type<string[]>().default([]), // Array of allowed endpoints
+  rateLimit: integer('rate_limit').default(1000), // Requests per hour
+  isActive: boolean('is_active').default(true),
+  lastUsedAt: timestamp('last_used_at'),
+  expiresAt: timestamp('expires_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastUsedAt: true
+});
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
