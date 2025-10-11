@@ -12,6 +12,22 @@ A comprehensive digital health platform specializing in advanced medical communi
 - Comprehensive patient communication and data management system
 
 ## Recent Changes
+**October 11, 2025 - Replit Auth Integration Complete ✅**
+- **Integrated Replit Auth (OpenID Connect) alongside existing custom authentication:**
+  - Added social login support: Google, GitHub, X (Twitter), Apple, and Email
+  - Created sessions table for Replit Auth session storage
+  - Added replitAuthId and profileImageUrl fields to users table (preserved serial ID type)
+  - Implemented server/replitAuth.ts with Passport.js and OpenID Connect strategy
+  - Integrated connect-pg-simple for PostgreSQL session storage
+  - Created /api/login, /api/logout, /api/callback endpoints for Replit Auth flow
+  - Added useReplitAuth hook for frontend authentication state
+  - Updated login page with social login buttons while preserving username/password option
+  - Both authentication methods coexist: users can choose custom auth OR social login
+  - Session management properly configured with automatic refresh
+  - Database schema safely updated without breaking existing ID types
+  - Architect review: PASSED - no security issues, proper coexistence verified
+  - Required env vars: SESSION_SECRET, REPLIT_DOMAINS, REPL_ID (all present)
+
 **October 10, 2025 - Help & Support System Built ✅**
 - **Comprehensive Help & Support center implemented:**
   - Accessible from sidebar → Personal → Help & Support
