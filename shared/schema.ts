@@ -58,6 +58,16 @@ export const rolePermissions = pgTable('role_permissions', {
   permissionId: integer('permission_id').references(() => permissions.id).notNull()
 });
 
+// User-Organization membership table (for multi-organization support)
+export const userOrganizations = pgTable('user_organizations', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  roleId: integer('role_id').references(() => roles.id), // Role within this organization
+  isDefault: boolean('is_default').default(false), // Default organization for this user
+  joinedAt: timestamp('joined_at').defaultNow()
+});
+
 // Session storage table for Replit Auth
 // Reference: blueprint:javascript_log_in_with_replit
 export const sessions = pgTable(
@@ -1585,3 +1595,12 @@ export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
 
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+
+// UserOrganizations schemas
+export const insertUserOrganizationSchema = createInsertSchema(userOrganizations).omit({
+  id: true,
+  joinedAt: true
+});
+
+export type UserOrganization = typeof userOrganizations.$inferSelect;
+export type InsertUserOrganization = z.infer<typeof insertUserOrganizationSchema>;
