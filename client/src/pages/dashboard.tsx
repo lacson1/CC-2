@@ -11,6 +11,7 @@ import { Link, useLocation } from "wouter";
 import PatientRegistrationModal from "@/components/patient-registration-modal";
 import { useRole } from "@/components/role-guard";
 import { useGlobalShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
 
 interface DashboardStats {
   totalPatients: number;
@@ -84,6 +85,7 @@ export default function Dashboard() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <OrganizationSwitcher />
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 h-4 w-4" />
                 <Input

@@ -6,15 +6,17 @@ import { Building2, ChevronRight, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-interface UserOrganization {
+interface Organization {
   id: number;
+  name: string;
+  type: string;
+  themeColor?: string;
+}
+
+interface UserOrganization {
   organizationId: number;
-  organizationName: string;
-  organizationType: string;
-  organizationLogo: string | null;
-  roleId: number | null;
   isDefault: boolean;
-  joinedAt: string;
+  organization: Organization;
 }
 
 export default function OrganizationSelector() {
@@ -22,12 +24,12 @@ export default function OrganizationSelector() {
   const { toast } = useToast();
 
   const { data: organizations, isLoading } = useQuery<UserOrganization[]>({
-    queryKey: ["/api/organizations/my-organizations"],
+    queryKey: ["/api/organizations/user-organizations"],
   });
 
   const switchOrganization = useMutation({
     mutationFn: async (organizationId: number) => {
-      return await apiRequest("POST", `/api/organizations/switch/${organizationId}`);
+      return await apiRequest(`/api/organizations/switch`, 'POST', { organizationId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -49,10 +51,10 @@ export default function OrganizationSelector() {
 
   const setDefault = useMutation({
     mutationFn: async (organizationId: number) => {
-      return await apiRequest("POST", `/api/organizations/set-default/${organizationId}`);
+      return await apiRequest(`/api/organizations/set-default/${organizationId}`, 'POST');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/organizations/my-organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/organizations/user-organizations"] });
       toast({
         title: "Default organization updated",
         description: "This organization will be selected automatically on login",
@@ -109,60 +111,58 @@ export default function OrganizationSelector() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {organizations.map((org) => (
+          {organizations.map((userOrg) => (
             <Card
-              key={org.id}
+              key={userOrg.organizationId}
               className="hover:border-primary transition-colors cursor-pointer"
-              data-testid={`org-card-${org.organizationId}`}
+              data-testid={`org-card-${userOrg.organizationId}`}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    {org.organizationLogo ? (
-                      <img
-                        src={org.organizationLogo}
-                        alt={org.organizationName}
-                        className="w-12 h-12 rounded-lg object-cover"
+                    <div 
+                      className="w-12 h-12 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${userOrg.organization.themeColor}20` }}
+                    >
+                      <Building2 
+                        className="w-6 h-6" 
+                        style={{ color: userOrg.organization.themeColor || '#3B82F6' }}
                       />
-                    ) : (
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-primary" />
-                      </div>
-                    )}
+                    </div>
                     <div>
                       <h3 className="font-semibold text-lg flex items-center gap-2">
-                        {org.organizationName}
-                        {org.isDefault && (
+                        {userOrg.organization.name}
+                        {userOrg.isDefault && (
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                             Default
                           </span>
                         )}
                       </h3>
                       <p className="text-sm text-muted-foreground capitalize">
-                        {org.organizationType}
+                        {userOrg.organization.type}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!org.isDefault && (
+                    {!userOrg.isDefault && (
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          setDefault.mutate(org.organizationId);
+                          setDefault.mutate(userOrg.organizationId);
                         }}
                         disabled={setDefault.isPending}
-                        data-testid={`button-set-default-${org.organizationId}`}
+                        data-testid={`button-set-default-${userOrg.organizationId}`}
                       >
                         <Check className="w-4 h-4 mr-1" />
                         Set Default
                       </Button>
                     )}
                     <Button
-                      onClick={() => switchOrganization.mutate(org.organizationId)}
+                      onClick={() => switchOrganization.mutate(userOrg.organizationId)}
                       disabled={switchOrganization.isPending}
-                      data-testid={`button-select-org-${org.organizationId}`}
+                      data-testid={`button-select-org-${userOrg.organizationId}`}
                     >
                       Select
                       <ChevronRight className="w-4 h-4 ml-1" />
