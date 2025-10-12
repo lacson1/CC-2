@@ -29,6 +29,7 @@ export interface SessionRequest extends Request {
     username: string;
     role: string;
     organizationId?: number;
+    currentOrganizationId?: number;
   };
 }
 

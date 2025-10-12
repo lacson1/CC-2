@@ -7,6 +7,7 @@ import mobileApiRouter from "./mobile-api";
 import apiKeysRouter from "./api-keys";
 import apiDocsRouter from "./api-docs";
 import accessControlRouter from "./access-control";
+import organizationsRouter from "./organizations";
 // import { setupAppointmentRoutes } from "./appointments";
 // import { setupAuthRoutes } from "./auth";
 // import { setupAnalyticsRoutes } from "./analytics";
@@ -56,6 +57,10 @@ export function setupRoutes(app: Express): void {
   // Access Control & Role Management routes
   console.log("Setting up access control routes...");
   app.use('/api/access-control', accessControlRouter);
+  
+  // Organization Management routes
+  console.log("Setting up organization management routes...");
+  app.use('/api/organizations', organizationsRouter);
   
   // TODO: Add remaining modules as they are created:
   // setupAppointmentRoutes(app);

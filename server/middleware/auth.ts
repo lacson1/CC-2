@@ -12,6 +12,7 @@ declare module 'express-session' {
       username: string;
       role: string;
       organizationId?: number;
+      currentOrganizationId?: number; // Currently selected organization
     };
   }
 }
@@ -24,6 +25,7 @@ export interface AuthRequest extends Request {
     username: string;
     role: string;
     organizationId?: number;
+    currentOrganizationId?: number; // Currently selected organization
   };
 }
 
@@ -50,7 +52,8 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
       id: sessionUser.id,
       username: sessionUser.username,
       role: sessionUser.role,
-      organizationId: sessionUser.organizationId || undefined
+      organizationId: sessionUser.organizationId || undefined,
+      currentOrganizationId: sessionUser.currentOrganizationId || sessionUser.organizationId || undefined
     };
     
     next();
