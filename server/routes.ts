@@ -26,6 +26,7 @@ import path from 'path';
 import { setupOrganizationStaffRoutes } from "./organization-staff";
 import { setupTenantRoutes } from "./tenant-routes";
 import { setupSuperAdminRoutes } from "./super-admin-routes";
+import { setupComplianceReportRoutes } from "./routes/compliance-reports";
 import { performanceMonitor, globalErrorHandler, setupErrorRoutes } from "./error-handler";
 import { getOptimizationTasks, implementOptimizationTask } from "./system-optimizer";
 import { setupNetworkValidationRoutes } from "./network-validator";
@@ -11010,6 +11011,9 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   
   // Setup super admin control routes
   setupSuperAdminRoutes(app);
+  
+  // Setup compliance report generation routes
+  setupComplianceReportRoutes(app);
 
   // Autocomplete suggestions API endpoints
   app.get("/api/autocomplete/:fieldType", authenticateToken, async (req: AuthRequest, res) => {
