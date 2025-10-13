@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,12 +9,34 @@ import { Separator } from '@/components/ui/separator';
 import { Loader2, Heart, Shield, Activity, Stethoscope, Users, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { SiGoogle, SiGithub, SiX, SiApple } from 'react-icons/si';
 
+// Import tech-themed backgrounds
+import bg1 from '@assets/stock_images/abstract_geometric_d_7334a5b3.jpg';
+import bg2 from '@assets/stock_images/abstract_geometric_d_fe7b9c3a.jpg';
+import bg3 from '@assets/stock_images/abstract_geometric_d_4155ce98.jpg';
+import bg4 from '@assets/stock_images/cyberpunk_digital_pl_0937bd2d.jpg';
+import bg5 from '@assets/stock_images/cyberpunk_digital_pl_a2872fec.jpg';
+import bg6 from '@assets/stock_images/cyberpunk_digital_pl_5dfba5e0.jpg';
+import bg7 from '@assets/stock_images/minimalist_dark_tech_82c21955.jpg';
+import bg8 from '@assets/stock_images/minimalist_dark_tech_7c5bb1fa.jpg';
+import bg9 from '@assets/stock_images/minimalist_dark_tech_6f13daeb.jpg';
+
+const backgrounds = [bg1, bg2, bg3, bg4, bg5, bg6, bg7, bg8, bg9];
+
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [currentBg, setCurrentBg] = useState(0);
   const { login, isLoading } = useAuth();
+
+  // Rotate background every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentBg((prev) => (prev + 1) % backgrounds.length);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,11 +62,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Subtle Background Pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-accent rounded-full blur-3xl"></div>
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Tech Background with Rotation */}
+      <div className="absolute inset-0">
+        {backgrounds.map((bg, index) => (
+          <div
+            key={index}
+            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+            style={{
+              backgroundImage: `url(${bg})`,
+              opacity: currentBg === index ? 1 : 0,
+            }}
+          />
+        ))}
+        {/* Dark overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/60" />
       </div>
       
       <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
@@ -57,20 +89,20 @@ export default function Login() {
                 <Stethoscope className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold gradient-text">
+                <h1 className="text-4xl font-bold text-white">
                   Bluequee
                 </h1>
-                <p className="text-muted-foreground font-medium">
+                <p className="text-gray-200 font-medium">
                   Healthcare Management System
                 </p>
               </div>
             </div>
             
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-foreground">
+              <h2 className="text-3xl font-bold text-white">
                 Professional Clinical Management
               </h2>
-              <p className="text-muted-foreground leading-relaxed text-lg">
+              <p className="text-gray-300 leading-relaxed text-lg">
                 Comprehensive healthcare platform with intelligent analytics, real-time monitoring, and streamlined patient care workflows.
               </p>
             </div>
@@ -78,36 +110,36 @@ export default function Login() {
           
           {/* Feature Grid */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="healthcare-card p-6 group hover:shadow-lg transition-all">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+            <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/10 backdrop-blur-sm border-white/20">
+              <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary/30 transition-colors">
                 <Activity className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Smart Analytics</h3>
-              <p className="text-sm text-muted-foreground">Intelligent diagnostic insights</p>
+              <h3 className="font-semibold text-white mb-2">Smart Analytics</h3>
+              <p className="text-sm text-gray-300">Intelligent diagnostic insights</p>
             </div>
             
-            <div className="healthcare-card p-6 group hover:shadow-lg transition-all">
-              <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+            <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/10 backdrop-blur-sm border-white/20">
+              <div className="w-12 h-12 bg-accent/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent/30 transition-colors">
                 <Heart className="w-6 h-6 text-accent" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Vital Monitoring</h3>
-              <p className="text-sm text-muted-foreground">Real-time health tracking</p>
+              <h3 className="font-semibold text-white mb-2">Vital Monitoring</h3>
+              <p className="text-sm text-gray-300">Real-time health tracking</p>
             </div>
             
-            <div className="healthcare-card p-6 group hover:shadow-lg transition-all">
-              <div className="w-12 h-12 bg-info/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-info/20 transition-colors">
+            <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/10 backdrop-blur-sm border-white/20">
+              <div className="w-12 h-12 bg-info/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-info/30 transition-colors">
                 <Users className="w-6 h-6 text-info" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Patient Care</h3>
-              <p className="text-sm text-muted-foreground">Comprehensive patient management</p>
+              <h3 className="font-semibold text-white mb-2">Patient Care</h3>
+              <p className="text-sm text-gray-300">Comprehensive patient management</p>
             </div>
             
-            <div className="healthcare-card p-6 group hover:shadow-lg transition-all">
-              <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-success/20 transition-colors">
+            <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/10 backdrop-blur-sm border-white/20">
+              <div className="w-12 h-12 bg-success/20 rounded-xl flex items-center justify-center mb-4 group-hover:bg-success/30 transition-colors">
                 <Shield className="w-6 h-6 text-success" />
               </div>
-              <h3 className="font-semibold text-foreground mb-2">Secure Vault</h3>
-              <p className="text-sm text-muted-foreground">HIPAA-compliant protection</p>
+              <h3 className="font-semibold text-white mb-2">Secure Vault</h3>
+              <p className="text-sm text-gray-300">HIPAA-compliant protection</p>
             </div>
           </div>
         </div>
