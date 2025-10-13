@@ -44,11 +44,17 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Futuristic Gradient Background */}
+      {/* Animated Futuristic Gradient Background */}
       <div 
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        className="absolute inset-0 bg-cover bg-center animate-[float_20s_ease-in-out_infinite]"
+        style={{ 
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: '120%'
+        }}
       />
+      
+      {/* Gradient Blend Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/30" />
       
       <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
         
@@ -117,7 +123,7 @@ export default function Login() {
         
         {/* Right Side - Login Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
-          <Card className="healthcare-card shadow-xl">
+          <Card className="healthcare-card shadow-2xl bg-white/60 backdrop-blur-2xl border-white/30">
             <CardHeader className="space-y-4 pb-6">
               <div className="text-center space-y-3">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mx-auto shadow-lg">
