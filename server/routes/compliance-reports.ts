@@ -4,7 +4,7 @@ import { db } from "../db";
 import { patients, visits, users, auditLogs, invoices, invoiceItems, medications, prescriptions, appointments, labResults, labTests } from "@shared/schema";
 import { eq, desc, and, gte, lte, sql } from "drizzle-orm";
 import ExcelJS from 'exceljs';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 export function setupComplianceReportRoutes(app: Express) {
