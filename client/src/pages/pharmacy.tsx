@@ -73,7 +73,7 @@ export default function Pharmacy() {
         ...data,
         expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : null,
       };
-      const response = await apiRequest("POST", "/api/medicines", medicineData);
+      const response = await apiRequest("/api/medicines", "POST", medicineData);
       return response.json();
     },
     onSuccess: () => {
@@ -97,7 +97,7 @@ export default function Pharmacy() {
 
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ id, quantity }: { id: number; quantity: number }) => {
-      const response = await apiRequest("PATCH", `/api/medicines/${id}`, { quantity });
+      const response = await apiRequest(`/api/medicines/${id}`, "PATCH", { quantity });
       return response.json();
     },
     onSuccess: () => {
