@@ -92,7 +92,7 @@ export default function EnhancedPatientManagementFixed({ user, onPatientSelect }
     }
 
     try {
-      await apiRequest("POST", "/api/patients/bulk-action", {
+      await apiRequest("/api/patients/bulk-action", "POST", {
         patientIds: Array.from(selectedPatients),
         action
       });
