@@ -76,10 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: data.organizationMessage,
           duration: 6000,
         });
-        
-        // Small delay to ensure toast is visible before redirect
-        await new Promise(resolve => setTimeout(resolve, 500));
       }
+      
+      // Small delay to ensure session cookie is properly set before redirect
+      // This prevents 401 errors on subsequent API calls
+      await new Promise(resolve => setTimeout(resolve, 500));
       
       // Check if user needs to select organization
       if (data.requiresOrgSelection) {
