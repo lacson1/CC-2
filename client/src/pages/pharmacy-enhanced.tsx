@@ -71,7 +71,7 @@ export default function EnhancedPharmacyPage() {
 
   // Add medicine mutation
   const addMedicineMutation = useMutation({
-    mutationFn: (data: AddMedicineForm) => apiRequest('POST', '/api/medicines', {
+    mutationFn: (data: AddMedicineForm) => apiRequest('/api/medicines', 'POST', {
       ...data,
       expiryDate: data.expiryDate ? new Date(data.expiryDate).toISOString() : undefined,
     }),
@@ -96,7 +96,7 @@ export default function EnhancedPharmacyPage() {
   // Update medicine quantity mutation
   const updateQuantityMutation = useMutation({
     mutationFn: ({ id, quantity }: { id: number; quantity: number }) =>
-      apiRequest('PATCH', `/api/medicines/${id}`, { quantity }),
+      apiRequest(`/api/medicines/${id}`, 'PATCH', { quantity }),
     onSuccess: () => {
       toast({
         title: "Success",
