@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight, Brain, Calendar, ClipboardList, Activity, Star, Building, CreditCard, Mail, DollarSign, Receipt, AlertTriangle } from "lucide-react";
+import { Heart, BarChart3, Users, Stethoscope, FlaskRound, Pill, User, LogOut, UserCheck, Menu, X, Settings, UserCog, Shield, FileText, TrendingUp, Building2, Calculator, HelpCircle, ChevronDown, ChevronRight, Brain, Calendar, ClipboardList, Activity, Star, Building, CreditCard, Mail, DollarSign, Receipt, AlertTriangle, Palette } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole, RoleGuard } from "@/components/role-guard";
 import { Button } from "@/components/ui/button";
@@ -114,6 +114,7 @@ const getNavigationGroupsForRole = (role: string) => {
       items: [
         { name: "My Profile", href: "/profile", icon: User, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
         { name: "Settings", href: "/settings", icon: Settings, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
+        { name: "UI Showcase", href: "/ui-showcase", icon: Palette, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist", "receptionist", "lab_technician"] },
         { name: "Help & Support", href: "/help", icon: HelpCircle, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist", "receptionist", "lab_technician"] },
       ]
     }

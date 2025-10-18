@@ -71,6 +71,7 @@ import RoleManagement from "@/pages/role-management";
 import StaffAccessControl from "@/pages/staff-access-control";
 import OrganizationSelector from "@/pages/organization-selector";
 import OrganizationStaff from "@/pages/organization-staff";
+import UIShowcase from "@/pages/ui-showcase";
 
 function AuthenticatedApp() {
   const { user } = useAuth();
@@ -174,6 +175,7 @@ function AuthenticatedApp() {
                   <Route path="/super-admin-control" component={SuperAdminControl} />
                   <Route path="/role-management" component={RoleManagement} />
                   <Route path="/staff-access-control" component={StaffAccessControl} />
+                  <Route path="/ui-showcase" component={UIShowcase} />
                   <Route component={NotFound} />
                 </Switch>
               </div>
