@@ -1606,11 +1606,28 @@ export const aiConsultations = pgTable('ai_consultations', {
     content: string;
     timestamp: string;
   }>>().default([]),
-  status: varchar('status', { length: 20 }).default('in_progress').notNull(), // 'in_progress', 'completed', 'cancelled'
+  status: varchar('status', { length: 30 }).default('in_progress').notNull(), // 'in_progress', 'completed', 'review_pending', 'auto_draft_ready', 'cancelled', 'archived'
   chiefComplaint: text('chief_complaint'),
+  // Context data injected into AI
+  contextData: json('context_data').$type<{
+    vitals?: { temperature?: string; bloodPressure?: string; heartRate?: string; weight?: string; };
+    recentVisits?: Array<{ date: string; diagnosis: string; }>;
+    currentMedications?: Array<{ name: string; dosage: string; }>;
+    allergies?: string[];
+    labResults?: Array<{ test: string; result: string; date: string; }>;
+  }>(),
+  // AI-generated insights
+  aiInsights: json('ai_insights').$type<{
+    differentialDiagnoses?: Array<{ diagnosis: string; probability: number; reasoning: string; }>;
+    redFlags?: string[];
+    suggestedQuestions?: string[];
+    clinicalRecommendations?: string[];
+    confidenceScore?: number; // 0-100
+  }>(),
   organizationId: integer('organization_id').references(() => organizations.id),
   createdAt: timestamp('created_at').defaultNow(),
-  completedAt: timestamp('completed_at')
+  completedAt: timestamp('completed_at'),
+  updatedAt: timestamp('updated_at').defaultNow()
 });
 
 export const clinicalNotes = pgTable('clinical_notes', {
@@ -1630,6 +1647,7 @@ export const clinicalNotes = pgTable('clinical_notes', {
     dosage: string;
     frequency: string;
     duration: string;
+    reasoning?: string;
   }>>().default([]),
   vitalSigns: json('vital_signs').$type<{
     temperature?: string;
@@ -1639,8 +1657,34 @@ export const clinicalNotes = pgTable('clinical_notes', {
     oxygenSaturation?: string;
   }>(),
   diagnosis: text('diagnosis'),
+  // Enhanced AI features
+  differentialDiagnoses: json('differential_diagnoses').$type<Array<{
+    diagnosis: string;
+    icdCode?: string;
+    probability: number;
+    reasoning: string;
+  }>>().default([]),
+  icdCodes: json('icd_codes').$type<Array<{
+    code: string;
+    description: string;
+    category: string;
+  }>>().default([]),
+  suggestedLabTests: json('suggested_lab_tests').$type<Array<{
+    test: string;
+    reasoning: string;
+    urgency: 'routine' | 'urgent' | 'stat';
+  }>>().default([]),
+  clinicalWarnings: json('clinical_warnings').$type<Array<{
+    type: 'contraindication' | 'drug_interaction' | 'allergy' | 'red_flag';
+    message: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+  }>>().default([]),
+  confidenceScore: integer('confidence_score'), // 0-100
   recommendations: text('recommendations'),
   followUpInstructions: text('follow_up_instructions'),
+  followUpDate: date('follow_up_date'),
+  addedToPatientRecord: boolean('added_to_patient_record').default(false),
+  addedToRecordAt: timestamp('added_to_record_at'),
   organizationId: integer('organization_id').references(() => organizations.id),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow()

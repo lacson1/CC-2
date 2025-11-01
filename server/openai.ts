@@ -20,6 +20,24 @@ interface PatientContext {
   medicalHistory?: string;
   allergies?: string;
   currentMedications?: string;
+  // Enhanced context
+  vitals?: {
+    temperature?: string;
+    bloodPressure?: string;
+    heartRate?: string;
+    weight?: string;
+  };
+  recentVisits?: Array<{
+    date: string;
+    diagnosis: string;
+    treatment?: string;
+  }>;
+  labResults?: Array<{
+    test: string;
+    result: string;
+    date: string;
+    isAbnormal?: boolean;
+  }>;
 }
 
 interface ClinicalNote {
@@ -34,10 +52,35 @@ interface ClinicalNote {
     dosage: string;
     frequency: string;
     duration: string;
+    reasoning?: string;
   }>;
   diagnosis: string;
+  // Enhanced AI features
+  differentialDiagnoses: Array<{
+    diagnosis: string;
+    icdCode?: string;
+    probability: number;
+    reasoning: string;
+  }>;
+  icdCodes: Array<{
+    code: string;
+    description: string;
+    category: string;
+  }>;
+  suggestedLabTests: Array<{
+    test: string;
+    reasoning: string;
+    urgency: 'routine' | 'urgent' | 'stat';
+  }>;
+  clinicalWarnings: Array<{
+    type: 'contraindication' | 'drug_interaction' | 'allergy' | 'red_flag';
+    message: string;
+    severity: 'low' | 'medium' | 'high' | 'critical';
+  }>;
+  confidenceScore: number;
   recommendations: string;
   followUpInstructions: string;
+  followUpDate?: string;
 }
 
 export async function simulatePatientResponse(
@@ -45,26 +88,58 @@ export async function simulatePatientResponse(
   patientContext: PatientContext,
   chiefComplaint: string
 ): Promise<string> {
-  const systemPrompt = `You are simulating a patient named ${patientContext.name}, a ${patientContext.age}-year-old ${patientContext.gender}.
+  // Build enhanced context with all available patient data
+  let contextBuilder = `You are simulating a patient named ${patientContext.name}, a ${patientContext.age}-year-old ${patientContext.gender}.
 
 Chief Complaint: ${chiefComplaint}
 
 Medical Background:
 - Medical History: ${patientContext.medicalHistory || 'None reported'}
 - Known Allergies: ${patientContext.allergies || 'None'}
-- Current Medications: ${patientContext.currentMedications || 'None'}
+- Current Medications: ${patientContext.currentMedications || 'None'}`;
 
-Instructions:
+  // Add vitals if available
+  if (patientContext.vitals) {
+    const vitals = patientContext.vitals;
+    const vitalStrings = [];
+    if (vitals.temperature) vitalStrings.push(`Temperature: ${vitals.temperature}`);
+    if (vitals.bloodPressure) vitalStrings.push(`BP: ${vitals.bloodPressure}`);
+    if (vitals.heartRate) vitalStrings.push(`HR: ${vitals.heartRate}`);
+    if (vitals.weight) vitalStrings.push(`Weight: ${vitals.weight}`);
+    if (vitalStrings.length > 0) {
+      contextBuilder += `\n- Current Vitals: ${vitalStrings.join(', ')}`;
+    }
+  }
+
+  // Add recent visits context
+  if (patientContext.recentVisits && patientContext.recentVisits.length > 0) {
+    contextBuilder += `\n- Recent Visits:`;
+    patientContext.recentVisits.slice(0, 3).forEach(visit => {
+      contextBuilder += `\n  • ${visit.date}: ${visit.diagnosis}${visit.treatment ? ` (Treated with: ${visit.treatment})` : ''}`;
+    });
+  }
+
+  // Add lab results if available
+  if (patientContext.labResults && patientContext.labResults.length > 0) {
+    contextBuilder += `\n- Recent Lab Results:`;
+    patientContext.labResults.slice(0, 5).forEach(lab => {
+      const abnormal = lab.isAbnormal ? ' (ABNORMAL)' : '';
+      contextBuilder += `\n  • ${lab.test}: ${lab.result}${abnormal} (${lab.date})`;
+    });
+  }
+
+  contextBuilder += `\n\nInstructions:
 - Respond naturally as the patient would during a medical consultation
-- Provide realistic, medically plausible symptoms and responses
+- Provide realistic, medically plausible symptoms and responses based on your medical history
 - Be specific but not overly technical
 - Express concerns, fears, or questions a real patient might have
+- Reference your medical history and current conditions when relevant
 - If asked about specific symptoms, provide detailed but realistic descriptions
 - Stay in character - you are the patient, not a doctor
 - Keep responses conversational and brief (2-4 sentences)`;
 
   const chatMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: contextBuilder },
     ...messages.map(msg => ({
       role: msg.role as 'user' | 'assistant' | 'system',
       content: msg.content
@@ -75,7 +150,7 @@ Instructions:
     model: 'gpt-4o',
     messages: chatMessages,
     temperature: 0.8,
-    max_tokens: 200
+    max_tokens: 250
   });
 
   return response.choices[0]?.message?.content || 'I would like to discuss my symptoms with you.';
@@ -85,38 +160,99 @@ export async function generateClinicalNotes(
   transcript: ConsultationMessage[],
   patientContext: PatientContext
 ): Promise<ClinicalNote> {
-  const systemPrompt = `You are an expert medical scribe creating structured clinical notes from a doctor-patient consultation.
-
-Patient Information:
+  // Build enhanced patient context
+  let contextInfo = `Patient Information:
 - Name: ${patientContext.name}
 - Age: ${patientContext.age}
 - Gender: ${patientContext.gender}
 - Medical History: ${patientContext.medicalHistory || 'None reported'}
 - Allergies: ${patientContext.allergies || 'None'}
-- Current Medications: ${patientContext.currentMedications || 'None'}
+- Current Medications: ${patientContext.currentMedications || 'None'}`;
 
-Generate comprehensive clinical notes in SOAP format (Subjective, Objective, Assessment, Plan) based on the consultation transcript.
+  if (patientContext.vitals) {
+    const v = patientContext.vitals;
+    const vitals = [];
+    if (v.temperature) vitals.push(`Temp: ${v.temperature}`);
+    if (v.bloodPressure) vitals.push(`BP: ${v.bloodPressure}`);
+    if (v.heartRate) vitals.push(`HR: ${v.heartRate}`);
+    if (v.weight) vitals.push(`Weight: ${v.weight}`);
+    if (vitals.length > 0) contextInfo += `\n- Vitals: ${vitals.join(', ')}`;
+  }
 
-IMPORTANT: Return ONLY valid JSON with this exact structure:
+  if (patientContext.recentVisits && patientContext.recentVisits.length > 0) {
+    contextInfo += `\n- Recent Visits: ${patientContext.recentVisits.slice(0, 2).map(v => `${v.date}: ${v.diagnosis}`).join('; ')}`;
+  }
+
+  if (patientContext.labResults && patientContext.labResults.length > 0) {
+    contextInfo += `\n- Recent Labs: ${patientContext.labResults.slice(0, 3).map(l => `${l.test}: ${l.result}${l.isAbnormal ? ' (ABNORMAL)' : ''}`).join('; ')}`;
+  }
+
+  const systemPrompt = `You are an expert AI clinical assistant creating comprehensive SOAP notes with diagnostic support.
+
+${contextInfo}
+
+Generate detailed clinical notes with ALL the following components in valid JSON format:
+
 {
   "chiefComplaint": "Brief chief complaint",
-  "subjective": "Patient's description of symptoms and concerns",
-  "objective": "Physical examination findings and vital signs mentioned",
-  "assessment": "Clinical assessment and differential diagnoses",
-  "plan": "Treatment plan and recommendations",
-  "historyOfPresentIllness": "Detailed HPI",
+  "subjective": "Patient's symptoms, concerns, and history in their own words",
+  "objective": "Physical exam findings, vital signs, and observable data",
+  "assessment": "Clinical assessment integrating subjective and objective data",
+  "plan": "Detailed treatment plan with medications, tests, and follow-up",
+  "historyOfPresentIllness": "Chronological detailed HPI with context",
   "medications": [
     {
       "name": "Medication name",
-      "dosage": "Dosage amount",
-      "frequency": "Frequency (e.g., twice daily)",
-      "duration": "Duration (e.g., 7 days)"
+      "dosage": "Dosage amount with units",
+      "frequency": "e.g., twice daily, every 8 hours",
+      "duration": "e.g., 7 days, 2 weeks",
+      "reasoning": "Why this medication is prescribed for this condition"
     }
   ],
-  "diagnosis": "Primary diagnosis",
-  "recommendations": "Additional recommendations",
-  "followUpInstructions": "Follow-up instructions"
-}`;
+  "diagnosis": "Primary diagnosis with clinical reasoning",
+  "differentialDiagnoses": [
+    {
+      "diagnosis": "Differential diagnosis name",
+      "icdCode": "ICD-10 code if applicable (e.g., J20.9)",
+      "probability": 75,
+      "reasoning": "Why this diagnosis is being considered"
+    }
+  ],
+  "icdCodes": [
+    {
+      "code": "ICD-10 code (e.g., J06.9)",
+      "description": "Description of the condition",
+      "category": "Category (e.g., Respiratory, Cardiovascular)"
+    }
+  ],
+  "suggestedLabTests": [
+    {
+      "test": "Test name (e.g., Complete Blood Count)",
+      "reasoning": "Why this test is recommended",
+      "urgency": "routine|urgent|stat"
+    }
+  ],
+  "clinicalWarnings": [
+    {
+      "type": "contraindication|drug_interaction|allergy|red_flag",
+      "message": "Specific warning message",
+      "severity": "low|medium|high|critical"
+    }
+  ],
+  "confidenceScore": 85,
+  "recommendations": "Additional clinical recommendations and patient education",
+  "followUpInstructions": "When to return, warning signs to watch for",
+  "followUpDate": "YYYY-MM-DD if follow-up needed"
+}
+
+CRITICAL INSTRUCTIONS:
+- Check patient allergies against all medications
+- Flag potential drug interactions
+- Consider age, gender, and medical history in recommendations
+- Assign realistic ICD-10 codes relevant to Southwest Nigeria healthcare
+- Confidence score should reflect diagnostic certainty (0-100)
+- Include red flags for serious conditions that need immediate attention
+- Suggest lab tests that would help confirm diagnosis`;
 
   const conversationText = transcript
     .filter(msg => msg.role !== 'system')
@@ -130,7 +266,8 @@ IMPORTANT: Return ONLY valid JSON with this exact structure:
       { role: 'user', content: `Consultation Transcript:\n\n${conversationText}` }
     ],
     response_format: { type: "json_object" },
-    temperature: 0.3
+    temperature: 0.3,
+    max_tokens: 2500 // Increased for comprehensive output
   });
 
   const noteContent = response.choices[0]?.message?.content;
@@ -149,8 +286,15 @@ IMPORTANT: Return ONLY valid JSON with this exact structure:
     historyOfPresentIllness: parsedNote.historyOfPresentIllness || '',
     medications: parsedNote.medications || [],
     diagnosis: parsedNote.diagnosis || '',
+    // Enhanced AI features
+    differentialDiagnoses: parsedNote.differentialDiagnoses || [],
+    icdCodes: parsedNote.icdCodes || [],
+    suggestedLabTests: parsedNote.suggestedLabTests || [],
+    clinicalWarnings: parsedNote.clinicalWarnings || [],
+    confidenceScore: parsedNote.confidenceScore || 70,
     recommendations: parsedNote.recommendations || '',
-    followUpInstructions: parsedNote.followUpInstructions || ''
+    followUpInstructions: parsedNote.followUpInstructions || '',
+    followUpDate: parsedNote.followUpDate
   };
 }
 

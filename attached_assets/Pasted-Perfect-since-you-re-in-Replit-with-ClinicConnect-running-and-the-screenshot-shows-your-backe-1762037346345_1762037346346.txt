@@ -1,0 +1,162 @@
+Perfect — since you’re in **Replit with ClinicConnect running**, and the screenshot shows your backend and client already connected (with endpoints like `/api/patients/:id/visits`, `/api/ai-consultations`, etc.), here’s how to **test all APIs and their corresponding fetch calls systematically** — to verify functionality, security, and integration.
+
+---
+
+## ⚙️ 1. **Set Up an Automated API Test File**
+
+Inside your project root (e.g. `/server/tests`), create a file:
+
+```bash
+server/tests/api.test.js
+```
+
+Install dependencies (if not already):
+
+```bash
+npm install --save-dev jest supertest
+```
+
+Then in your `package.json`, add:
+
+```json
+"scripts": {
+  "test:api": "jest --runInBand"
+}
+```
+
+---
+
+## 🧪 2. **Core Test Template Using Supertest**
+
+```js
+import request from 'supertest';
+import app from '../server.js'; // adjust path to your Express instance
+
+describe('ClinicConnect API Tests', () => {
+  let token;
+  const samplePatientId = 41;
+
+  beforeAll(async () => {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'superadmin@clinic.com', password: 'password123' });
+    token = res.body.token;
+  });
+
+  test('GET /api/patients', async () => {
+    const res = await request(app)
+      .get('/api/patients')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+  });
+
+  test('GET /api/patients/:id/visits', async () => {
+    const res = await request(app)
+      .get(`/api/patients/${samplePatientId}/visits`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(200);
+  });
+
+  test('GET /api/ai-consultations', async () => {
+    const res = await request(app)
+      .get('/api/ai-consultations')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(200);
+  });
+
+  test('POST /api/ai-consultations', async () => {
+    const res = await request(app)
+      .post('/api/ai-consultations')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Headache', patientId: samplePatientId });
+    expect(res.statusCode).toBe(201);
+  });
+
+  test('GET /api/medications/search', async () => {
+    const res = await request(app)
+      .get('/api/medications/search?query=paracetamol')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.statusCode).toBe(200);
+  });
+});
+```
+
+Then run:
+
+```bash
+npm run test:api
+```
+
+✅ This verifies:
+
+* Auth endpoints return valid tokens
+* Protected routes reject unauthenticated requests
+* All CRUD endpoints for patients, visits, consultations, and medications work
+* API response structure and status codes are consistent
+
+---
+
+## 🌐 3. **Test the Fetch Calls on the Frontend**
+
+To confirm your frontend correctly consumes these APIs, open your browser console (DevTools → Network tab) and verify requests to:
+
+* `/api/patients`
+* `/api/patients/:id/visits`
+* `/api/ai-consultations`
+* `/api/medications/search`
+
+You can also programmatically test fetch endpoints using a small script inside `/client/src/utils/apiTest.js`:
+
+```js
+async function testFetchEndpoints() {
+  const token = localStorage.getItem('token');
+  const endpoints = [
+    '/api/patients',
+    '/api/ai-consultations',
+    '/api/medications/search?query=ibuprofen'
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      console.log(url, res.status, data);
+    } catch (err) {
+      console.error(url, err);
+    }
+  }
+}
+
+testFetchEndpoints();
+```
+
+Run this in your browser console or temporarily from your dashboard page.
+
+---
+
+## 🧰 4. **Optional: Add Postman / Insomnia Collection**
+
+You can also export and test all endpoints manually:
+
+* Create a **Postman Collection**
+* Import each route (`GET`, `POST`, `PUT`, `DELETE`)
+* Add environment variables: `{{baseUrl}}`, `{{token}}`
+
+This helps you simulate full flows (login → fetch patients → create consultation → attach medications → export report).
+
+---
+
+## 🔍 5. **Next Steps**
+
+Once tests pass:
+
+* Add CI integration: GitHub Action or Replit “Auto-test on deploy”
+* Add response schema validation (with Zod or Joi)
+* Include mock data generation for realistic test patients & visits
+
+---
+
+Would you like me to **generate the ready-to-run Jest test suite for all your `/api/*` routes (patients, visits, consultations, medications, labs, auth)** so you can paste and run it immediately in Replit?
