@@ -3,8 +3,12 @@ import { setupRoutes } from "./routes/index";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { sessionConfig } from "./middleware/session";
+import { securityHeaders } from "./middleware/security";
 
 const app = express();
+
+// Security headers middleware (must be first)
+app.use(securityHeaders);
 
 // CORS configuration
 app.use((req, res, next) => {

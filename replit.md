@@ -19,6 +19,7 @@ The system adopts a mobile-first responsive design with a clean, professional in
 - **Database:** PostgreSQL managed with Drizzle ORM.
 - **State Management:** TanStack Query for efficient data handling.
 - **Authentication:** Integrated Replit Auth (OpenID Connect) for social logins (Google, GitHub, X, Apple, Email) alongside a custom username/password system. Features robust security middleware with password validation, login attempt tracking, account lockout, and enhanced session management.
+- **Security Headers:** Comprehensive security middleware implementing Content Security Policy (CSP) with proper syntax, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy, and Permissions-Policy headers. HSTS enabled in production. Eliminates CSP warnings and provides defense-in-depth security.
 - **API System:** Public REST API (`/api/v1/*`) and Mobile API (`/api/mobile/*`) with API Key Management, OpenAPI/Swagger Documentation, configurable permissions, and rate limiting.
 - **Help & Support:** A comprehensive system with FAQs, guides, contact forms, and resource libraries.
 - **System Design Choices:** Multi-tenant support with organization-aware operations. Employs a modular Express Router architecture for backend routes (e.g., Patients, Laboratory, Prescriptions).
