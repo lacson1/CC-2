@@ -43,6 +43,7 @@ const getNavigationGroupsForRole = (role: string) => {
       name: "Clinical Services",
       icon: Stethoscope,
       items: [
+        { name: "AI Consultations", href: "/ai-consultations", icon: Brain, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse"] },
         { name: "Laboratory Management", href: "/laboratory", icon: FlaskRound, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse"] },
         { name: "Pharmacy Management", href: "/pharmacy", icon: Pill, roles: ["super_admin", "superadmin", "admin", "pharmacist"] },
         { name: "Referrals", href: "/referrals", icon: UserCheck, roles: ["super_admin", "superadmin", "admin", "doctor", "nurse", "pharmacist", "physiotherapist"] },
