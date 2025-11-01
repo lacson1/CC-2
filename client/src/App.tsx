@@ -72,6 +72,8 @@ import StaffAccessControl from "@/pages/staff-access-control";
 import OrganizationSelector from "@/pages/organization-selector";
 import OrganizationStaff from "@/pages/organization-staff";
 import UIShowcase from "@/pages/ui-showcase";
+import AiConsultationsListPage from "@/pages/ai-consultations-list";
+import AiConsultationPage from "@/pages/ai-consultation";
 
 function AuthenticatedApp() {
   const { user } = useAuth();
@@ -135,6 +137,8 @@ function AuthenticatedApp() {
                   <Route path="/inventory" component={InventoryPage} />
                   <Route path="/referrals" component={Referrals} />
                   <Route path="/appointments" component={AppointmentsPage} />
+                  <Route path="/ai-consultations" component={AiConsultationsListPage} />
+                  <Route path="/ai-consultations/:id" component={AiConsultationPage} />
                   <Route path="/consultation-dashboard" component={ConsultationDashboard} />
                   <Route path="/documents" component={DocumentsPage} />
                   <Route path="/billing" component={BillingPage} />
