@@ -1443,9 +1443,24 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  app.get("/api/patients/:id/visits", async (req, res) => {
+  app.get("/api/patients/:id/visits", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      if (!userOrgId) {
+        return res.status(403).json({ message: "Organization context required" });
+      }
+      
+      // Verify patient belongs to user's organization
+      const patient = await db.select().from(patients)
+        .where(eq(patients.id, patientId))
+        .limit(1);
+      
+      if (!patient.length || patient[0].organizationId !== userOrgId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
       const visits = await storage.getVisitsByPatient(patientId);
       res.json(visits);
     } catch (error) {
