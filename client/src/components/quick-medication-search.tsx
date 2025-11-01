@@ -23,6 +23,7 @@ interface Medication {
 
 interface QuickMedicationSearchProps {
   onSelect?: (medication: Medication) => void;
+  onSearchChange?: (query: string) => void;
   placeholder?: string;
   showDetails?: boolean;
   className?: string;
@@ -30,7 +31,8 @@ interface QuickMedicationSearchProps {
 }
 
 export function QuickMedicationSearch({ 
-  onSelect, 
+  onSelect,
+  onSearchChange,
   placeholder = "Search medications...",
   showDetails = true,
   className,
@@ -181,7 +183,11 @@ export function QuickMedicationSearch({
           type="text"
           placeholder={placeholder}
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            const newQuery = e.target.value;
+            setQuery(newQuery);
+            onSearchChange?.(newQuery);
+          }}
           onFocus={() => {
             if (medications.length > 0) setIsOpen(true);
           }}

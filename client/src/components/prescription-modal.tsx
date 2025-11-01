@@ -365,6 +365,13 @@ export default function PrescriptionModal({
                       setSelectedMedicine(fullMedication);
                       handleMedicationSelect(fullMedication);
                     }}
+                    onSearchChange={(query) => {
+                      // Clear selected medication when user starts typing a new search
+                      // This prevents showing stale auto-fill data for previously selected medication
+                      if (query.trim().length < 2 || (selectedMedicine && query.trim().toLowerCase() !== selectedMedicine.name.toLowerCase())) {
+                        setSelectedMedicine(null);
+                      }
+                    }}
                     placeholder="Search medications by name, category, or description..."
                     showDetails={false}
                     className="w-full"
