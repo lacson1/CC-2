@@ -257,15 +257,19 @@ export const messages = pgTable('messages', {
 export const labTests = pgTable('lab_tests', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
+  code: varchar('code', { length: 50 }), // Test code (e.g., "HGB", "CBC")
+  loincCode: varchar('loinc_code', { length: 50 }), // LOINC standard code
   category: varchar('category', { length: 50 }), // e.g., "Blood Test"
   description: varchar('description', { length: 255 }),
   units: varchar('units', { length: 50 }),
   referenceRange: varchar('reference_range', { length: 100 }),
+  departmentId: integer('department_id').references(() => labDepartments.id),
   organizationId: integer('organization_id').references(() => organizations.id),
   isActive: boolean('is_active').default(true),
   priority: varchar('priority', { length: 20 }).default('routine'), // routine, urgent, stat
   sampleType: varchar('sample_type', { length: 50 }), // blood, urine, stool, etc.
   methodOfCollection: varchar('method_of_collection', { length: 100 }),
+  preparationInstructions: text('preparation_instructions'), // Patient preparation
   estimatedTime: varchar('estimated_time', { length: 50 }), // e.g., "2-4 hours"
   cost: decimal('cost', { precision: 10, scale: 2 }),
   createdAt: timestamp('created_at').defaultNow()
@@ -310,6 +314,7 @@ export const labOrderItems = pgTable('lab_order_items', {
 export const labDepartments = pgTable('lab_departments', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
+  code: varchar('code', { length: 50 }), // Department code (e.g., "HEM", "CHEM")
   description: text('description'),
   headOfDepartment: integer('head_of_department').references(() => users.id),
   organizationId: integer('organization_id').references(() => organizations.id),

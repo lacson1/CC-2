@@ -27,6 +27,7 @@ import { setupOrganizationStaffRoutes } from "./organization-staff";
 import { setupTenantRoutes } from "./tenant-routes";
 import { setupSuperAdminRoutes } from "./super-admin-routes";
 import { setupComplianceReportRoutes } from "./routes/compliance-reports";
+import { setupLabSeedRoutes } from "./routes/lab-seed";
 import { performanceMonitor, globalErrorHandler, setupErrorRoutes } from "./error-handler";
 import { getOptimizationTasks, implementOptimizationTask } from "./system-optimizer";
 import { setupNetworkValidationRoutes } from "./network-validator";
@@ -11599,6 +11600,9 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   
   // Setup compliance report generation routes
   setupComplianceReportRoutes(app);
+  
+  // Setup lab catalog seeding route
+  setupLabSeedRoutes(app);
 
   // Autocomplete suggestions API endpoints
   app.get("/api/autocomplete/:fieldType", authenticateToken, async (req: AuthRequest, res) => {
