@@ -356,6 +356,34 @@ export const worksheetItems = pgTable('worksheet_items', {
   createdAt: timestamp('created_at').defaultNow()
 });
 
+// Lab panels - Common test groupings (CBC, BMP, Lipid Panel, etc.)
+export const labPanels = pgTable('lab_panels', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(), // e.g., "Complete Blood Count (CBC)"
+  code: varchar('code', { length: 50 }), // Panel code (e.g., "CBC", "BMP")
+  description: text('description'),
+  category: varchar('category', { length: 50 }), // Hematology, Chemistry, Immunology
+  departmentId: integer('department_id').references(() => labDepartments.id),
+  totalCost: decimal('total_cost', { precision: 10, scale: 2 }),
+  estimatedTime: varchar('estimated_time', { length: 50 }), // e.g., "4-6 hours"
+  sampleType: varchar('sample_type', { length: 50 }), // blood, urine, etc.
+  preparationInstructions: text('preparation_instructions'), // e.g., "Fast for 12 hours"
+  isCommon: boolean('is_common').default(false), // Flag for frequently ordered panels
+  organizationId: integer('organization_id').references(() => organizations.id),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow()
+});
+
+// Junction table linking panels to individual tests
+export const labPanelTests = pgTable('lab_panel_tests', {
+  id: serial('id').primaryKey(),
+  panelId: integer('panel_id').notNull().references(() => labPanels.id),
+  testId: integer('test_id').notNull().references(() => labTests.id),
+  isRequired: boolean('is_required').default(true), // Some tests in panel may be optional
+  displayOrder: integer('display_order'), // Order to display tests in panel
+  createdAt: timestamp('created_at').defaultNow()
+});
+
 export const medications = pgTable('medications', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 150 }).notNull(),
@@ -702,6 +730,26 @@ export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
 
 export const labTestsRelations = relations(labTests, ({ many }) => ({
   labResults: many(labResults),
+  panelTests: many(labPanelTests),
+}));
+
+export const labPanelsRelations = relations(labPanels, ({ one, many }) => ({
+  department: one(labDepartments, {
+    fields: [labPanels.departmentId],
+    references: [labDepartments.id],
+  }),
+  panelTests: many(labPanelTests),
+}));
+
+export const labPanelTestsRelations = relations(labPanelTests, ({ one }) => ({
+  panel: one(labPanels, {
+    fields: [labPanelTests.panelId],
+    references: [labPanels.id],
+  }),
+  test: one(labTests, {
+    fields: [labPanelTests.testId],
+    references: [labTests.id],
+  }),
 }));
 
 export const medicationsRelations = relations(medications, ({ many }) => ({
@@ -877,6 +925,16 @@ export const insertLabOrderItemSchema = createInsertSchema(labOrderItems).omit({
   verifiedAt: true,
 });
 
+export const insertLabPanelSchema = createInsertSchema(labPanels).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLabPanelTestSchema = createInsertSchema(labPanelTests).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertLabDepartmentSchema = createInsertSchema(labDepartments).omit({
   id: true,
   createdAt: true,
@@ -925,6 +983,10 @@ export type LabOrder = typeof labOrders.$inferSelect;
 export type InsertLabOrder = z.infer<typeof insertLabOrderSchema>;
 export type LabOrderItem = typeof labOrderItems.$inferSelect;
 export type InsertLabOrderItem = z.infer<typeof insertLabOrderItemSchema>;
+export type LabPanel = typeof labPanels.$inferSelect;
+export type InsertLabPanel = z.infer<typeof insertLabPanelSchema>;
+export type LabPanelTest = typeof labPanelTests.$inferSelect;
+export type InsertLabPanelTest = z.infer<typeof insertLabPanelTestSchema>;
 export type LabDepartment = typeof labDepartments.$inferSelect;
 export type InsertLabDepartment = z.infer<typeof insertLabDepartmentSchema>;
 export type LabEquipment = typeof labEquipment.$inferSelect;
