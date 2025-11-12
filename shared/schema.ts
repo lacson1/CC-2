@@ -1782,3 +1782,39 @@ export const insertUserOrganizationSchema = createInsertSchema(userOrganizations
 
 export type UserOrganization = typeof userOrganizations.$inferSelect;
 export type InsertUserOrganization = z.infer<typeof insertUserOrganizationSchema>;
+
+// Tab Configurations for customizable patient overview tabs
+export const tabConfigs = pgTable('tab_configs', {
+  id: serial('id').primaryKey(),
+  organizationId: integer('organization_id').references(() => organizations.id),
+  scope: varchar('scope', { length: 20 }).notNull(), // 'system', 'organization', 'role', 'user'
+  roleId: integer('role_id').references(() => roles.id),
+  userId: integer('user_id').references(() => users.id),
+  key: varchar('key', { length: 100 }).notNull(), // Unique key for built-in components (e.g., 'overview', 'medications')
+  label: varchar('label', { length: 100 }).notNull(), // Display name
+  icon: varchar('icon', { length: 50 }), // Lucide icon name
+  contentType: varchar('content_type', { length: 30 }).notNull(), // 'builtin_component', 'query_widget', 'markdown', 'iframe'
+  settings: json('settings').$type<{
+    componentName?: string; // For builtin_component
+    query?: string; // For query_widget
+    markdown?: string; // For markdown
+    iframeUrl?: string; // For iframe
+    allowedDomains?: string[]; // For iframe security
+    customStyles?: Record<string, string>;
+  }>(),
+  isVisible: boolean('is_visible').default(true),
+  isSystemDefault: boolean('is_system_default').default(false), // True for built-in tabs
+  displayOrder: integer('display_order').notNull(), // Sort order (use multiples of 10 for easier reordering)
+  createdBy: integer('created_by').references(() => users.id),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow()
+});
+
+export const insertTabConfigSchema = createInsertSchema(tabConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export type TabConfig = typeof tabConfigs.$inferSelect;
+export type InsertTabConfig = z.infer<typeof insertTabConfigSchema>;
