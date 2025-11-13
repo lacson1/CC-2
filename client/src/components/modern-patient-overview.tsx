@@ -64,6 +64,10 @@ import {
   History
 } from "lucide-react";
 import { GlobalMedicationSearch } from "@/components/global-medication-search";
+import { usePatientTabs } from "@/hooks/use-patient-tabs";
+import { TabManager } from "@/components/tab-manager";
+import { getTabIcon } from "@/lib/tab-icons";
+import { Settings } from "lucide-react";
 
 // Comprehensive visit form schema
 const comprehensiveVisitSchema = z.object({
@@ -572,6 +576,10 @@ export function ModernPatientOverview({
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [showMedicationReviewAssignmentModal, setShowMedicationReviewAssignmentModal] = useState(false);
   const [selectedPrescriptionForReview, setSelectedPrescriptionForReview] = useState<any>(null);
+  
+  // Dynamic tab management
+  const { tabs, isLoading: tabsLoading, isError: tabsError, defaultTabKey } = usePatientTabs();
+  const [showTabManager, setShowTabManager] = useState(false);
   
   // Visit Recording Form State
   const [isVisitFormVisible, setIsVisitFormVisible] = useState(false);
@@ -1537,81 +1545,49 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
   return (
     <div className="space-y-4 min-h-screen w-full">
-      {/* Enhanced Tabbed Interface - Full Width */}
-      <Tabs defaultValue="overview" className="w-full h-full">
-        <TabsList className="grid w-full grid-cols-12 mb-8 h-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border-2 border-blue-200/60 rounded-2xl p-3 shadow-2xl backdrop-blur-lg ring-1 ring-blue-100/50">
-          {/* 1. Overview - Patient Summary */}
-          <TabsTrigger value="overview" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Patient className="w-6 h-6 group-data-[state=active]:text-blue-600" />
-            <span className="font-semibold">Overview</span>
-          </TabsTrigger>
-          
-          {/* 2. Visit - Record Consultation */}
-          <TabsTrigger value="record-visit" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Calendar className="w-6 h-6 group-data-[state=active]:text-indigo-600" />
-            <span className="font-semibold">Visit</span>
-          </TabsTrigger>
-          
-          {/* 3. Vitals - Take Vital Signs */}
-          <TabsTrigger value="vitals" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Monitor className="w-6 h-6 group-data-[state=active]:text-amber-600" />
-            <span className="font-semibold">Vitals</span>
-          </TabsTrigger>
-          
-          {/* 4. Labs - Order Lab Tests */}
-          <TabsTrigger value="labs" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <BloodTest className="w-6 h-6 group-data-[state=active]:text-red-600" />
-            <span className="font-semibold">Labs</span>
-          </TabsTrigger>
-          
-          {/* 5. Medications - Prescribe Medications */}
-          <TabsTrigger value="medications" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Medication className="w-6 h-6 group-data-[state=active]:text-purple-600" />
-            <span className="font-semibold">Medications</span>
-          </TabsTrigger>
-          
-          {/* 6. Vaccines - Immunizations */}
-          <TabsTrigger value="vaccinations" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Injection className="w-6 h-6 group-data-[state=active]:text-green-600" />
-            <span className="font-semibold">Vaccines</span>
-          </TabsTrigger>
-          
-          {/* 7. Documents - Medical Records */}
-          <TabsTrigger value="documents" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <MedicalRecord className="w-6 h-6 group-data-[state=active]:text-emerald-600" />
-            <span className="font-semibold">Documents</span>
-          </TabsTrigger>
-          
-          {/* 8. Timeline - Patient History */}
-          <TabsTrigger value="timeline" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Vitals className="w-6 h-6 group-data-[state=active]:text-teal-600" />
-            <span className="font-semibold">Timeline</span>
-          </TabsTrigger>
-          
-          {/* 9. Safety - Allergies/Alerts */}
-          <TabsTrigger value="safety" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <HeartRate className="w-6 h-6 group-data-[state=active]:text-rose-600" />
-            <span className="font-semibold">Safety</span>
-          </TabsTrigger>
-          
-          {/* 10. Specialty - Consultations/Referrals */}
-          <TabsTrigger value="consultation" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Stethoscope className="w-6 h-6 group-data-[state=active]:text-cyan-600" />
-            <span className="font-semibold">Specialty</span>
-          </TabsTrigger>
-          
-          {/* 11. Reviews - Medication Reviews */}
-          <TabsTrigger value="med-reviews" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <FileText className="w-6 h-6 group-data-[state=active]:text-orange-600" />
-            <span className="font-semibold">Reviews</span>
-          </TabsTrigger>
-          
-          {/* 12. Chat - Communication */}
-          <TabsTrigger value="communication" className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group">
-            <Message className="w-6 h-6 group-data-[state=active]:text-violet-600" />
-            <span className="font-semibold">Chat</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Enhanced Tabbed Interface - Full Width with Dynamic Tabs */}
+      <Tabs defaultValue={defaultTabKey} className="w-full h-full">
+        <div className="relative">
+          <TabsList className="grid w-full grid-cols-12 mb-8 h-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border-2 border-blue-200/60 rounded-2xl p-3 shadow-2xl backdrop-blur-lg ring-1 ring-blue-100/50">
+            {tabsLoading ? (
+              <div className="col-span-full flex items-center justify-center py-4 text-blue-600">
+                <Clock className="w-5 h-5 animate-spin mr-2" />
+                <span className="font-semibold">Loading tabs...</span>
+              </div>
+            ) : tabsError ? (
+              <div className="col-span-full flex items-center justify-center py-4 text-orange-600">
+                <span className="font-semibold">Using default tabs (offline mode)</span>
+              </div>
+            ) : (
+              tabs.map((tab) => {
+                const IconComponent = getTabIcon(tab.icon);
+                return (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.key}
+                    className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group"
+                    data-testid={`tab-trigger-${tab.key}`}
+                  >
+                    <IconComponent className="w-6 h-6" />
+                    <span className="font-semibold">{tab.label}</span>
+                  </TabsTrigger>
+                );
+              })
+            )}
+          </TabsList>
+
+          {/* TabManager Settings Button */}
+          <Button
+            onClick={() => setShowTabManager(true)}
+            size="sm"
+            variant="ghost"
+            className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-white/60"
+            data-testid="button-open-tab-manager"
+            title="Customize Tabs"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Medications Tab */}
         <TabsContent value="medications" className="space-y-4">
@@ -3552,6 +3528,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           patientId={patient.id}
           patient={patient}
           selectedPrescription={selectedPrescriptionForReview}
+        />
+
+        {/* Tab Manager Modal */}
+        <TabManager
+          open={showTabManager}
+          onOpenChange={setShowTabManager}
         />
     </div>
   );
