@@ -13,6 +13,7 @@ import {
   FileCheck,
   MessageSquare,
 } from 'lucide-react';
+import { PatientBillingTab } from '../patient-billing-tab';
 
 export interface TabRenderProps {
   patient: any;
@@ -124,14 +125,7 @@ export const SYSTEM_TAB_REGISTRY: Record<string, SystemTabDefinition> = {
     key: 'billing',
     defaultLabel: 'Billing',
     icon: CreditCard,
-    render: ({ patient }) => (
-      <div className="p-4">
-        <h2 className="text-2xl font-bold mb-4">Billing</h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Invoices and payments will be displayed here.
-        </p>
-      </div>
-    ),
+    render: ({ patient, ...props }) => <PatientBillingTab patient={patient} {...props} />,
   },
   
   insurance: {

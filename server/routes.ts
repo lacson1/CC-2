@@ -10990,12 +10990,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
 
   // ===== BILLING AND INVOICING ENDPOINTS =====
 
-  // Get all invoices for organization
+  // Get all invoices for organization (optionally filtered by patient)
   app.get("/api/invoices", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const orgId = req.user!.organizationId;
+      const patientId = req.query.patientId ? parseInt(req.query.patientId as string) : null;
       
-      const invoicesList = await db.select({
+      let query = db.select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
         patientId: invoices.patientId,
@@ -11011,8 +11012,14 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       })
       .from(invoices)
       .innerJoin(patients, eq(invoices.patientId, patients.id))
-      .where(eq(invoices.organizationId, orgId))
+      .where(
+        patientId 
+          ? and(eq(invoices.organizationId, orgId), eq(invoices.patientId, patientId))
+          : eq(invoices.organizationId, orgId)
+      )
       .orderBy(desc(invoices.createdAt));
+
+      const invoicesList = await query;
 
       res.json(invoicesList);
     } catch (error) {
