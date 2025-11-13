@@ -116,7 +116,159 @@ export function setupTabConfigRoutes(app: Express) {
     }
   });
 
-  // Update tab configuration
+  // Hide/Show tab (creates override for system tabs, updates custom tabs)
+  app.patch('/api/tab-configs/:id/visibility', authenticateToken, tenantMiddleware, async (req: CombinedRequest, res: Response) => {
+    try {
+      const tabId = parseInt(req.params.id);
+      const { isVisible, scope: targetScope = 'user' } = req.body;
+      const userId = req.user?.id;
+      const roleId = req.user?.roleId;
+      const organizationId = req.tenant?.id;
+
+      if (!organizationId) {
+        return res.status(403).json({ error: 'Organization context required' });
+      }
+
+      const [existingTab] = await db
+        .select()
+        .from(tabConfigs)
+        .where(eq(tabConfigs.id, tabId));
+
+      if (!existingTab) {
+        return res.status(404).json({ error: 'Tab configuration not found' });
+      }
+
+      // Check if tab is mandatory
+      if (existingTab.isMandatory && !isVisible) {
+        return res.status(403).json({ 
+          error: 'Cannot hide mandatory tab',
+          message: 'This tab is required and cannot be hidden'
+        });
+      }
+
+      // Validate targetScope authorization
+      if (targetScope === 'role' && !roleId) {
+        return res.status(400).json({ error: 'Cannot create role override without a role assignment' });
+      }
+      if (targetScope === 'organization' && req.user?.role !== 'admin' && req.user?.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Only admins can create organization-wide overrides' });
+      }
+
+      // If hiding, ensure at least one tab will remain visible in the MERGED view
+      if (!isVisible) {
+        // Fetch all tabs (same as GET endpoint)
+        const allTabs = await db
+          .select()
+          .from(tabConfigs)
+          .where(
+            or(
+              and(eq(tabConfigs.scope, 'system'), eq(tabConfigs.isSystemDefault, true)),
+              and(eq(tabConfigs.scope, 'organization'), eq(tabConfigs.organizationId, organizationId)),
+              roleId ? and(eq(tabConfigs.scope, 'role'), eq(tabConfigs.roleId, roleId)) : undefined,
+              userId ? and(eq(tabConfigs.scope, 'user'), eq(tabConfigs.userId, userId)) : undefined
+            )
+          );
+
+        // Merge tabs by key, preferring more specific scopes (same logic as GET)
+        const tabMap = new Map();
+        const scopePriority: Record<TabScope, number> = { system: 1, organization: 2, role: 3, user: 4 };
+
+        for (const tab of allTabs) {
+          const existing = tabMap.get(tab.key);
+          const tabScope = tab.scope as TabScope;
+          const existingScope = existing?.scope as TabScope;
+          
+          if (!existing || scopePriority[tabScope] > scopePriority[existingScope]) {
+            tabMap.set(tab.key, tab);
+          }
+        }
+
+        // Simulate the hide by setting the target tab as hidden in the merged view
+        const targetTabInMerged = tabMap.get(existingTab.key);
+        if (targetTabInMerged) {
+          const targetScopePriority = scopePriority[targetScope as TabScope];
+          const currentScopePriority = scopePriority[targetTabInMerged.scope as TabScope];
+          
+          // If the new override will take precedence, mark it as hidden
+          if (targetScopePriority >= currentScopePriority) {
+            tabMap.set(existingTab.key, { ...targetTabInMerged, isVisible: false });
+          }
+        }
+
+        // Count visible tabs in merged view
+        const mergedTabs = Array.from(tabMap.values());
+        const visibleCount = mergedTabs.filter(t => t.isVisible).length;
+        
+        if (visibleCount === 0) {
+          return res.status(400).json({ 
+            error: 'Cannot hide last visible tab',
+            message: 'At least one tab must remain visible in your view'
+          });
+        }
+      }
+
+      // For system tabs, create or update an override
+      if (existingTab.isSystemDefault) {
+        // Check if override already exists
+        const [existingOverride] = await db
+          .select()
+          .from(tabConfigs)
+          .where(
+            and(
+              eq(tabConfigs.key, existingTab.key),
+              eq(tabConfigs.scope, targetScope),
+              targetScope === 'user' ? eq(tabConfigs.userId, userId!) : 
+              targetScope === 'role' ? eq(tabConfigs.roleId, roleId!) : 
+              eq(tabConfigs.organizationId, organizationId)
+            )
+          );
+
+        if (existingOverride) {
+          // Update existing override
+          const [updated] = await db
+            .update(tabConfigs)
+            .set({ isVisible, updatedAt: new Date() })
+            .where(eq(tabConfigs.id, existingOverride.id))
+            .returning();
+          return res.json(updated);
+        } else {
+          // Create new override
+          const overrideData = {
+            key: existingTab.key,
+            label: existingTab.label,
+            icon: existingTab.icon,
+            contentType: existingTab.contentType,
+            settings: existingTab.settings,
+            scope: targetScope,
+            organizationId: targetScope === 'organization' ? organizationId : null,
+            roleId: targetScope === 'role' ? roleId : null,
+            userId: targetScope === 'user' ? userId : null,
+            isVisible,
+            isSystemDefault: false,
+            isMandatory: false,
+            displayOrder: existingTab.displayOrder,
+            createdBy: userId,
+          };
+
+          const [newOverride] = await db.insert(tabConfigs).values(overrideData).returning();
+          return res.json(newOverride);
+        }
+      } else {
+        // For custom tabs, update directly
+        const [updatedTab] = await db
+          .update(tabConfigs)
+          .set({ isVisible, updatedAt: new Date() })
+          .where(eq(tabConfigs.id, tabId))
+          .returning();
+        return res.json(updatedTab);
+      }
+    } catch (error) {
+      console.error('Error updating tab visibility:', error);
+      res.status(400).json({ error: 'Failed to update tab visibility' });
+    }
+  });
+
+  // Update tab configuration (for custom tabs only)
   app.patch('/api/tab-configs/:id', authenticateToken, tenantMiddleware, async (req: CombinedRequest, res: Response) => {
     try {
       const tabId = parseInt(req.params.id);
@@ -133,7 +285,7 @@ export function setupTabConfigRoutes(app: Express) {
       }
 
       if (existingTab.isSystemDefault) {
-        return res.status(403).json({ error: 'Cannot modify system default tabs' });
+        return res.status(403).json({ error: 'Cannot modify system default tabs directly. Use visibility endpoint to create overrides.' });
       }
 
       // Multi-tenant access control: verify ownership
@@ -283,6 +435,65 @@ export function setupTabConfigRoutes(app: Express) {
     } catch (error) {
       console.error('Error deleting tab config:', error);
       res.status(500).json({ error: 'Failed to delete tab configuration' });
+    }
+  });
+
+  // Reset to defaults (remove all overrides for user/role/org)
+  app.delete('/api/tab-configs/reset', authenticateToken, tenantMiddleware, async (req: CombinedRequest, res: Response) => {
+    try {
+      const { scope = 'user' } = req.body;
+      const userId = req.user?.id;
+      const roleId = req.user?.roleId;
+      const organizationId = req.tenant?.id;
+
+      if (!organizationId) {
+        return res.status(403).json({ error: 'Organization context required' });
+      }
+
+      // Authorization check
+      if (scope === 'organization' && req.user?.role !== 'admin' && req.user?.role !== 'super_admin') {
+        return res.status(403).json({ error: 'Only admins can reset organization-wide tabs' });
+      }
+
+      // Delete overrides based on scope
+      let deletedCount = 0;
+      if (scope === 'user' && userId) {
+        const result = await db.delete(tabConfigs)
+          .where(and(
+            eq(tabConfigs.scope, 'user'),
+            eq(tabConfigs.userId, userId),
+            eq(tabConfigs.isSystemDefault, false)
+          ))
+          .returning();
+        deletedCount = result.length;
+      } else if (scope === 'role' && roleId) {
+        const result = await db.delete(tabConfigs)
+          .where(and(
+            eq(tabConfigs.scope, 'role'),
+            eq(tabConfigs.roleId, roleId),
+            eq(tabConfigs.isSystemDefault, false)
+          ))
+          .returning();
+        deletedCount = result.length;
+      } else if (scope === 'organization' && organizationId) {
+        const result = await db.delete(tabConfigs)
+          .where(and(
+            eq(tabConfigs.scope, 'organization'),
+            eq(tabConfigs.organizationId, organizationId),
+            eq(tabConfigs.isSystemDefault, false)
+          ))
+          .returning();
+        deletedCount = result.length;
+      }
+
+      res.json({ 
+        message: 'Tab configuration reset to defaults', 
+        deletedCount,
+        scope
+      });
+    } catch (error) {
+      console.error('Error resetting tab configs:', error);
+      res.status(500).json({ error: 'Failed to reset tab configuration' });
     }
   });
 

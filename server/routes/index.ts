@@ -9,6 +9,7 @@ import apiDocsRouter from "./api-docs";
 import accessControlRouter from "./access-control";
 import organizationsRouter from "./organizations";
 import { setupTabConfigRoutes } from "./tab-configs";
+import { setupTabPresetRoutes } from "./tab-presets";
 // import { setupAppointmentRoutes } from "./appointments";
 // import { setupAuthRoutes } from "./auth";
 // import { setupAnalyticsRoutes } from "./analytics";
@@ -66,6 +67,10 @@ export function setupRoutes(app: Express): void {
   // Tab Configurations routes
   console.log("Setting up tab configurations routes...");
   setupTabConfigRoutes(app);
+  
+  // Tab Presets routes
+  console.log("Setting up tab presets routes...");
+  setupTabPresetRoutes(app);
   
   // TODO: Add remaining modules as they are created:
   // setupAppointmentRoutes(app);
