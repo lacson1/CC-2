@@ -514,6 +514,13 @@ function LabResultInputModal({
     enabled: !!patientId,
   });
 
+  // Fetch organization data for printable documents
+  const { data: organization } = useQuery<Organization>({
+    queryKey: ['/api/organizations', (user as any)?.organizationId],
+    queryFn: () => fetch(`/api/organizations/${(user as any)?.organizationId}`).then(res => res.json()),
+    enabled: !!(user as any)?.organizationId
+  });
+
   // Fetch visits
   const { data: visits, isLoading: visitsLoading } = useQuery<Visit[]>({
     queryKey: [`/api/patients/${patientId}/visits`],
@@ -1044,7 +1051,7 @@ function LabResultInputModal({
         <PatientSummaryPrintable
           patient={patient}
           visits={visits || []}
-          organization={currentOrganization}
+          organization={organization}
         />
       </div>
     </div>
