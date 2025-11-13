@@ -153,13 +153,13 @@ router.get('/lab-results', requireApiPermission('lab:read'), async (req: ApiAuth
         patientId: labOrders.patientId,
         patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`,
         orderDate: labOrders.createdAt,
-        status: labOrders.status,
+        orderStatus: labOrders.status,
         resultId: labResults.id,
         testName: labResults.testName,
         result: labResults.result,
         unit: labResults.unit,
         referenceRange: labResults.referenceRange,
-        status: labResults.status,
+        resultStatus: labResults.status,
         resultDate: labResults.createdAt
       })
       .from(labOrders)

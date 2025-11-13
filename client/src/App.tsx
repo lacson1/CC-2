@@ -17,7 +17,7 @@ import { Search } from "lucide-react";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
-import PatientProfile from "@/pages/patient-profile-clean";
+import PatientProfile from "@/pages/patient-profile";
 import Visits from "@/pages/visits";
 
 import EnhancedPharmacy from "@/pages/pharmacy-enhanced";
@@ -46,14 +46,12 @@ import ExerciseLeafletsPage from "@/pages/exercise-leaflets";
 import MedicalCertificatesPage from "@/pages/medical-certificates";
 import ReferralLettersPage from "@/pages/referral-letters";
 import EnhancedPrescriptionForm from "@/pages/enhanced-prescription";
-import SecurityDemo from "@/pages/security-demo";
 
 import ClinicalProtocols from "@/components/clinical-protocols";
 import ExportCompliance from "@/components/export-compliance";
 import ConsultationDashboard from "@/pages/consultation-dashboard";
 import PatientAccessCards from "@/pages/patient-access-cards";
 import Settings from "@/pages/settings";
-import ErrorMonitoring from "@/pages/error-monitoring";
 import { PerformancePage } from "@/pages/performance-page";
 import Profile from "@/pages/profile";
 import SuperAdminAnalytics from "@/pages/superadmin-analytics";
@@ -71,10 +69,8 @@ import RoleManagement from "@/pages/role-management";
 import StaffAccessControl from "@/pages/staff-access-control";
 import OrganizationSelector from "@/pages/organization-selector";
 import OrganizationStaff from "@/pages/organization-staff";
-import UIShowcase from "@/pages/ui-showcase";
 import AiConsultationsListPage from "@/pages/ai-consultations-list";
 import AiConsultationPage from "@/pages/ai-consultation";
-import TabDemo from "@/pages/tab-demo";
 
 function AuthenticatedApp() {
   const { user } = useAuth();
@@ -151,7 +147,6 @@ function AuthenticatedApp() {
                   <Route path="/referral-letters" component={ReferralLettersPage} />
                   <Route path="/prescriptions" component={EnhancedPrescriptionForm} />
                   <Route path="/enhanced-prescription" component={EnhancedPrescriptionForm} />
-                  <Route path="/security-demo" component={SecurityDemo} />
                   <Route path="/laboratory-enhanced" component={LaboratoryUnified} />
 
                   <Route path="/protocols" component={ClinicalProtocols} />
@@ -166,7 +161,6 @@ function AuthenticatedApp() {
                   <Route path="/user-management" component={UserManagementSimple} />
                   <Route path="/ai-clinical-insights" component={AIClinicalInsights} />
                   <Route path="/audit-logs" component={AuditLogs} />
-                  <Route path="/error-monitoring" component={ErrorMonitoring} />
                   <Route path="/performance" component={PerformancePage} />
                   <Route path="/organization-management" component={OrganizationManagement} />
                   <Route path="/organization-staff" component={OrganizationStaff} />
@@ -180,8 +174,6 @@ function AuthenticatedApp() {
                   <Route path="/super-admin-control" component={SuperAdminControl} />
                   <Route path="/role-management" component={RoleManagement} />
                   <Route path="/staff-access-control" component={StaffAccessControl} />
-                  <Route path="/ui-showcase" component={UIShowcase} />
-                  <Route path="/tab-demo" component={TabDemo} />
                   <Route component={NotFound} />
                 </Switch>
               </div>

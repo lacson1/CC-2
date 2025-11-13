@@ -22,14 +22,6 @@ export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
   const patientId = params?.id ? parseInt(params.id) : undefined;
   const { role: user } = useRole();
-  
-  // Debug logging for patientId
-  console.log('Patient Profile Debug:', { 
-    params, 
-    patientId, 
-    urlPath: window.location.pathname,
-    patientIdType: typeof patientId 
-  });
 
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [showLabModal, setShowLabModal] = useState(false);
@@ -541,15 +533,11 @@ function LabResultInputModal({
   });
 
   // Lab results using React Query (same pattern as working sidebar)
-  console.log('Lab Query Debug - patientId:', patientId, 'enabled:', !!patientId);
-  
   const { data: labResults = [], isLoading: labsLoading, error: labsError } = useQuery<LabResultFromOrder[]>({
     queryKey: [`/api/patients/${patientId}/labs`],
     enabled: !!patientId,
     retry: 2
   });
-
-  console.log('Lab Results State:', { labResults, labsLoading, labsError });
 
   // Mutation for adding lab results
   const addResultMutation = useMutation({
@@ -631,21 +619,6 @@ function LabResultInputModal({
       age--;
     }
     return age;
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
-      case "normal":
-        return <Badge className="bg-green-100 text-green-800">Normal</Badge>;
-      case "abnormal":
-        return <Badge className="bg-red-100 text-red-800">Abnormal</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
   };
 
   const printPrescription = async (prescription: any, patient: any) => {
