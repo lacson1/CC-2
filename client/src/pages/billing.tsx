@@ -54,12 +54,12 @@ export default function BillingPage() {
   const queryClient = useQueryClient();
 
   // Fetch invoices
-  const { data: invoices = [], isLoading: loadingInvoices } = useQuery({
+  const { data: invoices = [], isLoading: loadingInvoices } = useQuery<any[]>({
     queryKey: ['/api/invoices'],
   });
 
   // Fetch patients for invoice creation
-  const { data: patients = [] } = useQuery({
+  const { data: patients = [] } = useQuery<any[]>({
     queryKey: ['/api/patients'],
   });
 

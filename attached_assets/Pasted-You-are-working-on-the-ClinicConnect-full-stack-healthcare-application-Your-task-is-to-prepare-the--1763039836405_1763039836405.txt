@@ -1,0 +1,215 @@
+You are working on the ClinicConnect full-stack healthcare application.
+Your task is to prepare the entire repository for a clean production release by removing all development artifacts, placeholder data, mock UI, debug code, and unused files.
+
+🎯 GOALS
+
+Remove all mock data and placeholder fields
+
+Ensure all screens display only real database data
+
+Remove test pages, prototype components, and unused routes
+
+Clean UI and remove temporary text/labels/images
+
+Remove dev-only console logging
+
+Ensure backend routes match production schema
+
+Ensure app builds and runs cleanly afterward
+
+🧹 FULL CLEANUP TASK LIST
+1. Remove all mock/demo/test data
+
+Search the entire project for any of the following:
+
+mock data
+
+sample data
+
+fixtures
+
+temp lists
+
+prototypes
+
+placeholder JSON
+
+hardcoded arrays
+
+sample patient, appointment, billing, or prescriptions
+
+AI demo files
+
+test SQL seed data (except schema seeds)
+
+Delete or rewrite all of them so the app uses only real DB queries.
+
+2. Remove demo/test pages
+
+Locate and delete pages such as:
+
+patient-profile-optimized.tsx
+
+patient-profile-working.tsx
+
+ai-consultations-list.tsx
+
+any file labelled "test", "demo", "sample", “working”, “backup”, etc.
+
+These must not ship to production.
+
+3. Clean App.tsx routing
+
+Ensure:
+
+Only real production pages remain
+
+No proto/demo/dev screens
+
+No alternative versions of patient screens
+
+Remove unused imports + dead routes
+
+4. Clean UI placeholders
+
+Search /client for:
+
+Dummy numbers (e.g., 17 patients, +12%)
+
+“No data available” fillers used only for development
+
+Placeholder images/icons
+
+Prototype UI
+
+Temporary loading skeletons that are no longer needed
+
+Replace with production-appropriate components.
+
+5. Remove all console.logs and debug statements
+
+Search for:
+
+console.log
+
+console.warn
+
+console.error (unless true error handling)
+
+commented-out debug locals
+
+leftover TODO/FIXME markers
+
+Clean them or convert to structured error logging only.
+
+6. Backend cleanup
+
+In /server:
+
+Remove unused routes
+
+Remove mock responses
+
+Ensure controllers pull exclusively from the database
+
+Ensure services validate input
+
+Ensure currentOrganization and other global variables are properly defined
+
+Remove temporary logic used by the agent
+
+7. Database schema alignment
+
+Confirm:
+
+patients
+
+appointments
+
+billing
+
+prescriptions
+
+medication reviews
+
+organizations
+
+provider roles
+
+specialty
+
+—all match client expectations.
+
+Fix mismatches and type errors.
+
+8. Delete unused or generated files
+
+Clean safely:
+
+/uploads sample PNGs
+
+old screenshots
+
+early prototype files
+
+unused components
+
+unused utility files
+
+unused Cypress recordings
+
+anything Cursor identifies as dead code
+
+Ask before removing large or deeply connected modules.
+
+9. Final pass: dead-import sweep
+
+Run Cursor’s automated tree scan:
+
+remove unused imports
+
+collapse duplicate components
+
+simplify top-level layout
+
+ensure no circular dependencies
+
+ensure no build-blocking warnings
+
+📦 OUTPUT REQUIREMENTS
+
+After performing changes:
+
+Provide a full diff summary
+
+Explain every deletion or major refactor
+
+Confirm the app builds
+
+Confirm the app loads without runtime errors
+
+Confirm patient profile, billing, appointments, and review sections work together
+
+Provide a list of any recommended additional improvements
+
+❗ SAFETY RULES
+
+Do NOT delete:
+
+real SQL schema files
+
+Drizzle migration files
+
+environment variable references
+
+role permissions
+
+production routes
+
+actual medical data types
+
+patient portal access code
+
+organization logic
+
+Before deleting a file that affects routing, ask for confirmation.
