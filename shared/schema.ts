@@ -478,6 +478,30 @@ export const medicalHistory = pgTable('medical_history', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const dischargeLetters = pgTable('discharge_letters', {
+  id: serial('id').primaryKey(),
+  patientId: integer('patient_id').notNull().references(() => patients.id),
+  visitId: integer('visit_id').references(() => visits.id),
+  admissionDate: date('admission_date').notNull(),
+  dischargeDate: date('discharge_date').notNull(),
+  diagnosis: text('diagnosis').notNull(),
+  treatmentSummary: text('treatment_summary').notNull(),
+  medicationsOnDischarge: text('medications_on_discharge'),
+  followUpInstructions: text('follow_up_instructions'),
+  followUpDate: date('follow_up_date'),
+  attendingPhysicianId: integer('attending_physician_id').references(() => users.id),
+  dischargeCondition: varchar('discharge_condition', { length: 50 }).notNull(), // 'improved', 'stable', 'unchanged', 'deceased'
+  specialInstructions: text('special_instructions'),
+  restrictions: text('restrictions'),
+  dietaryAdvice: text('dietary_advice'),
+  warningSymptoms: text('warning_symptoms'),
+  emergencyContact: varchar('emergency_contact', { length: 100 }),
+  status: varchar('status', { length: 20 }).default('draft').notNull(), // 'draft', 'finalized', 'sent'
+  organizationId: integer('organization_id').references(() => organizations.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const appointments = pgTable('appointments', {
   id: serial('id').primaryKey(),
   patientId: integer('patient_id').references(() => patients.id).notNull(),
@@ -1074,6 +1098,12 @@ export const insertMedicalHistorySchema = createInsertSchema(medicalHistory).omi
   createdAt: true,
 });
 
+export const insertDischargeLetterSchema = createInsertSchema(dischargeLetters).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Medical Records Types
 export type Vaccination = typeof vaccinations.$inferSelect;
 export type InsertVaccination = z.infer<typeof insertVaccinationSchema>;
@@ -1081,6 +1111,8 @@ export type Allergy = typeof allergies.$inferSelect;
 export type InsertAllergy = z.infer<typeof insertAllergySchema>;
 export type MedicalHistory = typeof medicalHistory.$inferSelect;
 export type InsertMedicalHistory = z.infer<typeof insertMedicalHistorySchema>;
+export type DischargeLetter = typeof dischargeLetters.$inferSelect;
+export type InsertDischargeLetter = z.infer<typeof insertDischargeLetterSchema>;
 
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   id: true,
