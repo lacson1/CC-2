@@ -3658,14 +3658,25 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(403).json({ message: "Access denied - patient not in your organization" });
       }
       
-      // Validate request body with schema
-      const validationResult = insertMedicalHistorySchema.omit({ id: true, patientId: true, createdAt: true }).safeParse(req.body);
-      if (!validationResult.success) {
-        return res.status(400).json({ message: "Invalid data", errors: validationResult.error.errors });
+      // Validate required fields
+      const requiredFields = ['condition', 'type', 'dateOccurred', 'status', 'description'];
+      for (const field of requiredFields) {
+        if (!req.body[field]) {
+          return res.status(400).json({ message: `Missing required field: ${field}` });
+        }
+      }
+      
+      // Sanitize allowed fields only
+      const allowedFields = ['condition', 'type', 'dateOccurred', 'status', 'description', 'treatment', 'notes'];
+      const validatedData: Record<string, any> = {};
+      for (const key of allowedFields) {
+        if (key in req.body) {
+          validatedData[key] = req.body[key];
+        }
       }
       
       const [newHistory] = await db.insert(medicalHistory).values({
-        ...validationResult.data,
+        ...validatedData,
         patientId
       }).returning();
 
