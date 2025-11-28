@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { fileStorage } from "./storage-service";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertMedicationReviewAssignmentSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, insertPatientInsuranceSchema, insertPatientReferralSchema, insertPinnedConsultationFormSchema, insertTelemedicineSessionSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, labResults, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, medicationReviewAssignments, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices, medicalDocuments, vaccinations, roles, permissions, rolePermissions, patientInsurance, patientReferrals, pinnedConsultationForms, telemedicineSessions, userOrganizations, medicalHistory } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertDischargeLetterSchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertMedicationReviewAssignmentSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, insertPatientInsuranceSchema, insertPatientReferralSchema, insertPinnedConsultationFormSchema, insertTelemedicineSessionSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, labResults, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, medicationReviewAssignments, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices, medicalDocuments, vaccinations, roles, permissions, rolePermissions, patientInsurance, patientReferrals, pinnedConsultationForms, telemedicineSessions, userOrganizations, medicalHistory, dischargeLetters } from "@shared/schema";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
@@ -3760,6 +3760,192 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     } catch (error) {
       console.error('Error deleting medical history entry:', error);
       res.status(500).json({ message: "Failed to delete medical history entry" });
+    }
+  });
+
+  // Discharge Letter Routes
+  app.get('/api/patients/:id/discharge-letters', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      const letters = await db.select({
+        id: dischargeLetters.id,
+        patientId: dischargeLetters.patientId,
+        visitId: dischargeLetters.visitId,
+        admissionDate: dischargeLetters.admissionDate,
+        dischargeDate: dischargeLetters.dischargeDate,
+        diagnosis: dischargeLetters.diagnosis,
+        treatmentSummary: dischargeLetters.treatmentSummary,
+        medicationsOnDischarge: dischargeLetters.medicationsOnDischarge,
+        followUpInstructions: dischargeLetters.followUpInstructions,
+        followUpDate: dischargeLetters.followUpDate,
+        dischargeCondition: dischargeLetters.dischargeCondition,
+        specialInstructions: dischargeLetters.specialInstructions,
+        restrictions: dischargeLetters.restrictions,
+        dietaryAdvice: dischargeLetters.dietaryAdvice,
+        warningSymptoms: dischargeLetters.warningSymptoms,
+        emergencyContact: dischargeLetters.emergencyContact,
+        status: dischargeLetters.status,
+        createdAt: dischargeLetters.createdAt,
+        updatedAt: dischargeLetters.updatedAt,
+        attendingPhysician: {
+          id: users.id,
+          username: users.username,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role
+        }
+      })
+      .from(dischargeLetters)
+      .leftJoin(users, eq(dischargeLetters.attendingPhysicianId, users.id))
+      .where(and(
+        eq(dischargeLetters.patientId, patientId),
+        eq(dischargeLetters.organizationId, userOrgId!)
+      ))
+      .orderBy(desc(dischargeLetters.dischargeDate));
+
+      res.json(letters);
+    } catch (error) {
+      console.error('Error fetching discharge letters:', error);
+      res.status(500).json({ message: "Failed to fetch discharge letters" });
+    }
+  });
+
+  app.post('/api/patients/:id/discharge-letters', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      const userId = req.user?.id;
+      
+      // Verify patient belongs to user's organization
+      const [patient] = await db.select().from(patients)
+        .where(and(eq(patients.id, patientId), eq(patients.organizationId, userOrgId!)))
+        .limit(1);
+      
+      if (!patient) {
+        return res.status(403).json({ message: "Access denied - patient not in your organization" });
+      }
+      
+      // Validate required fields
+      const requiredFields = ['admissionDate', 'dischargeDate', 'diagnosis', 'treatmentSummary', 'dischargeCondition'];
+      for (const field of requiredFields) {
+        if (!req.body[field]) {
+          return res.status(400).json({ message: `Missing required field: ${field}` });
+        }
+      }
+      
+      // Sanitize allowed fields only
+      const allowedFields = [
+        'admissionDate', 'dischargeDate', 'diagnosis', 'treatmentSummary',
+        'medicationsOnDischarge', 'followUpInstructions', 'followUpDate',
+        'dischargeCondition', 'specialInstructions', 'restrictions',
+        'dietaryAdvice', 'warningSymptoms', 'emergencyContact', 'visitId', 'status'
+      ];
+      const validatedData: Record<string, any> = {};
+      for (const key of allowedFields) {
+        if (key in req.body) {
+          validatedData[key] = req.body[key];
+        }
+      }
+      
+      const [newLetter] = await db.insert(dischargeLetters).values({
+        ...validatedData,
+        patientId,
+        attendingPhysicianId: userId,
+        organizationId: userOrgId
+      }).returning();
+
+      res.status(201).json(newLetter);
+    } catch (error) {
+      console.error('Error creating discharge letter:', error);
+      res.status(500).json({ message: "Failed to create discharge letter" });
+    }
+  });
+
+  app.patch('/api/patients/:id/discharge-letters/:letterId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const letterId = parseInt(req.params.letterId);
+      const userOrgId = req.user?.organizationId;
+      
+      // Verify patient belongs to user's organization
+      const [patient] = await db.select().from(patients)
+        .where(and(eq(patients.id, patientId), eq(patients.organizationId, userOrgId!)))
+        .limit(1);
+      
+      if (!patient) {
+        return res.status(403).json({ message: "Access denied - patient not in your organization" });
+      }
+      
+      // Whitelist allowed fields for update
+      const allowedFields = [
+        'admissionDate', 'dischargeDate', 'diagnosis', 'treatmentSummary',
+        'medicationsOnDischarge', 'followUpInstructions', 'followUpDate',
+        'dischargeCondition', 'specialInstructions', 'restrictions',
+        'dietaryAdvice', 'warningSymptoms', 'emergencyContact', 'visitId', 'status'
+      ];
+      
+      const updateData: Record<string, any> = { updatedAt: new Date() };
+      for (const key of allowedFields) {
+        if (key in req.body) {
+          updateData[key] = req.body[key];
+        }
+      }
+      
+      if (Object.keys(updateData).length <= 1) {
+        return res.status(400).json({ message: "No valid fields to update" });
+      }
+      
+      const [updated] = await db.update(dischargeLetters)
+        .set(updateData)
+        .where(and(
+          eq(dischargeLetters.id, letterId),
+          eq(dischargeLetters.patientId, patientId)
+        ))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Discharge letter not found" });
+      }
+
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating discharge letter:', error);
+      res.status(500).json({ message: "Failed to update discharge letter" });
+    }
+  });
+
+  app.delete('/api/patients/:id/discharge-letters/:letterId', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const letterId = parseInt(req.params.letterId);
+      const userOrgId = req.user?.organizationId;
+      
+      // Verify patient belongs to user's organization
+      const [patient] = await db.select().from(patients)
+        .where(and(eq(patients.id, patientId), eq(patients.organizationId, userOrgId!)))
+        .limit(1);
+      
+      if (!patient) {
+        return res.status(403).json({ message: "Access denied - patient not in your organization" });
+      }
+      
+      const [deleted] = await db.delete(dischargeLetters)
+        .where(and(
+          eq(dischargeLetters.id, letterId),
+          eq(dischargeLetters.patientId, patientId)
+        ))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Discharge letter not found" });
+      }
+
+      res.json({ message: "Discharge letter deleted successfully" });
+    } catch (error) {
+      console.error('Error deleting discharge letter:', error);
+      res.status(500).json({ message: "Failed to delete discharge letter" });
     }
   });
 
