@@ -136,6 +136,7 @@ import { PatientAppointmentsTab } from './patient-appointments-tab';
 import { PatientBillingTab } from './patient-billing-tab';
 import { PatientInsuranceTab } from './patient-insurance-tab';
 import { PatientHistoryTab } from './patient-history-tab';
+import { PatientDischargeLetterTab } from './patient-discharge-letter-tab';
 import { MedicationReviewAssignmentsList } from './medication-review-assignments-list';
 import VaccinationManagement from './vaccination-management';
 import { useAuth } from '@/contexts/AuthContext';
@@ -3140,7 +3141,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="medical-records" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 max-w-2xl mb-6 bg-gradient-to-r from-slate-50 to-blue-50">
+                  <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6 bg-gradient-to-r from-slate-50 to-blue-50">
                     <TabsTrigger 
                       value="medical-records" 
                       className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all duration-200"
@@ -3156,6 +3157,14 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     >
                       <Document className="w-4 h-4" />
                       Consent Forms
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="discharge-letters" 
+                      className="flex items-center gap-2 data-[state=active]:bg-teal-500 data-[state=active]:text-white transition-all duration-200"
+                      data-testid="tab-discharge-letters"
+                    >
+                      <FileText className="w-4 h-4" />
+                      Discharge Letters
                     </TabsTrigger>
                     <TabsTrigger 
                       value="insurance" 
@@ -3301,6 +3310,10 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         }}
                       />
                     </div>
+                  </TabsContent>
+
+                  <TabsContent value="discharge-letters" className="space-y-4">
+                    <PatientDischargeLetterTab patientId={patient.id} />
                   </TabsContent>
 
                   <TabsContent value="insurance" className="space-y-4">
