@@ -3313,7 +3313,12 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   </TabsContent>
 
                   <TabsContent value="discharge-letters" className="space-y-4">
-                    <PatientDischargeLetterTab patientId={patient.id} />
+                    <PatientDischargeLetterTab 
+                      patientId={patient.id} 
+                      patientName={formatPatientName(patient)}
+                      clinicName="Bluequee Health Clinic"
+                      clinicAddress="Southwest Nigeria"
+                    />
                   </TabsContent>
 
                   <TabsContent value="insurance" className="space-y-4">

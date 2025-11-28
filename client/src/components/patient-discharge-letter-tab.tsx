@@ -90,6 +90,10 @@ interface DischargeLetter {
 
 interface PatientDischargeLetterTabProps {
   patientId: number;
+  patientName?: string;
+  clinicName?: string;
+  clinicAddress?: string;
+  clinicPhone?: string;
 }
 
 const dischargeLetterFormSchema = z.object({
@@ -112,7 +116,13 @@ const dischargeLetterFormSchema = z.object({
 
 type DischargeLetterFormValues = z.infer<typeof dischargeLetterFormSchema>;
 
-export function PatientDischargeLetterTab({ patientId }: PatientDischargeLetterTabProps) {
+export function PatientDischargeLetterTab({ 
+  patientId, 
+  patientName = 'Patient',
+  clinicName = 'Bluequee Health Clinic',
+  clinicAddress = 'Southwest Nigeria',
+  clinicPhone = ''
+}: PatientDischargeLetterTabProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -120,6 +130,323 @@ export function PatientDischargeLetterTab({ patientId }: PatientDischargeLetterT
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState<DischargeLetter | null>(null);
+
+  const handlePrintLetter = (letter: DischargeLetter) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({
+        title: "Error",
+        description: "Could not open print window. Please allow popups.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const physicianName = letter.attendingPhysician 
+      ? `Dr. ${letter.attendingPhysician.firstName || ''} ${letter.attendingPhysician.lastName || letter.attendingPhysician.username}`.trim()
+      : 'Attending Physician';
+
+    const getConditionLabel = (condition: string) => {
+      const labels: Record<string, string> = {
+        improved: 'Improved',
+        stable: 'Stable',
+        unchanged: 'Unchanged',
+        critical: 'Critical',
+        deceased: 'Deceased'
+      };
+      return labels[condition] || condition;
+    };
+
+    const formatDate = (dateStr: string) => {
+      try {
+        return format(parseISO(dateStr), 'MMMM d, yyyy');
+      } catch {
+        return dateStr;
+      }
+    };
+
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Discharge Letter - ${patientName}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Times New Roman', Times, serif; 
+            line-height: 1.6; 
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+            color: #333;
+          }
+          .header {
+            text-align: center;
+            border-bottom: 3px solid #0d9488;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .clinic-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 10px;
+            background: linear-gradient(135deg, #0d9488, #14b8a6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+          }
+          .clinic-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0d9488;
+            margin-bottom: 5px;
+          }
+          .clinic-info {
+            font-size: 14px;
+            color: #666;
+          }
+          .document-title {
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+            margin: 25px 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #1f2937;
+          }
+          .patient-info {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #0d9488;
+          }
+          .patient-info h3 {
+            color: #0d9488;
+            margin-bottom: 10px;
+            font-size: 16px;
+          }
+          .info-row {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 8px;
+          }
+          .info-item {
+            flex: 1;
+          }
+          .info-label {
+            font-weight: bold;
+            color: #4b5563;
+            font-size: 12px;
+            text-transform: uppercase;
+          }
+          .info-value {
+            font-size: 14px;
+            color: #1f2937;
+          }
+          .section {
+            margin-bottom: 20px;
+          }
+          .section-title {
+            font-weight: bold;
+            color: #0d9488;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+          }
+          .section-content {
+            font-size: 14px;
+            white-space: pre-wrap;
+            padding: 10px;
+            background: #fafafa;
+            border-radius: 4px;
+          }
+          .warning-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+          }
+          .warning-title {
+            color: #dc2626;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .warning-content {
+            color: #7f1d1d;
+            font-size: 14px;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+          }
+          .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+          }
+          .signature-box {
+            text-align: center;
+            width: 45%;
+          }
+          .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+          }
+          .date-printed {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 30px;
+          }
+          @media print {
+            body { padding: 20px; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="clinic-logo">B</div>
+          <div class="clinic-name">${clinicName}</div>
+          <div class="clinic-info">
+            ${clinicAddress}${clinicPhone ? ` | Tel: ${clinicPhone}` : ''}
+          </div>
+        </div>
+
+        <div class="document-title">Discharge Summary Letter</div>
+
+        <div class="patient-info">
+          <h3>Patient Information</h3>
+          <div class="info-row">
+            <div class="info-item">
+              <div class="info-label">Patient Name</div>
+              <div class="info-value">${patientName}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Condition at Discharge</div>
+              <div class="info-value">${getConditionLabel(letter.dischargeCondition)}</div>
+            </div>
+          </div>
+          <div class="info-row">
+            <div class="info-item">
+              <div class="info-label">Admission Date</div>
+              <div class="info-value">${formatDate(letter.admissionDate)}</div>
+            </div>
+            <div class="info-item">
+              <div class="info-label">Discharge Date</div>
+              <div class="info-value">${formatDate(letter.dischargeDate)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Diagnosis</div>
+          <div class="section-content">${letter.diagnosis}</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Treatment Summary</div>
+          <div class="section-content">${letter.treatmentSummary}</div>
+        </div>
+
+        ${letter.medicationsOnDischarge ? `
+        <div class="section">
+          <div class="section-title">Medications on Discharge</div>
+          <div class="section-content">${letter.medicationsOnDischarge}</div>
+        </div>
+        ` : ''}
+
+        ${letter.followUpInstructions ? `
+        <div class="section">
+          <div class="section-title">Follow-up Instructions</div>
+          <div class="section-content">${letter.followUpInstructions}</div>
+        </div>
+        ` : ''}
+
+        ${letter.followUpDate ? `
+        <div class="section">
+          <div class="section-title">Follow-up Appointment</div>
+          <div class="section-content">${formatDate(letter.followUpDate)}</div>
+        </div>
+        ` : ''}
+
+        ${letter.specialInstructions ? `
+        <div class="section">
+          <div class="section-title">Special Instructions</div>
+          <div class="section-content">${letter.specialInstructions}</div>
+        </div>
+        ` : ''}
+
+        ${letter.restrictions ? `
+        <div class="section">
+          <div class="section-title">Activity Restrictions</div>
+          <div class="section-content">${letter.restrictions}</div>
+        </div>
+        ` : ''}
+
+        ${letter.dietaryAdvice ? `
+        <div class="section">
+          <div class="section-title">Dietary Advice</div>
+          <div class="section-content">${letter.dietaryAdvice}</div>
+        </div>
+        ` : ''}
+
+        ${letter.warningSymptoms ? `
+        <div class="warning-box">
+          <div class="warning-title">⚠️ Warning Symptoms - Seek Immediate Medical Attention If:</div>
+          <div class="warning-content">${letter.warningSymptoms}</div>
+        </div>
+        ` : ''}
+
+        ${letter.emergencyContact ? `
+        <div class="section">
+          <div class="section-title">Emergency Contact</div>
+          <div class="section-content">${letter.emergencyContact}</div>
+        </div>
+        ` : ''}
+
+        <div class="footer">
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-line">${physicianName}</div>
+              <div style="font-size: 12px; color: #666;">Attending Physician</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line">Date</div>
+              <div style="font-size: 12px; color: #666;">${formatDate(letter.dischargeDate)}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="date-printed">
+          Document printed on: ${format(new Date(), 'MMMM d, yyyy \'at\' h:mm a')}
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          }
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
 
   const { data: letters = [], isLoading, isError, refetch } = useQuery<DischargeLetter[]>({
     queryKey: [`/api/patients/${patientId}/discharge-letters`],
@@ -659,7 +986,7 @@ export function PatientDischargeLetterTab({ patientId }: PatientDischargeLetterT
                   Finalize
                 </DropdownMenuItem>
               )}
-              <DropdownMenuItem data-testid={`button-print-${letter.id}`}>
+              <DropdownMenuItem onClick={() => handlePrintLetter(letter)} data-testid={`button-print-${letter.id}`}>
                 <Printer className="w-4 h-4 mr-2" />
                 Print
               </DropdownMenuItem>
@@ -912,9 +1239,17 @@ export function PatientDischargeLetterTab({ patientId }: PatientDischargeLetterT
                 </div>
               )}
 
-              <DialogFooter>
+              <DialogFooter className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
                   Close
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePrintLetter(selectedLetter)}
+                  data-testid="button-print-letter"
+                >
+                  <Printer className="w-4 h-4 mr-2" />
+                  Print
                 </Button>
                 <Button onClick={() => { setIsViewDialogOpen(false); handleEditClick(selectedLetter); }}>
                   <Edit className="w-4 h-4 mr-2" />
