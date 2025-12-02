@@ -9,23 +9,17 @@ name: clinicconnect
 region: lon
 services:
 - name: clinicconnect
-  environment_slug: node-js
+  dockerfile_path: Dockerfile.optimized
   github:
     branch: main
     deploy_on_push: true
     repo: lacson1/clinicconnect
-  build_command: npm run build
-  run_command: npm start
   http_port: 5001
   instance_count: 1
   instance_size_slug: apps-s-1vcpu-1gb
   envs:
   - key: NODE_ENV
-    scope: RUN_TIME
     value: production
-  - key: NPM_CONFIG_PRODUCTION
-    scope: BUILD_TIME
-    value: "false"
   - key: PORT
     value: "5001"
   - key: DATABASE_URL
