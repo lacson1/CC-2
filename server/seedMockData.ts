@@ -167,6 +167,11 @@ export async function seedMockData() {
       organizationName: organization.name
     };
   } catch (error) {
+    const err = error as any;
+    if (err?.code === '42P01') {
+      console.log('⚠️  Mock data seeding skipped - tables not yet created');
+      return { message: 'Skipped - tables not created', organizationId: 0, organizationName: '' };
+    }
     console.error('❌ Error seeding mock data:', error);
     throw error;
   }

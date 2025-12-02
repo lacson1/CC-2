@@ -114,6 +114,11 @@ export async function seedTabPresets() {
     console.log(`✨ Successfully seeded ${totalCreated} tab presets`);
     return { message: 'Tab presets seeded successfully', count: totalCreated };
   } catch (error) {
+    const err = error as any;
+    if (err?.code === '42P01') {
+      console.log('⚠️  Tab presets seeding skipped - tables not yet created');
+      return { message: 'Skipped - tables not created', count: 0 };
+    }
     console.error('❌ Error seeding tab presets:', error);
     throw error;
   }

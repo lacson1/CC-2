@@ -185,20 +185,30 @@ export async function seedTabConfigs() {
     },
   ];
 
-  // Check if system tabs already exist
-  const existingTabs = await db
-    .select()
-    .from(tabConfigs)
-    .where(eq(tabConfigs.isSystemDefault, true));
+  try {
+    // Check if system tabs already exist
+    const existingTabs = await db
+      .select()
+      .from(tabConfigs)
+      .where(eq(tabConfigs.isSystemDefault, true));
 
-  if (existingTabs.length > 0) {
-    console.log(`✓ ${existingTabs.length} system tabs already exist`);
-    return { message: 'System tabs already seeded', count: existingTabs.length };
+    if (existingTabs.length > 0) {
+      console.log(`✓ ${existingTabs.length} system tabs already exist`);
+      return { message: 'System tabs already seeded', count: existingTabs.length };
+    }
+
+    // Insert system tabs
+    const inserted = await db.insert(tabConfigs).values(systemTabs).returning();
+
+    console.log(`✓ Successfully seeded ${inserted.length} system tabs`);
+    return { message: 'System tabs seeded successfully', count: inserted.length };
+  } catch (error) {
+    const err = error as any;
+    if (err?.code === '42P01') {
+      console.log('⚠️  Tab configs seeding skipped - tables not yet created');
+      return { message: 'Skipped - tables not created', count: 0 };
+    }
+    console.error('❌ Error seeding tab configs:', error);
+    throw error;
   }
-
-  // Insert system tabs
-  const inserted = await db.insert(tabConfigs).values(systemTabs).returning();
-
-  console.log(`✓ Successfully seeded ${inserted.length} system tabs`);
-  return { message: 'System tabs seeded successfully', count: inserted.length };
 }

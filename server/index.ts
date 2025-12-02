@@ -8,9 +8,46 @@ import { securityHeaders } from "./middleware/security";
 import { authRateLimit, apiRateLimit } from "./middleware/rate-limit";
 import { devLogger, prodLogger } from "./middleware/request-logger";
 import { globalErrorHandler, notFoundHandler } from "./middleware/error-handler";
-import { seedTabPresets } from "./seedTabPresets";
-import { seedTabConfigs } from "./seedTabConfigs";
-import { seedMockData } from "./seedMockData";
+
+// Dynamic imports for seeding (may fail if tables don't exist)
+const seedTabPresets = async () => {
+  try {
+    const module = await import("./seedTabPresets");
+    await module.seedTabPresets();
+  } catch (error: any) {
+    if (error?.code === '42P01') {
+      console.log('⚠️  Skipping tab presets seeding - tables not yet created');
+    } else {
+      throw error;
+    }
+  }
+};
+
+const seedTabConfigs = async () => {
+  try {
+    const module = await import("./seedTabConfigs");
+    await module.seedTabConfigs();
+  } catch (error: any) {
+    if (error?.code === '42P01') {
+      console.log('⚠️  Skipping tab configs seeding - tables not yet created');
+    } else {
+      throw error;
+    }
+  }
+};
+
+const seedMockData = async () => {
+  try {
+    const module = await import("./seedMockData");
+    await module.seedMockData();
+  } catch (error: any) {
+    if (error?.code === '42P01') {
+      console.log('⚠️  Skipping mock data seeding - tables not yet created');
+    } else {
+      throw error;
+    }
+  }
+};
 
 const app = express();
 
@@ -86,27 +123,38 @@ app.use(isProduction ? prodLogger : devLogger);
 
 (async () => {
   try {
+    // Note: Seeding will be skipped if database tables don't exist yet
+    // Run 'npm run db:push' to create tables, then restart the server
+    
     // Seed tab configurations on startup (idempotent - only creates if not exists)
     try {
       console.log('🌱 Seeding tab configurations...');
       await seedTabConfigs();
-    } catch (error) {
-      console.error('Failed to seed tab configurations:', error);
+    } catch (error: any) {
+      if (error?.code === '42P01') {
+        console.log('⚠️  Tables not found - run "npm run db:push" to create database schema');
+      } else {
+        console.error('Failed to seed tab configurations:', error?.message || error);
+      }
     }
 
     // Seed tab presets on startup (idempotent - only creates if not exists)
     try {
       console.log('🌱 Seeding tab presets...');
       await seedTabPresets();
-    } catch (error) {
-      console.error('Failed to seed tab presets:', error);
+    } catch (error: any) {
+      if (error?.code !== '42P01') {
+        console.error('Failed to seed tab presets:', error?.message || error);
+      }
     }
 
     // Seed mock data (2 patients, 2 staff) on startup (idempotent)
     try {
       await seedMockData();
-    } catch (error) {
-      console.error('Failed to seed mock data:', error);
+    } catch (error: any) {
+      if (error?.code !== '42P01') {
+        console.error('Failed to seed mock data:', error?.message || error);
+      }
     }
 
     // Seed comprehensive lab test catalog on startup (idempotent)
@@ -114,8 +162,10 @@ app.use(isProduction ? prodLogger : devLogger);
       console.log('🧪 Seeding lab test catalog...');
       const { seedComprehensiveLabTests } = await import('./seedComprehensiveLabTests');
       await seedComprehensiveLabTests();
-    } catch (error) {
-      console.error('Failed to seed lab test catalog:', error);
+    } catch (error: any) {
+      if (error?.code !== '42P01') {
+        console.error('Failed to seed lab test catalog:', error?.message || error);
+      }
     }
 
     // Setup new modular routes (patients, laboratory, prescriptions)

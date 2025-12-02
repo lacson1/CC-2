@@ -767,14 +767,21 @@ export async function seedComprehensiveLabTests() {
 
     return { added: insertedCount, skipped: labTestCatalog.length - insertedCount };
   } catch (error) {
+    // Don't throw on missing table errors - just log and continue
+    const err = error as any;
+    if (err?.code === '42P01') {
+      console.log('⚠️  Lab test catalog seeding skipped - tables not yet created');
+      console.log('   Run "npm run db:push" to create database schema');
+      return;
+    }
     console.error('❌ Error seeding lab test catalog:', error);
     throw error;
   }
 }
 
-// Run if called directly (ESM compatible)
-const isMainModule = import.meta.url === `file://${process.argv[1]}`;
-if (isMainModule) {
+// Only run if called directly as a script (not when imported)
+// This prevents double-execution when imported
+if (typeof process !== 'undefined' && process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   seedComprehensiveLabTests()
     .then(() => process.exit(0))
     .catch(() => process.exit(1));
