@@ -34,19 +34,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
+  // Check for existing session on mount
   useEffect(() => {
-    // Check if user is already logged in via session
-    refreshUser();
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/profile', {
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+        } else {
+          // No valid session - user needs to login
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
   }, []);
 
-  // Disabled periodic session refresh to prevent stability issues
-  // useEffect(() => {
-  //   if (!user) return;
-  //   const interval = setInterval(() => {
-  //     refreshUser();
-  //   }, 30000);
-  //   return () => clearInterval(interval);
-  // }, [user]);
+  // Periodic session refresh to keep session alive
+  useEffect(() => {
+    if (!user) return;
+    
+    const interval = setInterval(() => {
+      refreshUser();
+    }, 5 * 60 * 1000); // Refresh every 5 minutes
+    
+    return () => clearInterval(interval);
+  }, [user]);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
@@ -61,15 +84,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!response.ok) {
-        throw new Error('Invalid credentials');
+        const errorData = await response.json().catch(() => ({}));
+        
+        if (response.status === 503 || response.status === 0) {
+          throw new Error(errorData.message || 'Backend server is not running. Please start it with: npm run dev');
+        }
+        if (response.status === 403) {
+          throw new Error('Access forbidden. Please check if the backend server is running.');
+        }
+        if (response.status === 423) {
+          throw new Error(errorData.message || 'Account is temporarily locked. Please try again later.');
+        }
+        if (response.status === 401) {
+          throw new Error(errorData.message || 'Invalid username or password');
+        }
+        throw new Error(errorData.message || 'Login failed');
       }
 
-      const data = await response.json();
+      const response_data = await response.json();
       
-      // No token storage needed - session is managed by cookies
+      // Handle both wrapped (sendSuccess) and unwrapped response formats
+      const data = response_data.data || response_data;
+
+      // Validate that we received user data
+      if (!data.user || !data.user.username) {
+        throw new Error('Invalid response from server - no user data received');
+      }
+
+      // Set user from response
       setUser(data.user);
-      
-      // Show organization assignment message if present (for demo users)
+
+      // Show organization assignment message if present
       if (data.organizationMessage) {
         toast({
           title: "Organization Assignment",
@@ -77,19 +122,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           duration: 6000,
         });
       }
-      
+
+      // Show success message
+      toast({
+        title: "Welcome back!",
+        description: `Logged in as ${data.user?.username || 'User'}`,
+        duration: 3000,
+      });
+
       // Small delay to ensure session cookie is properly set before redirect
-      // This prevents 401 errors on subsequent API calls
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       // Check if user needs to select organization
       if (data.requiresOrgSelection) {
         setLocation('/select-organization');
       } else {
-        // Automatically redirect to dashboard after successful login
+        // Redirect to dashboard after successful login
         setLocation('/dashboard');
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      
+      if (errorMessage.includes('Backend server') || errorMessage.includes('not running')) {
+        toast({
+          title: "Backend Server Unavailable",
+          description: errorMessage + ". Make sure DATABASE_URL is set and the server is running.",
+          variant: "destructive",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
       throw error;
     } finally {
       setIsLoading(false);
@@ -102,16 +170,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         credentials: 'include',
       });
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+        duration: 3000,
+      });
     } catch (error) {
-      // Production: Logout error handled
+      console.error('Logout error:', error);
     }
+    
     setUser(null);
+    setLocation('/login');
   };
 
   const refreshUser = async () => {
     try {
       const response = await fetch('/api/profile', {
-        credentials: 'include', // Include session cookies
+        credentials: 'include',
       });
 
       if (response.ok) {
@@ -122,10 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
       }
     } catch (error) {
-      // Production: Failed to refresh user data
+      console.error('Failed to refresh user data:', error);
       // Don't clear user on network errors, only on auth failures
-    } finally {
-      setIsLoading(false);
     }
   };
 

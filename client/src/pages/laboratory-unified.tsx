@@ -1,30 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { 
-  TestTube, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Calendar,
-  Filter,
+import {
+  TestTube,
+  Clock,
+  CheckCircle,
   Download,
   Search,
-  Users,
   Activity,
   BarChart3,
   Settings,
@@ -34,17 +30,13 @@ import {
   Microscope,
   Printer,
   Eye,
-  Edit,
-  Trash2,
   RefreshCw,
   User,
   FlaskRound,
-  MoreVertical,
-  ArrowUpDown,
   TrendingUp,
-  AlertTriangle,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  AlertTriangle
 } from "lucide-react";
 import { format } from "date-fns";
 import LetterheadService from "@/services/letterhead-service";
@@ -65,14 +57,17 @@ const labOrderSchema = z.object({
 
 const resultEntrySchema = z.object({
   orderItemId: z.number(),
-  value: z.string().min(1, "Result value is required"),
+  value: z.string().optional(),
+  result: z.string().optional(),
   units: z.string().optional(),
   referenceRange: z.string().optional(),
   status: z.enum(["normal", "abnormal", "critical", "pending_review", "high", "low", "borderline", "inconclusive", "invalid", "rejected"]),
   notes: z.string().optional(),
   interpretation: z.string().optional(),
-  recommendations: z.string().optional(),
-  result: z.string().optional()
+  recommendations: z.string().optional()
+}).refine((data) => data.value || data.result, {
+  message: "Either value or result is required",
+  path: ["result"]
 });
 
 // Type definitions
@@ -175,17 +170,17 @@ export default function LaboratoryUnified() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/lab-results/reviewed'] });
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders/enhanced'] });
-      toast({ 
-        title: "Existing lab results uploaded successfully", 
-        description: `${data?.count || 0} results connected to the system` 
+      toast({
+        title: "Existing lab results uploaded successfully",
+        description: `${data?.count || 0} results connected to the system`
       });
     },
     onError: (error) => {
       console.error('Upload error:', error);
-      toast({ 
-        title: "Upload failed", 
-        description: "Failed to upload existing lab results", 
-        variant: "destructive" 
+      toast({
+        title: "Upload failed",
+        description: "Failed to upload existing lab results",
+        variant: "destructive"
       });
     }
   });
@@ -245,7 +240,7 @@ export default function LaboratoryUnified() {
 
     const selectedResultData = filteredResults.filter(result => selectedResults.has(result.id));
     const combinedPrintContent = generateCombinedResultsPrintContent(selectedResultData);
-    
+
     const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
     if (printWindow) {
       printWindow.document.write(combinedPrintContent);
@@ -267,7 +262,7 @@ export default function LaboratoryUnified() {
 
     const selectedOrderData = filteredOrders.filter(order => selectedOrders.has(order.id));
     const combinedPrintContent = generateCombinedOrdersPrintContent(selectedOrderData);
-    
+
     const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
     if (printWindow) {
       printWindow.document.write(combinedPrintContent);
@@ -292,20 +287,20 @@ export default function LaboratoryUnified() {
 
   const generateLabOrderPrintContent = (order: LabOrder) => {
     const patient = patients.find(p => p.id === order.patientId);
-    
+
     // Find the organization of the staff member who ordered the test
     let orderingOrganization = null;
-    
+
     // Look for the ordering user's organization ID from the order data
     if (order.orderedBy && Array.isArray(organizations)) {
       orderingOrganization = organizations.find((org: any) => org.id === (order as any).organizationId);
     }
-    
+
     // If not found in order data, use current user's organization as fallback
     if (!orderingOrganization && userProfile?.organizationId) {
       orderingOrganization = Array.isArray(organizations) ? organizations.find((org: any) => org.id === userProfile.organizationId) : null;
     }
-    
+
     // Use the ordering staff member's organization for letterhead branding
     const org = orderingOrganization || {};
     const orgName = (org as any)?.name || 'Healthcare Organization';
@@ -316,7 +311,7 @@ export default function LaboratoryUnified() {
     const orgWebsite = org.website || 'www.healthcare.com';
     const themeColor = org.themeColor || '#1e40af';
     const orgLogo = org.logo || '';
-    
+
     return `
       <!DOCTYPE html>
       <html>
@@ -733,7 +728,7 @@ export default function LaboratoryUnified() {
   // Mutations
   const createOrder = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('/api/lab-orders', 'POST', data);
+      return apiRequest(`/api/patients/${data.patientId}/lab-orders`, 'POST', data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/lab-orders/enhanced'] });
@@ -763,7 +758,7 @@ export default function LaboratoryUnified() {
           description: `Status: ${analysis.status} | Urgency: ${analysis.urgency}`,
           duration: 6000
         });
-        
+
         // Log detailed AI analysis for clinical review
         console.log('🤖 AI Clinical Analysis:', {
           testName: response.testName,
@@ -785,10 +780,10 @@ export default function LaboratoryUnified() {
     },
     onError: (error) => {
       console.error('Save error:', error);
-      toast({ 
-        title: "Save failed", 
-        description: "Please try again", 
-        variant: "destructive" 
+      toast({
+        title: "Save failed",
+        description: "Please try again",
+        variant: "destructive"
       });
     }
   });
@@ -796,31 +791,31 @@ export default function LaboratoryUnified() {
   // Filter data using orders with items
   const ordersToDisplay = labOrdersWithItems.data || labOrders;
   const filteredOrders = ordersToDisplay.filter(order => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       `${order.patient.firstName} ${order.patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.items && order.items.some(item => 
+      (order.items && order.items.some(item =>
         (item.labTest?.name || item.testName || 'FBC').toLowerCase().includes(searchTerm.toLowerCase())
       ));
-    
+
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
     const matchesPatient = !selectedPatient || order.patientId === selectedPatient;
-    const matchesCategory = categoryFilter === "all" || 
-      (order.items && order.items.some(item => 
+    const matchesCategory = categoryFilter === "all" ||
+      (order.items && order.items.some(item =>
         (item.labTest?.category || item.testCategory || 'Hematology') === categoryFilter
       ));
-    
+
     return matchesSearch && matchesStatus && matchesPatient && matchesCategory;
   });
 
   const filteredResults = labResults.filter(result => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       (result.patientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (result.testName || '').toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesPatient = !selectedPatient || result.patientId === selectedPatient;
-    const matchesCategory = categoryFilter === "all" || 
+    const matchesCategory = categoryFilter === "all" ||
       result.category === categoryFilter;
-    
+
     return matchesSearch && matchesPatient && matchesCategory;
   });
 
@@ -831,13 +826,13 @@ export default function LaboratoryUnified() {
 
   // Filter tests based on search and selected categories
   const filteredTests = labTests.filter(test => {
-    const matchesSearch = !testSearchQuery || 
+    const matchesSearch = !testSearchQuery ||
       test.name.toLowerCase().includes(testSearchQuery.toLowerCase()) ||
       test.category.toLowerCase().includes(testSearchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategories.length === 0 || 
+
+    const matchesCategory = selectedCategories.length === 0 ||
       selectedCategories.includes(test.category);
-    
+
     return matchesSearch && matchesCategory;
   });
 
@@ -852,8 +847,8 @@ export default function LaboratoryUnified() {
 
   // Toggle category selection
   const toggleCategory = (category: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
+    setSelectedCategories(prev =>
+      prev.includes(category)
         ? prev.filter(c => c !== category)
         : [...prev, category]
     );
@@ -888,8 +883,8 @@ export default function LaboratoryUnified() {
 
   const handleOrderSubmit = (data: any) => {
     createOrder.mutate({
-      patientId: parseInt(data.patientId),
-      tests: data.tests, // Send full test objects as backend expects
+      patientId: Number.parseInt(data.patientId, 10),
+      labTestIds: data.tests.map((test: any) => test.id), // Extract test IDs as backend expects
       clinicalNotes: data.clinicalNotes,
       diagnosis: data.diagnosis || '', // Add diagnosis field
       priority: data.priority
@@ -898,7 +893,7 @@ export default function LaboratoryUnified() {
 
   const handleResultSubmit = (data: any) => {
     if (!selectedOrderItem) return;
-    
+
     submitResult.mutate({
       ...data,
       orderItemId: selectedOrderItem.id
@@ -926,16 +921,16 @@ export default function LaboratoryUnified() {
           </h1>
           <p className="text-gray-600 mt-1">Comprehensive lab orders, results, and analytics</p>
         </div>
-        
+
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => setShowOrderDialog(true)}
             className="bg-blue-600 hover:bg-blue-700"
+            title="New Lab Order"
           >
-            <Plus className="w-4 h-4 mr-2" />
-            New Lab Order
+            <Plus className="w-4 h-4" />
           </Button>
-          <Button 
+          <Button
             onClick={uploadExistingResults}
             variant="outline"
             className="border-green-600 text-green-600 hover:bg-green-50"
@@ -1022,16 +1017,16 @@ export default function LaboratoryUnified() {
                   className="pl-10 h-10"
                 />
               </div>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={() => setShowCustomViewDialog(true)}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Custom View
               </Button>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSearchTerm('');
@@ -1043,10 +1038,10 @@ export default function LaboratoryUnified() {
                 Clear
               </Button>
             </div>
-            
+
             {/* Filters */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <Select value={selectedPatient?.toString() || "all"} onValueChange={(value) => setSelectedPatient(value === "all" ? null : parseInt(value))}>
+              <Select value={selectedPatient?.toString() || "all"} onValueChange={(value) => setSelectedPatient(value === "all" ? null : Number.parseInt(value, 10))}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Patients" />
                 </SelectTrigger>
@@ -1120,7 +1115,7 @@ export default function LaboratoryUnified() {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="orders" className="flex items-center gap-2">
             <FlaskRound className="w-4 h-4" />
             Lab Orders
@@ -1128,10 +1123,6 @@ export default function LaboratoryUnified() {
           <TabsTrigger value="results" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Results
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4" />
-            Analytics
           </TabsTrigger>
         </TabsList>
 
@@ -1150,9 +1141,8 @@ export default function LaboratoryUnified() {
                 <TestTube className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No lab orders found</h3>
                 <p className="text-gray-600 mb-4">Create your first lab order to get started</p>
-                <Button onClick={() => setShowOrderDialog(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Lab Order
+                <Button onClick={() => setShowOrderDialog(true)} title="Create Lab Order">
+                  <Plus className="w-4 h-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -1184,7 +1174,7 @@ export default function LaboratoryUnified() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {selectedOrders.size > 0 && (
                         <>
@@ -1225,126 +1215,126 @@ export default function LaboratoryUnified() {
                               <div className="p-2 bg-blue-50 rounded-lg">
                                 <User className="w-5 h-5 text-blue-600" />
                               </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {order.patient.title} {order.patient.firstName} {order.patient.lastName}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              Order #{order.id} • {format(new Date(order.createdAt), 'MMM dd, yyyy')}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2 mb-3">
-                          <Badge className={getStatusColor(order.status)} variant="outline">
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                          </Badge>
-                          {Array.isArray(order.items) && order.items.length > 0 && order.items[0] && order.items[0].priority && (
-                            <Badge className={getPriorityColor(order.items[0].priority)} variant="outline">
-                              {order.items[0].priority.charAt(0).toUpperCase() + order.items[0].priority.slice(1)}
-                            </Badge>
-                          )}
-                          <Badge variant="secondary">
-                            {Array.isArray(order.items) ? order.items.length : 0} test{(Array.isArray(order.items) ? order.items.length : 0) !== 1 ? 's' : ''}
-                          </Badge>
-                        </div>
-
-                        <div className="space-y-3">
-                          {Array.isArray(order.items) && order.items.map((item) => (
-                            <div key={item.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md shadow-sm">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="p-1.5 bg-blue-100 rounded-full">
-                                    <TestTube className="w-4 h-4 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <p className="font-semibold text-base text-gray-900">{item.labTest?.name || item.testName || 'Full Blood Count (FBC)'}</p>
-                                    <p className="text-xs text-blue-600 font-medium">{item.labTest?.category || item.testCategory || 'Hematology'}</p>
-                                  </div>
-                                </div>
-                                {item.labTest?.referenceRange || item.referenceRange ? (
-                                  <p className="text-xs text-gray-700 mt-1 bg-white p-1.5 rounded">
-                                    <strong>Range:</strong> {item.labTest?.referenceRange || item.referenceRange}
-                                  </p>
-                                ) : null}
-                              </div>
-                              
-                              <div className="flex items-center gap-3">
-                                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 px-2 py-0.5 text-xs font-medium">
-                                  {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                                </Badge>
-                                
-                                {item.status === 'pending' && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => openResultDialog(item)}
-                                    className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 text-sm shadow-md"
-                                  >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Add Result
-                                  </Button>
-                                )}
-                                
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => handlePrintOrder(order)}
-                                  className="text-blue-600 hover:text-blue-800 border-blue-300"
-                                >
-                                  <Printer className="w-3 h-3 mr-1" />
-                                  Print
-                                </Button>
-                                
-                                {item.result && (
-                                  <div className="text-right bg-white p-2 rounded">
-                                    <p className="text-sm font-medium text-gray-900">{item.result}</p>
-                                    {item.resultDate && (
-                                      <p className="text-xs text-gray-500">
-                                        {format(new Date(item.resultDate), 'MMM dd')}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
+                              <div>
+                                <h3 className="font-semibold text-gray-900">
+                                  {order.patient.title} {order.patient.firstName} {order.patient.lastName}
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                  Order #{order.id} • {format(new Date(order.createdAt), 'MMM dd, yyyy')}
+                                </p>
                               </div>
                             </div>
-                          ))}
-                        </div>
 
-                        {order.notes && (
-                          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                            <p className="text-sm text-gray-700">
-                              <strong>Notes:</strong> {order.notes}
-                            </p>
-                          </div>
-                        )}
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              <Badge className={getStatusColor(order.status)} variant="outline">
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              </Badge>
+                              {Array.isArray(order.items) && order.items.length > 0 && order.items[0] && order.items[0].priority && (
+                                <Badge className={getPriorityColor(order.items[0].priority)} variant="outline">
+                                  {order.items[0].priority.charAt(0).toUpperCase() + order.items[0].priority.slice(1)}
+                                </Badge>
+                              )}
+                              <Badge variant="secondary">
+                                {Array.isArray(order.items) ? order.items.length : 0} test{(Array.isArray(order.items) ? order.items.length : 0) !== 1 ? 's' : ''}
+                              </Badge>
+                            </div>
+
+                            <div className="space-y-3">
+                              {Array.isArray(order.items) && order.items.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-md shadow-sm">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <div className="p-1.5 bg-blue-100 rounded-full">
+                                        <TestTube className="w-4 h-4 text-blue-600" />
+                                      </div>
+                                      <div>
+                                        <p className="font-semibold text-base text-gray-900">{item.labTest?.name || item.testName || 'Full Blood Count (FBC)'}</p>
+                                        <p className="text-xs text-blue-600 font-medium">{item.labTest?.category || item.testCategory || 'Hematology'}</p>
+                                      </div>
+                                    </div>
+                                    {item.labTest?.referenceRange || item.referenceRange ? (
+                                      <p className="text-xs text-gray-700 mt-1 bg-white p-1.5 rounded">
+                                        <strong>Range:</strong> {item.labTest?.referenceRange || item.referenceRange}
+                                      </p>
+                                    ) : null}
+                                  </div>
+
+                                  <div className="flex items-center gap-3">
+                                    <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300 px-2 py-0.5 text-xs font-medium">
+                                      {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                                    </Badge>
+
+                                    {item.status === 'pending' && (
+                                      <Button
+                                        size="sm"
+                                        onClick={() => openResultDialog(item)}
+                                        className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 text-sm shadow-md"
+                                      >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Result
+                                      </Button>
+                                    )}
+
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handlePrintOrder(order)}
+                                      className="text-blue-600 hover:text-blue-800 border-blue-300"
+                                    >
+                                      <Printer className="w-3 h-3 mr-1" />
+                                      Print
+                                    </Button>
+
+                                    {item.result && (
+                                      <div className="text-right bg-white p-2 rounded">
+                                        <p className="text-sm font-medium text-gray-900">{item.result}</p>
+                                        {item.resultDate && (
+                                          <p className="text-xs text-gray-500">
+                                            {format(new Date(item.resultDate), 'MMM dd')}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {order.notes && (
+                              <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes:</strong> {order.notes}
+                                </p>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setShowViewDialog(true);
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handlePrintOrderWithLetterhead(order)}
-                        >
-                          <Printer className="w-4 h-4 mr-1" />
-                          Print
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowViewDialog(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePrintOrderWithLetterhead(order)}
+                          >
+                            <Printer className="w-4 h-4 mr-1" />
+                            Print
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
@@ -1388,7 +1378,7 @@ export default function LaboratoryUnified() {
                         </Badge>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {selectedResults.size > 0 && (
                         <>
@@ -1429,164 +1419,174 @@ export default function LaboratoryUnified() {
                               <div className="p-2 bg-green-50 rounded-lg">
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                               </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900">
-                              {result.patientName || 'Unknown Patient'}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              {result.testName || 'Unknown Test'} • {result.category || 'General'}
-                            </p>
-                          </div>
-                        </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">
+                                  {result.patientName || 'Unknown Patient'}
+                                </h3>
+                                <p className="text-sm text-gray-600">
+                                  {result.testName || 'Unknown Test'} • {result.category || 'General'}
+                                </p>
+                              </div>
+                            </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Result</p>
-                            <p className="text-lg font-semibold text-gray-900">{result.result}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Reference Range</p>
-                            <p className="text-sm text-gray-700">{result.normalRange || 'N/A'}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-600">Status</p>
-                            <Badge className={
-                              result.status === 'normal' ? 'bg-green-100 text-green-800' :
-                              result.status === 'abnormal' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }>
-                              {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
-                            </Badge>
-                          </div>
-                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Result</p>
+                                <p className="text-lg font-semibold text-gray-900">{result.result}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Reference Range</p>
+                                <p className="text-sm text-gray-700">{result.normalRange || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-600">Status</p>
+                                <Badge className={
+                                  result.status === 'normal' ? 'bg-green-100 text-green-800' :
+                                    result.status === 'abnormal' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'
+                                }>
+                                  {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
+                                </Badge>
+                              </div>
+                            </div>
 
-                        {result.notes && (
-                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-700">
-                              <strong>Notes:</strong> {result.notes}
-                            </p>
-                          </div>
-                        )}
+                            {result.notes && (
+                              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                <p className="text-sm text-gray-700">
+                                  <strong>Notes:</strong> {result.notes}
+                                </p>
+                              </div>
+                            )}
 
-                        {result.reviewedBy && (
-                          <div className="mt-2 text-xs text-gray-500">
-                            Reviewed by {result.reviewedBy} on {result.reviewedAt && format(new Date(result.reviewedAt), 'MMM dd, yyyy')}
-                          </div>
-                        )}
+                            {result.reviewedBy && (
+                              <div className="mt-2 text-xs text-gray-500">
+                                Reviewed by {result.reviewedBy} on {result.reviewedAt && format(new Date(result.reviewedAt), 'MMM dd, yyyy')}
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            // Generate and show preview for review
-                            const resultContent = generateLabResultPrintContent(result);
-                            const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
-                            if (printWindow) {
-                              printWindow.document.write(resultContent);
-                              printWindow.document.close();
-                              printWindow.focus();
-                            }
-                          }}
-                        >
-                          <Download className="w-4 h-4 mr-1" />
-                          Preview & Print
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            const resultContent = generateLabResultPrintContent(result);
-                            const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
-                            if (printWindow) {
-                              printWindow.document.write(resultContent);
-                              printWindow.document.close();
-                              printWindow.focus();
-                            }
-                          }}
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          View Result
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Generate and show preview for review
+                              const resultContent = generateLabResultPrintContent(result);
+                              const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
+                              if (printWindow) {
+                                printWindow.document.write(resultContent);
+                                printWindow.document.close();
+                                printWindow.focus();
+                              }
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Preview & Print
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const resultContent = generateLabResultPrintContent(result);
+                              const printWindow = window.open('', '_blank', 'width=800,height=900,scrollbars=yes');
+                              if (printWindow) {
+                                printWindow.document.write(resultContent);
+                                printWindow.document.close();
+                                printWindow.focus();
+                              }
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View Result
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             </div>
           )}
         </TabsContent>
+      </Tabs>
 
-        {/* Analytics Tab */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Test Volume by Category
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {testCategories.slice(0, 5).map((category) => {
-                    const categoryCount = labOrders.reduce((count, order) => 
-                      count + (order.items?.filter(item => item.labTest?.category === category)?.length || 0), 0
-                    );
-                    const percentage = labOrders.length > 0 ? (categoryCount / labOrders.length * 100) : 0;
-                    
-                    return (
-                      <div key={category} className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium">{category}</span>
-                          <span className="text-gray-600">{categoryCount} tests</span>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full">
-                          <div 
-                            className="h-2 bg-blue-600 rounded-full transition-all duration-300"
-                            style={{ width: `${Math.min(percentage, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+      {/* Analytics Section */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-md">
+            <BarChart3 className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
+            <p className="text-gray-600">Laboratory performance insights and metrics</p>
+          </div>
+        </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {labOrders.slice(0, 5).map((order) => (
-                    <div key={order.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="p-2 bg-blue-100 rounded-full">
-                        <TestTube className="w-4 h-4 text-blue-600" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Test Volume by Category
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {testCategories.slice(0, 5).map((category) => {
+                  const categoryCount = labOrders.reduce((count, order) =>
+                    count + (order.items?.filter(item => item.labTest?.category === category)?.length || 0), 0
+                  );
+                  const percentage = labOrders.length > 0 ? (categoryCount / labOrders.length * 100) : 0;
+
+                  return (
+                    <div key={category} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium">{category}</span>
+                        <span className="text-gray-600">{categoryCount} tests</span>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          New order for {order.patient.firstName} {order.patient.lastName}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {format(new Date(order.createdAt), 'MMM dd, yyyy HH:mm')}
-                        </p>
+                      <div className="h-2 bg-gray-200 rounded-full">
+                        <div
+                          className="h-2 bg-blue-600 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min(percentage, 100)}%` }}
+                        />
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {labOrders.slice(0, 5).map((order) => (
+                  <div key={order.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="p-2 bg-blue-100 rounded-full">
+                      <TestTube className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        New order for {order.patient.firstName} {order.patient.lastName}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {format(new Date(order.createdAt), 'MMM dd, yyyy HH:mm')}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       {/* New Lab Order Dialog */}
       <Dialog open={showOrderDialog} onOpenChange={setShowOrderDialog}>
@@ -1657,7 +1657,7 @@ export default function LaboratoryUnified() {
                       <TestTube className="w-4 h-4" />
                       Lab Tests
                     </FormLabel>
-                    
+
                     {/* Search and Category Filter Controls */}
                     <div className="space-y-3 mb-4">
                       <div className="relative">
@@ -1669,7 +1669,7 @@ export default function LaboratoryUnified() {
                           className="pl-10"
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
                           <Label className="text-sm font-medium mb-2 block">Filter by Category</Label>
@@ -1699,7 +1699,7 @@ export default function LaboratoryUnified() {
                             </SelectContent>
                           </Select>
                         </div>
-                        
+
                         <div>
                           <Label className="text-sm font-medium mb-2 block">Quick Actions</Label>
                           <div className="flex gap-2">
@@ -1721,7 +1721,7 @@ export default function LaboratoryUnified() {
                               size="sm"
                               onClick={() => {
                                 const allTests = Object.values(groupedTests).flat();
-                                const unselectedTests = allTests.filter(test => 
+                                const unselectedTests = allTests.filter(test =>
                                   !field.value.some(selected => selected.id === test.id)
                                 );
                                 if (unselectedTests.length > 0) {
@@ -1735,9 +1735,9 @@ export default function LaboratoryUnified() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-xs text-gray-500 text-center">
-                        {selectedCategories.length === 0 
+                        {selectedCategories.length === 0
                           ? `Showing all ${testCategories.length} categories • ${labTests.length} total tests`
                           : `Showing ${selectedCategories[0]} category • ${Object.values(groupedTests).flat().length} tests`
                         }
@@ -1748,7 +1748,7 @@ export default function LaboratoryUnified() {
                     <div className="max-h-80 overflow-y-auto border rounded-lg p-4 space-y-3">
                       {Object.entries(groupedTests).map(([category, tests]) => (
                         <div key={category} className="space-y-2">
-                          <div 
+                          <div
                             className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded"
                             onClick={() => toggleCategoryCollapse(category)}
                           >
@@ -1769,7 +1769,7 @@ export default function LaboratoryUnified() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                const categoryTests = tests.filter(test => 
+                                const categoryTests = tests.filter(test =>
                                   !field.value.some(selected => selected.id === test.id)
                                 );
                                 if (categoryTests.length > 0) {
@@ -1780,7 +1780,7 @@ export default function LaboratoryUnified() {
                               Select All
                             </Button>
                           </div>
-                          
+
                           {!collapsedCategories[category] && (
                             <div className="pl-6 space-y-2">
                               {tests.map((test) => (
@@ -1813,7 +1813,7 @@ export default function LaboratoryUnified() {
                           )}
                         </div>
                       ))}
-                      
+
                       {Object.keys(groupedTests).length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                           <TestTube className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -1833,7 +1833,7 @@ export default function LaboratoryUnified() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Selected Tests Summary */}
                     {field.value.length > 0 && (
                       <div className="mt-3 p-3 bg-blue-50 rounded-lg">
@@ -1865,7 +1865,7 @@ export default function LaboratoryUnified() {
                         </div>
                       </div>
                     )}
-                    
+
                     <FormMessage />
                   </FormItem>
                 )}
@@ -1923,8 +1923,8 @@ export default function LaboratoryUnified() {
             <Form {...resultForm}>
               <form onSubmit={resultForm.handleSubmit(handleResultSubmit)} className="space-y-6">
                 {/* FBC Specific Fields */}
-                {selectedOrderItem.labTest?.name?.toLowerCase().includes('blood count') || 
-                 selectedOrderItem.labTest?.name?.toLowerCase().includes('fbc') ? (
+                {selectedOrderItem.labTest?.name?.toLowerCase().includes('blood count') ||
+                  selectedOrderItem.labTest?.name?.toLowerCase().includes('fbc') ? (
                   <div className="space-y-4">
                     <div className="bg-blue-50 p-4 rounded-lg">
                       <h4 className="font-semibold text-blue-900 mb-2">Full Blood Count (FBC) Results</h4>
@@ -1934,73 +1934,73 @@ export default function LaboratoryUnified() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* WBC */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">White Blood Cells (WBC)</label>
+                        <label htmlFor="wbc-value" className="text-sm font-medium">White Blood Cells (WBC)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="4.0-11.0" className="flex-1" />
-                          <Input placeholder="×10³/μL" className="w-24" disabled />
+                          <Input id="wbc-value" placeholder="4.0-11.0" className="flex-1" aria-label="WBC value" />
+                          <Input placeholder="×10³/μL" className="w-24" disabled aria-label="WBC unit" />
                         </div>
                       </div>
 
                       {/* RBC */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Red Blood Cells (RBC)</label>
+                        <label htmlFor="rbc-value" className="text-sm font-medium">Red Blood Cells (RBC)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="4.5-5.5" className="flex-1" />
-                          <Input placeholder="×10⁶/μL" className="w-24" disabled />
+                          <Input id="rbc-value" placeholder="4.5-5.5" className="flex-1" aria-label="RBC value" />
+                          <Input placeholder="×10⁶/μL" className="w-24" disabled aria-label="RBC unit" />
                         </div>
                       </div>
 
                       {/* Hemoglobin */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Hemoglobin (Hgb)</label>
+                        <label htmlFor="hgb-value" className="text-sm font-medium">Hemoglobin (Hgb)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="12.0-16.0" className="flex-1" />
-                          <Input placeholder="g/dL" className="w-20" disabled />
+                          <Input id="hgb-value" placeholder="12.0-16.0" className="flex-1" aria-label="Hemoglobin value" />
+                          <Input placeholder="g/dL" className="w-20" disabled aria-label="Hemoglobin unit" />
                         </div>
                       </div>
 
                       {/* Hematocrit */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Hematocrit (Hct)</label>
+                        <label htmlFor="hct-value" className="text-sm font-medium">Hematocrit (Hct)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="36-46" className="flex-1" />
-                          <Input placeholder="%" className="w-16" disabled />
+                          <Input id="hct-value" placeholder="36-46" className="flex-1" aria-label="Hematocrit value" />
+                          <Input placeholder="%" className="w-16" disabled aria-label="Hematocrit unit" />
                         </div>
                       </div>
 
                       {/* Platelets */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Platelets (PLT)</label>
+                        <label htmlFor="plt-value" className="text-sm font-medium">Platelets (PLT)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="150-450" className="flex-1" />
-                          <Input placeholder="×10³/μL" className="w-24" disabled />
+                          <Input id="plt-value" placeholder="150-450" className="flex-1" aria-label="Platelets value" />
+                          <Input placeholder="×10³/μL" className="w-24" disabled aria-label="Platelets unit" />
                         </div>
                       </div>
 
                       {/* MCV */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Mean Cell Volume (MCV)</label>
+                        <label htmlFor="mcv-value" className="text-sm font-medium">Mean Cell Volume (MCV)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="80-100" className="flex-1" />
-                          <Input placeholder="fL" className="w-16" disabled />
+                          <Input id="mcv-value" placeholder="80-100" className="flex-1" aria-label="MCV value" />
+                          <Input placeholder="fL" className="w-16" disabled aria-label="MCV unit" />
                         </div>
                       </div>
 
                       {/* MCH */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Mean Cell Hemoglobin (MCH)</label>
+                        <label htmlFor="mch-value" className="text-sm font-medium">Mean Cell Hemoglobin (MCH)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="27-32" className="flex-1" />
-                          <Input placeholder="pg" className="w-16" disabled />
+                          <Input id="mch-value" placeholder="27-32" className="flex-1" aria-label="MCH value" />
+                          <Input placeholder="pg" className="w-16" disabled aria-label="MCH unit" />
                         </div>
                       </div>
 
                       {/* MCHC */}
                       <div className="space-y-2">
-                        <label className="text-sm font-medium">Mean Cell Hemoglobin Concentration (MCHC)</label>
+                        <label htmlFor="mchc-value" className="text-sm font-medium">Mean Cell Hemoglobin Concentration (MCHC)</label>
                         <div className="flex gap-2">
-                          <Input placeholder="32-36" className="flex-1" />
-                          <Input placeholder="g/dL" className="w-20" disabled />
+                          <Input id="mchc-value" placeholder="32-36" className="flex-1" aria-label="MCHC value" />
+                          <Input placeholder="g/dL" className="w-20" disabled aria-label="MCHC unit" />
                         </div>
                       </div>
 
@@ -2155,6 +2155,207 @@ export default function LaboratoryUnified() {
               </form>
             </Form>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Order Details Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              Lab Order Details - Order #{selectedOrder?.id}
+            </DialogTitle>
+            <DialogDescription>
+              Complete information about this lab order
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Order Header */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Order ID</p>
+                  <p className="text-lg font-semibold">#{selectedOrder.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Status</p>
+                  <Badge className={
+                    selectedOrder.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      selectedOrder.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                        selectedOrder.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          'bg-gray-100 text-gray-800'
+                  }>
+                    {selectedOrder.status?.charAt(0).toUpperCase() + selectedOrder.status?.slice(1).replace('_', ' ')}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Priority</p>
+                  <Badge className={
+                    selectedOrder.priority === 'stat' ? 'bg-red-100 text-red-800 border-red-300' :
+                      selectedOrder.priority === 'urgent' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                        'bg-gray-100 text-gray-800 border-gray-300'
+                  }>
+                    {selectedOrder.priority?.toUpperCase()}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Order Date</p>
+                  <p className="font-medium">{selectedOrder.createdAt && format(new Date(selectedOrder.createdAt), 'PPp')}</p>
+                </div>
+              </div>
+
+              {/* Patient Information */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Patient Information
+                </h3>
+                <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Name</p>
+                    <p className="font-medium">{selectedOrder.patient?.firstName} {selectedOrder.patient?.lastName}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Date of Birth</p>
+                    <p className="font-medium">{selectedOrder.patient?.dateOfBirth && format(new Date(selectedOrder.patient.dateOfBirth), 'PP')}</p>
+                  </div>
+                  {selectedOrder.patient?.phone && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Phone</p>
+                      <p className="font-medium">{selectedOrder.patient.phone}</p>
+                    </div>
+                  )}
+                  {selectedOrder.patient?.email && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Email</p>
+                      <p className="font-medium">{selectedOrder.patient.email}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Ordered Tests */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <TestTube className="w-5 h-5" />
+                  Ordered Tests ({selectedOrder.items?.length || 0})
+                </h3>
+                <div className="space-y-2">
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((item: any) => (
+                      <div key={item.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <FlaskRound className="w-4 h-4 text-blue-600" />
+                              <p className="font-medium">{item.labTest?.name}</p>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Category: {item.labTest?.category}
+                            </p>
+                            {item.labTest?.referenceRange && (
+                              <p className="text-sm text-gray-600">
+                                Reference Range: {item.labTest.referenceRange}
+                              </p>
+                            )}
+                            {item.result && (
+                              <div className="mt-2 p-2 bg-green-50 rounded">
+                                <p className="text-sm font-medium text-green-900">
+                                  Result: {item.result} {item.units || ''}
+                                </p>
+                                {item.remarks && (
+                                  <p className="text-sm text-green-700 mt-1">
+                                    Remarks: {item.remarks}
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <Badge className={
+                            item.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              item.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                          }>
+                            {item.status || 'Pending'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 p-4 text-center">No tests ordered</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Clinical Notes */}
+              {selectedOrder.clinicalNotes && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Clinical Notes
+                  </h3>
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-gray-700">{selectedOrder.clinicalNotes}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnosis */}
+              {selectedOrder.diagnosis && (
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-lg">Diagnosis</h3>
+                  <div className="p-4 bg-purple-50 rounded-lg">
+                    <p className="text-sm text-gray-700">{selectedOrder.diagnosis}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Ordered By */}
+              <div className="space-y-2">
+                <h3 className="font-semibold text-lg">Order Information</h3>
+                <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Ordered By</p>
+                    <p className="font-medium">
+                      {selectedOrder.orderedByUser?.firstName} {selectedOrder.orderedByUser?.lastName}
+                      {selectedOrder.orderedByUser?.role && ` (${selectedOrder.orderedByUser.role})`}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Created At</p>
+                    <p className="font-medium">{selectedOrder.createdAt && format(new Date(selectedOrder.createdAt), 'PPp')}</p>
+                  </div>
+                  {selectedOrder.completedAt && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Completed At</p>
+                      <p className="font-medium">{format(new Date(selectedOrder.completedAt), 'PPp')}</p>
+                    </div>
+                  )}
+                  {selectedOrder.reviewedBy && (
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Reviewed By</p>
+                      <p className="font-medium">User #{selectedOrder.reviewedBy}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end space-x-2 pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => selectedOrder && handlePrintOrderWithLetterhead(selectedOrder)}
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Print
+            </Button>
+            <Button onClick={() => setShowViewDialog(false)}>
+              Close
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

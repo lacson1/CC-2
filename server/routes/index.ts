@@ -2,16 +2,19 @@ import type { Express } from "express";
 import { setupPatientRoutes } from "./patients";
 import { setupLaboratoryRoutes } from "./laboratory";
 import { setupPrescriptionRoutes } from "./prescriptions";
+import { setupPatientExtendedRoutes } from "./patient-extended";
 import publicApiRouter from "./public-api";
 import mobileApiRouter from "./mobile-api";
 import apiKeysRouter from "./api-keys";
 import apiDocsRouter from "./api-docs";
 import accessControlRouter from "./access-control";
 import organizationsRouter from "./organizations";
+import authRouter from "./auth";
+import healthRouter from "./health";
+import profileRouter from "./profile";
 import { setupTabConfigRoutes } from "./tab-configs";
 import { setupTabPresetRoutes } from "./tab-presets";
 // import { setupAppointmentRoutes } from "./appointments";
-// import { setupAuthRoutes } from "./auth";
 // import { setupAnalyticsRoutes } from "./analytics";
 // import { setupIntegrationRoutes } from "./integrations";
 // import { setupSuggestionRoutes } from "./suggestions";
@@ -27,6 +30,18 @@ import { setupTabPresetRoutes } from "./tab-presets";
 export function setupRoutes(app: Express): void {
   console.log("=== SETTING UP MODULAR ROUTES ===");
   
+  // Health check routes (for monitoring)
+  console.log("Setting up health check routes...");
+  app.use('/api/health', healthRouter);
+  
+  // Authentication routes (must be first for security)
+  console.log("Setting up authentication routes...");
+  app.use('/api/auth', authRouter);
+  
+  // Profile routes
+  console.log("Setting up profile routes...");
+  app.use('/api/profile', profileRouter);
+  
   // Core healthcare functionality - ONLY modules that exist
   console.log("Setting up patient routes...");
   const patientRouter = setupPatientRoutes();
@@ -39,6 +54,10 @@ export function setupRoutes(app: Express): void {
   console.log("Setting up prescription routes...");
   const prescriptionRouter = setupPrescriptionRoutes();
   app.use('/api', prescriptionRouter);
+  
+  console.log("Setting up patient extended routes (allergies, immunizations, imaging, procedures)...");
+  const patientExtendedRouter = setupPatientExtendedRoutes();
+  app.use('/api', patientExtendedRouter);
   
   // Public REST API routes
   console.log("Setting up public API routes...");
@@ -72,9 +91,8 @@ export function setupRoutes(app: Express): void {
   console.log("Setting up tab presets routes...");
   setupTabPresetRoutes(app);
   
-  // TODO: Add remaining modules as they are created:
+  // TODO: Add remaining modules as they are migrated from routes.ts:
   // setupAppointmentRoutes(app);
-  // setupAuthRoutes(app);
   // setupAnalyticsRoutes(app);
   // setupBillingRoutes(app);
   // setupIntegrationRoutes(app);

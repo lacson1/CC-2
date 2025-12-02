@@ -32,5 +32,7 @@ export function useRole() {
     isNurse: hasRole('nurse'),
     isPharmacist: hasRole('pharmacist'),
     isPhysiotherapist: hasRole('physiotherapist'),
+    isReceptionist: hasRole('receptionist'),
+    isFrontDesk: hasRole('receptionist'), // Alias for receptionist
   };
 }

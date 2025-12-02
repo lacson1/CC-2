@@ -96,6 +96,12 @@ export function setupTabConfigRoutes(app: Express) {
         return res.status(403).json({ error: 'Organization context required' });
       }
 
+      if (!userId) {
+        return res.status(403).json({ error: 'User context required' });
+      }
+
+      console.log('Creating tab with data:', JSON.stringify(req.body, null, 2));
+
       const validatedData = insertTabConfigSchema.parse(req.body);
 
       // Auto-assign IDs based on scope
@@ -107,12 +113,29 @@ export function setupTabConfigRoutes(app: Express) {
         isSystemDefault: false,
       };
 
+      console.log('Inserting tab data:', JSON.stringify(tabData, null, 2));
+
       const [newTab] = await db.insert(tabConfigs).values(tabData).returning();
 
+      console.log('Successfully created tab:', newTab);
+
       res.status(201).json(newTab);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating tab config:', error);
-      res.status(400).json({ error: 'Failed to create tab configuration' });
+      
+      // Return detailed error message for validation errors
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: 'Validation error', 
+          details: error.errors,
+          message: error.errors.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ')
+        });
+      }
+      
+      res.status(400).json({ 
+        error: error.message || 'Failed to create tab configuration',
+        details: error.toString()
+      });
     }
   });
 

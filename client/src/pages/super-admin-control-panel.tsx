@@ -296,37 +296,117 @@ export default function SuperAdminControlPanel() {
     }
   };
 
+  // Fetch active sessions
+  const { data: sessionsData, refetch: refetchSessions } = useQuery({
+    queryKey: ['/api/superadmin/sessions'],
+    enabled: false, // Only fetch when needed
+  });
+
+  // Fetch security policies
+  const { data: securityPolicies, refetch: refetchPolicies } = useQuery({
+    queryKey: ['/api/superadmin/security/policies'],
+    enabled: false,
+  });
+
+  // Fetch audit config
+  const { data: auditConfig, refetch: refetchAuditConfig } = useQuery({
+    queryKey: ['/api/superadmin/audit/config'],
+    enabled: false,
+  });
+
+  // Sessions modal state
+  const [showSessionsModal, setShowSessionsModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [securitySettings, setSecuritySettings] = useState({
+    sessionTimeoutMinutes: 30,
+    maxLoginAttempts: 5,
+    passwordPolicy: 'strong',
+    requireMFA: false,
+  });
+  const [auditSettings, setAuditSettings] = useState({
+    retentionDays: 90,
+    logLevel: 'detailed',
+  });
+
   // Security and monitoring handlers
-  const handleViewSessions = () => {
-    apiRequest('/api/superadmin/sessions', 'GET')
-      .then(() => {
-        toast({
-          title: "Session Monitor",
-          description: "Active user sessions interface would open here",
-        });
-      })
-      .catch(() => {
-        toast({
-          title: "Access Failed",
-          description: "Failed to access session monitoring",
-          variant: "destructive",
-        });
+  const handleViewSessions = async () => {
+    await refetchSessions();
+    setShowSessionsModal(true);
+  };
+
+  const handleSecuritySettings = async () => {
+    await refetchPolicies();
+    if (securityPolicies) {
+      setSecuritySettings(securityPolicies as any);
+    }
+    setShowSecurityModal(true);
+  };
+
+  const handleAuditConfiguration = async () => {
+    await refetchAuditConfig();
+    if (auditConfig) {
+      setAuditSettings(auditConfig as any);
+    }
+    setShowAuditModal(true);
+  };
+
+  // Update security policies mutation
+  const updateSecurityMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/superadmin/security/policies', 'PATCH', data),
+    onSuccess: () => {
+      toast({
+        title: "Security Policies Updated",
+        description: "Security settings have been updated successfully",
       });
-  };
+      setShowSecurityModal(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update security policies",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleSecuritySettings = () => {
-    toast({
-      title: "Security Configuration",
-      description: "Global security policy settings interface would open here",
-    });
-  };
+  // Update audit config mutation
+  const updateAuditMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/superadmin/audit/config', 'PATCH', data),
+    onSuccess: () => {
+      toast({
+        title: "Audit Configuration Updated",
+        description: "Audit settings have been updated successfully",
+      });
+      setShowAuditModal(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update audit configuration",
+        variant: "destructive",
+      });
+    },
+  });
 
-  const handleAuditConfiguration = () => {
-    toast({
-      title: "Audit Configuration",
-      description: "System-wide audit logging settings interface would open here",
-    });
-  };
+  // Force logout mutation
+  const forceLogoutMutation = useMutation({
+    mutationFn: (sessionId: string) => apiRequest(`/api/superadmin/sessions/${sessionId}`, 'DELETE'),
+    onSuccess: () => {
+      toast({
+        title: "Session Terminated",
+        description: "User session has been forcefully terminated",
+      });
+      refetchSessions();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to terminate session",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCreateBackup = () => {
     apiRequest('/api/superadmin/data/backup', 'POST', {
@@ -382,25 +462,37 @@ export default function SuperAdminControlPanel() {
     }
   };
 
+  // Activity and logs modal state
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showLogsModal, setShowLogsModal] = useState(false);
+
+  // Fetch activity data
+  const { data: activityData, refetch: refetchActivity } = useQuery({
+    queryKey: ['/api/superadmin/activity'],
+    enabled: false,
+  });
+
+  // Fetch logs data
+  const { data: logsData, refetch: refetchLogs } = useQuery({
+    queryKey: ['/api/superadmin/logs'],
+    enabled: false,
+  });
+
   const handleHealthDashboard = () => {
     toast({
       title: "System Health",
-      description: "System health monitoring is already displayed on this page",
+      description: "System health monitoring is displayed in the Monitoring tab",
     });
   };
 
-  const handleActivityMonitor = () => {
-    toast({
-      title: "Activity Monitor",
-      description: "User activity monitoring interface would open here",
-    });
+  const handleActivityMonitor = async () => {
+    await refetchActivity();
+    setShowActivityModal(true);
   };
 
-  const handleLogViewer = () => {
-    toast({
-      title: "Log Viewer",
-      description: "System log analysis interface would open here",
-    });
+  const handleLogViewer = async () => {
+    await refetchLogs();
+    setShowLogsModal(true);
   };
 
   // User management state
@@ -1556,6 +1648,328 @@ export default function SuperAdminControlPanel() {
               disabled={importDataMutation.isPending || exportDataMutation.isPending}
             >
               {dataModalType === 'import' ? 'Import Data' : 'Export Data'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Sessions Monitoring Modal */}
+      <Dialog open={showSessionsModal} onOpenChange={setShowSessionsModal}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Active User Sessions
+            </DialogTitle>
+            <DialogDescription>
+              Monitor and manage active user sessions across all organizations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[400px] overflow-y-auto space-y-3">
+            {(sessionsData as any)?.sessions?.map((session: any) => (
+              <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="font-medium">{session.username}</span>
+                    <Badge variant="outline">{session.role}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    IP: {session.ipAddress} • Duration: {session.sessionDuration}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Last activity: {new Date(session.lastActivity).toLocaleString()}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => forceLogoutMutation.mutate(session.id)}
+                  disabled={forceLogoutMutation.isPending}
+                >
+                  <UserX className="w-4 h-4 mr-1" />
+                  Force Logout
+                </Button>
+              </div>
+            )) || (
+              <div className="text-center py-8 text-muted-foreground">
+                No active sessions found
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => refetchSessions()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Security Settings Modal */}
+      <Dialog open={showSecurityModal} onOpenChange={setShowSecurityModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5" />
+              Security Policy Configuration
+            </DialogTitle>
+            <DialogDescription>
+              Configure global security settings for all organizations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Session Timeout</Label>
+              <div className="col-span-3 flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={securitySettings.sessionTimeoutMinutes}
+                  onChange={(e) => setSecuritySettings({
+                    ...securitySettings,
+                    sessionTimeoutMinutes: Number(e.target.value)
+                  })}
+                  className="w-20"
+                />
+                <span className="text-sm text-muted-foreground">minutes</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Max Login Attempts</Label>
+              <Input
+                type="number"
+                value={securitySettings.maxLoginAttempts}
+                onChange={(e) => setSecuritySettings({
+                  ...securitySettings,
+                  maxLoginAttempts: Number(e.target.value)
+                })}
+                className="col-span-3 w-20"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Password Policy</Label>
+              <Select 
+                value={securitySettings.passwordPolicy}
+                onValueChange={(value) => setSecuritySettings({
+                  ...securitySettings,
+                  passwordPolicy: value
+                })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic (8 characters)</SelectItem>
+                  <SelectItem value="strong">Strong (12 characters + symbols)</SelectItem>
+                  <SelectItem value="enterprise">Enterprise (16 characters + MFA)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Require MFA</Label>
+              <div className="col-span-3">
+                <Switch
+                  checked={securitySettings.requireMFA}
+                  onCheckedChange={(checked) => setSecuritySettings({
+                    ...securitySettings,
+                    requireMFA: checked
+                  })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSecurityModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => updateSecurityMutation.mutate(securitySettings)}
+              disabled={updateSecurityMutation.isPending}
+            >
+              {updateSecurityMutation.isPending ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Audit Configuration Modal */}
+      <Dialog open={showAuditModal} onOpenChange={setShowAuditModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Activity className="w-5 h-5" />
+              Audit Log Configuration
+            </DialogTitle>
+            <DialogDescription>
+              Configure system-wide audit logging settings
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Retention Period</Label>
+              <div className="col-span-3 flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={auditSettings.retentionDays}
+                  onChange={(e) => setAuditSettings({
+                    ...auditSettings,
+                    retentionDays: Number(e.target.value)
+                  })}
+                  className="w-20"
+                />
+                <span className="text-sm text-muted-foreground">days</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right">Log Level</Label>
+              <Select 
+                value={auditSettings.logLevel}
+                onValueChange={(value) => setAuditSettings({
+                  ...auditSettings,
+                  logLevel: value
+                })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="minimal">Minimal (login/logout only)</SelectItem>
+                  <SelectItem value="standard">Standard (critical actions)</SelectItem>
+                  <SelectItem value="detailed">Detailed (all actions)</SelectItem>
+                  <SelectItem value="debug">Debug (with request data)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <AlertTriangle className="w-4 h-4 inline mr-1" />
+                Audit logs older than the retention period will be automatically deleted during cleanup.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAuditModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => updateAuditMutation.mutate(auditSettings)}
+              disabled={updateAuditMutation.isPending}
+            >
+              {updateAuditMutation.isPending ? 'Saving...' : 'Save Configuration'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Monitor Modal */}
+      <Dialog open={showActivityModal} onOpenChange={setShowActivityModal}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              User Activity Monitor
+            </DialogTitle>
+            <DialogDescription>
+              Track user activity across all organizations
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[500px] overflow-y-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Action</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">User</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Details</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {(activityData as any)?.activities?.map((activity: any, index: number) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="px-4 py-2">
+                      <Badge variant="outline">{activity.action}</Badge>
+                    </td>
+                    <td className="px-4 py-2 text-sm">User #{activity.userId}</td>
+                    <td className="px-4 py-2 text-sm text-muted-foreground">
+                      {typeof activity.details === 'object' 
+                        ? JSON.stringify(activity.details).substring(0, 50) + '...'
+                        : activity.details || '-'}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-muted-foreground">
+                      {new Date(activity.timestamp).toLocaleString()}
+                    </td>
+                  </tr>
+                )) || (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8 text-muted-foreground">
+                      No activity data available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => refetchActivity()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Log Viewer Modal */}
+      <Dialog open={showLogsModal} onOpenChange={setShowLogsModal}>
+        <DialogContent className="sm:max-w-[900px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Server className="w-5 h-5" />
+              System Log Viewer
+            </DialogTitle>
+            <DialogDescription>
+              View and analyze system logs
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[500px] overflow-y-auto font-mono text-sm bg-gray-900 text-gray-100 rounded-lg p-4">
+            {(logsData as any)?.logs?.map((log: any, index: number) => (
+              <div key={index} className={`py-1 border-b border-gray-800 ${
+                log.level === 'error' ? 'text-red-400' :
+                log.level === 'warning' ? 'text-yellow-400' :
+                'text-green-400'
+              }`}>
+                <span className="text-gray-500">[{new Date(log.timestamp).toISOString()}]</span>
+                {' '}
+                <span className={`font-bold ${
+                  log.level === 'error' ? 'text-red-500' :
+                  log.level === 'warning' ? 'text-yellow-500' :
+                  'text-blue-500'
+                }`}>
+                  [{log.level?.toUpperCase() || 'INFO'}]
+                </span>
+                {' '}
+                <span>{log.action}</span>
+                {log.userId && <span className="text-gray-500"> (User #{log.userId})</span>}
+              </div>
+            )) || (
+              <div className="text-center py-8 text-gray-500">
+                No logs available
+              </div>
+            )}
+          </div>
+          <DialogFooter className="flex justify-between">
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-1" />
+                Filter
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-1" />
+                Export
+              </Button>
+            </div>
+            <Button variant="outline" onClick={() => refetchLogs()}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
             </Button>
           </DialogFooter>
         </DialogContent>

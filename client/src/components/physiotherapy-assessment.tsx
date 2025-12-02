@@ -48,7 +48,7 @@ export default function PhysiotherapyAssessment({ patientId, visitId }: Physioth
         title: "Success",
         description: "Physiotherapy assessment saved successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/patients', patientId, 'consultation-records'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/consultation-records`] });
       setAssessmentData({
         mobilityAssessment: '',
         rangeOfMotion: '',

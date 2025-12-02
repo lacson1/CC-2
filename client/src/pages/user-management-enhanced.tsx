@@ -11,7 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useToast } from "@/hooks/use-toast";
 import { User, InsertUser } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import { UserPlus, Edit, Trash2, Shield, UserX, Settings, Search, Grid3X3, List, Filter, X, Stethoscope, Pill, Heart, Activity } from "lucide-react";
+import { UserPlus, Edit, Trash2, Shield, UserX, Settings, Search, Grid3X3, List, Filter, X, Stethoscope, Pill, Heart, Activity, ClipboardList } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { StaffRegistrationModal } from "@/components/staff-registration-modal";
 import { OrganizationRegistrationModal } from "@/components/organization-registration-modal";
@@ -56,6 +56,14 @@ const USER_ROLES = [
     icon: Activity,
     description: "Physical therapy and rehabilitation",
     specialty: "Physical Therapy"
+  },
+  { 
+    value: "receptionist", 
+    label: "Receptionist", 
+    color: "bg-teal-100 text-teal-800", 
+    icon: ClipboardList,
+    description: "Patient registration and appointments",
+    specialty: "Front Desk"
   }
 ];
 
@@ -101,7 +109,12 @@ export default function UserManagementEnhanced() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (userData: InsertUser) => {
-      return apiRequest("/api/users", "POST", userData);
+      const response = await apiRequest("/api/users", "POST", userData);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || "Failed to create user");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

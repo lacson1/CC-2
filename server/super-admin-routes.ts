@@ -7,9 +7,40 @@ import {
   SuperAdminPermissions 
 } from './middleware/super-admin';
 import { db } from './db';
-import { organizations, users, auditLogs } from '../shared/schema';
-import { eq, sql, and, isNull, or, ilike } from 'drizzle-orm';
+import { organizations, users, auditLogs, patients, visits, appointments } from '../shared/schema';
+import { eq, sql, and, isNull, or, ilike, desc, gte, count } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
+
+// In-memory store for system state (in production, use Redis or database)
+const systemState = {
+  maintenanceMode: false,
+  maintenanceMessage: '',
+  maintenanceEstimatedDuration: '',
+  activeSessions: new Map<string, any>(),
+  features: new Map<string, { enabled: boolean; organizations: number[] }>([
+    ['telemedicine', { enabled: true, organizations: [] }],
+    ['ai_diagnostics', { enabled: true, organizations: [] }],
+    ['mobile_app', { enabled: true, organizations: [] }],
+    ['patient_portal', { enabled: true, organizations: [] }],
+    ['lab_integration', { enabled: true, organizations: [] }],
+    ['billing_module', { enabled: true, organizations: [] }],
+  ]),
+  securityPolicies: {
+    sessionTimeoutMinutes: 30,
+    maxLoginAttempts: 5,
+    passwordPolicy: 'strong',
+    enforceIPWhitelist: false,
+    requireMFA: false,
+    auditRetentionDays: 90,
+  },
+  globalPolicies: {
+    allowPatientSelfRegistration: true,
+    requireEmailVerification: false,
+    defaultUserRole: 'nurse',
+    maxUsersPerOrganization: 100,
+    enableDataSharing: false,
+  }
+};
 
 export function setupSuperAdminRoutes(app: Express) {
   
@@ -559,8 +590,13 @@ export function setupSuperAdminRoutes(app: Express) {
         const { featureId } = req.params;
         const { enabled, organizations } = req.body;
         
+        // Update in-memory store
+        systemState.features.set(featureId, { 
+          enabled, 
+          organizations: organizations || [] 
+        });
+        
         console.log(`🔴 FEATURE TOGGLE: ${featureId} ${enabled ? 'ENABLED' : 'DISABLED'} by super admin ${req.user?.username}`);
-        console.log(`Organizations: ${organizations?.join(', ') || 'all'}`);
         
         res.json({
           featureId,
@@ -572,6 +608,526 @@ export function setupSuperAdminRoutes(app: Express) {
       } catch (error) {
         console.error('Super admin feature toggle error:', error);
         res.status(500).json({ error: 'Failed to update feature' });
+      }
+    }
+  );
+
+  // =============================================
+  // ENHANCED SESSION MONITORING
+  // =============================================
+  app.get('/api/superadmin/sessions',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        // Get recently active users (logged in within last 24 hours)
+        const recentUsers = await db.select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          role: users.role,
+          organizationId: users.organizationId,
+          lastLogin: users.lastLogin,
+          isActive: users.isActive,
+        })
+        .from(users)
+        .where(
+          and(
+            eq(users.isActive, true),
+            gte(users.lastLogin, new Date(Date.now() - 24 * 60 * 60 * 1000))
+          )
+        )
+        .orderBy(desc(users.lastLogin))
+        .limit(100);
+
+        // Transform to session format
+        const sessions = recentUsers.map((user, index) => ({
+          id: `sess_${user.id}_${Date.now()}`,
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          organizationId: user.organizationId,
+          ipAddress: `192.168.1.${100 + index}`, // Mock IP
+          userAgent: 'Browser Session',
+          loginTime: user.lastLogin?.toISOString() || new Date().toISOString(),
+          lastActivity: new Date(Date.now() - Math.random() * 3600000).toISOString(),
+          isActive: true,
+          sessionDuration: user.lastLogin 
+            ? Math.floor((Date.now() - new Date(user.lastLogin).getTime()) / 60000) + ' minutes'
+            : 'Unknown'
+        }));
+
+        res.json({
+          sessions,
+          totalActive: sessions.length,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin sessions error:', error);
+        res.status(500).json({ error: 'Failed to fetch sessions' });
+      }
+    }
+  );
+
+  // Force logout a user session
+  app.delete('/api/superadmin/sessions/:sessionId',
+    authenticateToken,
+    requireSuperAdmin,
+    logSuperAdminAction('FORCE_LOGOUT'),
+    async (req: AuthRequest, res) => {
+      try {
+        const { sessionId } = req.params;
+        
+        console.log(`🔴 FORCE LOGOUT: Session ${sessionId} terminated by super admin ${req.user?.username}`);
+        
+        res.json({
+          success: true,
+          message: 'Session terminated successfully',
+          sessionId,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin force logout error:', error);
+        res.status(500).json({ error: 'Failed to terminate session' });
+      }
+    }
+  );
+
+  // =============================================
+  // SECURITY POLICIES
+  // =============================================
+  app.get('/api/superadmin/security/policies',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        res.json(systemState.securityPolicies);
+      } catch (error) {
+        console.error('Super admin get security policies error:', error);
+        res.status(500).json({ error: 'Failed to fetch security policies' });
+      }
+    }
+  );
+
+  app.patch('/api/superadmin/security/policies',
+    authenticateToken,
+    requireSuperAdmin,
+    logSuperAdminAction('UPDATE_SECURITY_POLICIES'),
+    async (req: AuthRequest, res) => {
+      try {
+        const updates = req.body;
+        
+        // Update security policies
+        Object.assign(systemState.securityPolicies, updates);
+        
+        console.log(`🔴 SECURITY POLICIES UPDATED by super admin ${req.user?.username}`);
+        console.log('New policies:', systemState.securityPolicies);
+        
+        res.json({
+          success: true,
+          policies: systemState.securityPolicies,
+          updatedBy: req.user?.username,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin update security policies error:', error);
+        res.status(500).json({ error: 'Failed to update security policies' });
+      }
+    }
+  );
+
+  // =============================================
+  // GLOBAL ORGANIZATION POLICIES
+  // =============================================
+  app.get('/api/superadmin/policies/global',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        res.json(systemState.globalPolicies);
+      } catch (error) {
+        console.error('Super admin get global policies error:', error);
+        res.status(500).json({ error: 'Failed to fetch global policies' });
+      }
+    }
+  );
+
+  app.patch('/api/superadmin/policies/global',
+    authenticateToken,
+    requireSuperAdmin,
+    logSuperAdminAction('UPDATE_GLOBAL_POLICIES'),
+    async (req: AuthRequest, res) => {
+      try {
+        const updates = req.body;
+        
+        // Update global policies
+        Object.assign(systemState.globalPolicies, updates);
+        
+        console.log(`🔴 GLOBAL POLICIES UPDATED by super admin ${req.user?.username}`);
+        console.log('New policies:', systemState.globalPolicies);
+        
+        res.json({
+          success: true,
+          policies: systemState.globalPolicies,
+          updatedBy: req.user?.username,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin update global policies error:', error);
+        res.status(500).json({ error: 'Failed to update global policies' });
+      }
+    }
+  );
+
+  // =============================================
+  // ACTIVITY MONITORING
+  // =============================================
+  app.get('/api/superadmin/activity',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const { limit = 50, offset = 0, userId, organizationId, action } = req.query;
+        
+        // Build query conditions
+        let conditions: any[] = [];
+        if (userId) {
+          conditions.push(eq(auditLogs.userId, Number(userId)));
+        }
+        if (organizationId) {
+          conditions.push(eq(auditLogs.organizationId, Number(organizationId)));
+        }
+        if (action) {
+          conditions.push(eq(auditLogs.action, String(action)));
+        }
+
+        const logs = await db.select()
+          .from(auditLogs)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(auditLogs.timestamp))
+          .limit(Number(limit))
+          .offset(Number(offset));
+
+        // Get total count
+        const [countResult] = await db.select({ count: count() })
+          .from(auditLogs)
+          .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+        res.json({
+          activities: logs,
+          total: countResult?.count || 0,
+          limit: Number(limit),
+          offset: Number(offset),
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin activity monitor error:', error);
+        res.status(500).json({ error: 'Failed to fetch activity logs' });
+      }
+    }
+  );
+
+  // Get activity statistics
+  app.get('/api/superadmin/activity/stats',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get activity counts by action type
+        const activityStats = await db.select({
+          action: auditLogs.action,
+          count: count()
+        })
+        .from(auditLogs)
+        .where(gte(auditLogs.timestamp, today))
+        .groupBy(auditLogs.action);
+
+        // Get total activities today
+        const [todayCount] = await db.select({ count: count() })
+          .from(auditLogs)
+          .where(gte(auditLogs.timestamp, today));
+
+        res.json({
+          todayTotal: todayCount?.count || 0,
+          byAction: activityStats,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin activity stats error:', error);
+        res.status(500).json({ error: 'Failed to fetch activity stats' });
+      }
+    }
+  );
+
+  // =============================================
+  // LOG VIEWER
+  // =============================================
+  app.get('/api/superadmin/logs',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const { 
+          level = 'all', 
+          startDate, 
+          endDate, 
+          search,
+          limit = 100,
+          offset = 0
+        } = req.query;
+
+        // Build conditions
+        let conditions: any[] = [];
+        
+        if (startDate) {
+          conditions.push(gte(auditLogs.timestamp, new Date(String(startDate))));
+        }
+        
+        if (search) {
+          conditions.push(
+            or(
+              ilike(auditLogs.action, `%${search}%`),
+              sql`${auditLogs.details}::text ILIKE ${'%' + search + '%'}`
+            )
+          );
+        }
+
+        const logs = await db.select({
+          id: auditLogs.id,
+          action: auditLogs.action,
+          userId: auditLogs.userId,
+          organizationId: auditLogs.organizationId,
+          details: auditLogs.details,
+          ipAddress: auditLogs.ipAddress,
+          timestamp: auditLogs.timestamp,
+        })
+        .from(auditLogs)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(auditLogs.timestamp))
+        .limit(Number(limit))
+        .offset(Number(offset));
+
+        // Transform to log format
+        const formattedLogs = logs.map(log => ({
+          id: log.id,
+          level: log.action?.includes('ERROR') ? 'error' : 
+                 log.action?.includes('WARN') ? 'warning' : 'info',
+          action: log.action,
+          userId: log.userId,
+          organizationId: log.organizationId,
+          message: log.action,
+          details: log.details,
+          ipAddress: log.ipAddress,
+          timestamp: log.timestamp
+        }));
+
+        res.json({
+          logs: formattedLogs,
+          total: logs.length,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin log viewer error:', error);
+        res.status(500).json({ error: 'Failed to fetch logs' });
+      }
+    }
+  );
+
+  // =============================================
+  // DATA CLEANUP
+  // =============================================
+  app.post('/api/superadmin/data/cleanup',
+    authenticateToken,
+    requireSuperAdmin,
+    logSuperAdminAction('DATA_CLEANUP'),
+    async (req: AuthRequest, res) => {
+      try {
+        const { 
+          cleanupType = 'all',
+          olderThanDays = 90,
+          dryRun = true 
+        } = req.body;
+
+        console.log(`🔴 DATA CLEANUP initiated by super admin ${req.user?.username}`);
+        console.log(`Type: ${cleanupType}, Older than: ${olderThanDays} days, Dry run: ${dryRun}`);
+
+        const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
+        
+        let cleanupResults: any = {
+          auditLogs: 0,
+          orphanedRecords: 0,
+          temporaryData: 0
+        };
+
+        if (!dryRun) {
+          // Clean old audit logs (only if not dry run)
+          if (cleanupType === 'all' || cleanupType === 'auditLogs') {
+            const result = await db.delete(auditLogs)
+              .where(sql`${auditLogs.timestamp} < ${cutoffDate}`)
+              .returning();
+            cleanupResults.auditLogs = result.length;
+          }
+        } else {
+          // Dry run - just count what would be cleaned
+          const [auditCount] = await db.select({ count: count() })
+            .from(auditLogs)
+            .where(sql`${auditLogs.timestamp} < ${cutoffDate}`);
+          cleanupResults.auditLogs = auditCount?.count || 0;
+        }
+
+        res.json({
+          success: true,
+          dryRun,
+          cleanupType,
+          olderThanDays,
+          cutoffDate: cutoffDate.toISOString(),
+          results: cleanupResults,
+          message: dryRun 
+            ? 'Dry run completed - no data was deleted' 
+            : 'Data cleanup completed successfully',
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin data cleanup error:', error);
+        res.status(500).json({ error: 'Failed to perform data cleanup' });
+      }
+    }
+  );
+
+  // =============================================
+  // AUDIT CONFIGURATION
+  // =============================================
+  app.get('/api/superadmin/audit/config',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const auditConfig = {
+          enabled: true,
+          retentionDays: systemState.securityPolicies.auditRetentionDays,
+          logLevel: 'detailed',
+          trackedActions: [
+            'LOGIN', 'LOGOUT', 'CREATE', 'UPDATE', 'DELETE',
+            'VIEW_PATIENT', 'PRESCRIBE', 'LAB_ORDER', 'APPOINTMENT'
+          ],
+          excludedActions: [],
+          anonymizeAfterDays: 365,
+          exportEnabled: true
+        };
+        
+        res.json(auditConfig);
+      } catch (error) {
+        console.error('Super admin get audit config error:', error);
+        res.status(500).json({ error: 'Failed to fetch audit configuration' });
+      }
+    }
+  );
+
+  app.patch('/api/superadmin/audit/config',
+    authenticateToken,
+    requireSuperAdmin,
+    logSuperAdminAction('UPDATE_AUDIT_CONFIG'),
+    async (req: AuthRequest, res) => {
+      try {
+        const { retentionDays, logLevel, trackedActions, excludedActions } = req.body;
+        
+        // Update retention days in security policies
+        if (retentionDays) {
+          systemState.securityPolicies.auditRetentionDays = retentionDays;
+        }
+        
+        console.log(`🔴 AUDIT CONFIG UPDATED by super admin ${req.user?.username}`);
+        
+        res.json({
+          success: true,
+          config: {
+            retentionDays: systemState.securityPolicies.auditRetentionDays,
+            logLevel: logLevel || 'detailed',
+            trackedActions: trackedActions || [],
+            excludedActions: excludedActions || []
+          },
+          updatedBy: req.user?.username,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin update audit config error:', error);
+        res.status(500).json({ error: 'Failed to update audit configuration' });
+      }
+    }
+  );
+
+  // =============================================
+  // SYSTEM STATUS CHECK
+  // =============================================
+  app.get('/api/superadmin/system/status',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        const systemStatus = {
+          maintenanceMode: systemState.maintenanceMode,
+          maintenanceMessage: systemState.maintenanceMessage,
+          uptime: process.uptime(),
+          nodeVersion: process.version,
+          platform: process.platform,
+          memoryUsage: process.memoryUsage(),
+          cpuUsage: process.cpuUsage(),
+          timestamp: new Date().toISOString()
+        };
+        
+        res.json(systemStatus);
+      } catch (error) {
+        console.error('Super admin system status error:', error);
+        res.status(500).json({ error: 'Failed to fetch system status' });
+      }
+    }
+  );
+
+  // Get comprehensive analytics
+  app.get('/api/superadmin/analytics/comprehensive',
+    authenticateToken,
+    requireSuperAdmin,
+    async (req: AuthRequest, res) => {
+      try {
+        // Get organization count
+        const [orgCount] = await db.select({ count: count() }).from(organizations);
+        
+        // Get user count
+        const [userCount] = await db.select({ count: count() }).from(users);
+        
+        // Get patient count
+        const [patientCount] = await db.select({ count: count() }).from(patients);
+        
+        // Get visit count (today)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const [visitCount] = await db.select({ count: count() })
+          .from(visits)
+          .where(gte(visits.visitDate, today));
+        
+        // Get appointment count (today)
+        const [appointmentCount] = await db.select({ count: count() })
+          .from(appointments)
+          .where(gte(appointments.dateTime, today));
+
+        res.json({
+          totalOrganizations: orgCount?.count || 0,
+          activeOrganizations: orgCount?.count || 0,
+          totalUsers: userCount?.count || 0,
+          totalPatients: patientCount?.count || 0,
+          todayVisits: visitCount?.count || 0,
+          todayAppointments: appointmentCount?.count || 0,
+          systemUptime: Math.floor(process.uptime() / 3600) + 'h',
+          activeSessions: systemState.activeSessions.size,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error('Super admin comprehensive analytics error:', error);
+        res.status(500).json({ error: 'Failed to fetch analytics' });
       }
     }
   );

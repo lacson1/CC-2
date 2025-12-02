@@ -19,6 +19,9 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'Monitor': LucideIcons.Monitor,
   'Heart': LucideIcons.Heart,
   'User': LucideIcons.User,
+  'AlertTriangle': LucideIcons.AlertTriangle,
+  'Scan': LucideIcons.Scan,
+  'Scissors': LucideIcons.Scissors,
 };
 
 export function getTabIcon(iconName: string): React.ComponentType<{ className?: string }> {

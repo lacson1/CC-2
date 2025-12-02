@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { TestTube, ChevronDown, ChevronRight, Calendar, User, Clock } from "lucide-react";
+import { TestTube, ChevronDown, ChevronRight, Calendar, User, Clock, Printer } from "lucide-react";
 import { format } from "date-fns";
 
 interface LabOrdersListProps {
@@ -38,17 +38,19 @@ export default function LabOrdersList({ patientId, showPendingOnly, showAll }: L
     queryKey: [`/api/patients/${patientId}/lab-orders`]
   });
 
-  // Filter lab orders based on props
-  const filteredLabOrders = labOrders.filter(order => {
-    if (showPendingOnly) {
-      return order.status === 'pending' || order.status === 'in_progress';
-    }
-    if (showAll) {
-      return true; // Show all orders
-    }
-    // Default behavior - show recent orders
-    return true;
-  });
+  // Filter lab orders based on props and sort by date (newest first)
+  const filteredLabOrders = labOrders
+    .filter(order => {
+      if (showPendingOnly) {
+        return order.status === 'pending' || order.status === 'in_progress';
+      }
+      if (showAll) {
+        return true; // Show all orders
+      }
+      // Default behavior - show recent orders
+      return true;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const toggleOrder = (orderId: number) => {
     setExpandedOrders(prev =>
@@ -139,6 +141,12 @@ function LabOrderCard({ order, isExpanded, onToggle }: LabOrderCardProps) {
     console.warn(`Could not load items for lab order ${order.id}:`, error);
   }
 
+  // Handler to print this specific lab order
+  const handlePrintOrder = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent toggling the collapsible
+    window.open(`/api/lab-orders/${order.id}/print`, '_blank');
+  };
+
   const getOrderStatus = () => {
     if (orderItems.length === 0) return 'pending';
     if (completedTests.length === orderItems.length) return 'completed';
@@ -197,6 +205,18 @@ function LabOrderCard({ order, isExpanded, onToggle }: LabOrderCardProps) {
               </div>
             ) : (
               <div className="space-y-3 mt-4">
+                {/* Print button for this specific lab order */}
+                <div className="flex justify-end mb-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrintOrder}
+                    className="gap-2"
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print This Order
+                  </Button>
+                </div>
                 {orderItems.map(item => (
                   <div
                     key={item.id}

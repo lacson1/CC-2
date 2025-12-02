@@ -309,7 +309,7 @@ export function setupLaboratoryRoutes(): Router {
         orderedBy: labOrders.orderedBy,
         status: labOrders.status,
         priority: labOrders.priority,
-        notes: labOrders.notes,
+        notes: labOrders.clinicalNotes,
         organizationId: labOrders.organizationId,
         totalCost: labOrders.totalCost,
         specimenCollectedAt: labOrders.specimenCollectedAt,

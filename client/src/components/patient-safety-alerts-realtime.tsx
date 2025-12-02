@@ -31,11 +31,12 @@ export function PatientSafetyAlertsRealtime({
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch real-time safety alerts from backend
+  // Fetch safety alerts from backend
   const { data: alertsData, isLoading, refetch } = useQuery({
     queryKey: [`/api/patients/${patientId}/safety-alerts`],
     enabled: !!patientId,
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchInterval: 5 * 60 * 1000, // Reduced from 30s to 5 minutes
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
     retry: 1, // Reduce retries to prevent excessive errors
   });
 
@@ -229,11 +230,12 @@ export function QuickSafetyIndicator({
 }: { 
   patientId: number;
 }) {
-  // Fetch real-time safety alerts for indicator
+  // Fetch safety alerts for indicator
   const { data: alerts = [] } = useQuery({
     queryKey: [`/api/patients/${patientId}/safety-alerts`],
     enabled: !!patientId,
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes (shared with main alerts)
   });
 
   const criticalAlerts = Array.isArray(alerts) ? alerts.filter((alert: SafetyAlert) => alert.type === 'critical') : [];

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,16 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Pill, Plus, Package, AlertTriangle, Search, Filter, X, SortAsc, SortDesc, Calendar, TrendingUp, BarChart3, Grid3X3, List, RefreshCw, Download, Upload } from "lucide-react";
+import { Pill, Plus, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useRole } from "@/components/role-guard";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertMedicineSchema, type Medicine, type InsertMedicine } from "@shared/schema";
+import { insertMedicineSchema, type Medicine } from "@shared/schema";
 import { PharmacyActivityLog } from "@/components/pharmacy-activity-log";
 import { EnhancedMedicationReview } from "@/components/enhanced-medication-review";
 import { PrescriptionQueue } from "@/components/prescription-queue";
@@ -37,7 +35,7 @@ export default function Pharmacy() {
   const { user } = useRole();
   const [editingQuantity, setEditingQuantity] = useState<{ [key: number]: string }>({});
   const [showAddDialog, setShowAddDialog] = useState(false);
-  
+
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [stockFilter, setStockFilter] = useState<string>("all");
@@ -120,8 +118,8 @@ export default function Pharmacy() {
   });
 
   const handleUpdateQuantity = (id: number) => {
-    const newQuantity = parseInt(editingQuantity[id]);
-    if (isNaN(newQuantity) || newQuantity < 0) {
+    const newQuantity = Number.parseInt(editingQuantity[id], 10);
+    if (Number.isNaN(newQuantity) || newQuantity < 0) {
       toast({
         title: "Error",
         description: "Please enter a valid quantity.",
@@ -183,9 +181,8 @@ export default function Pharmacy() {
                 </div>
                 <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Medicine
+                    <Button title="Add Medicine">
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
@@ -208,7 +205,7 @@ export default function Pharmacy() {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={form.control}
                             name="unit"
@@ -351,7 +348,7 @@ export default function Pharmacy() {
                                 </div>
                                 {getStockStatus(medicine)}
                               </div>
-                              
+
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div>
                                   <span className="text-slate-500">Quantity:</span>
@@ -387,9 +384,9 @@ export default function Pharmacy() {
                                   <Button size="sm" onClick={() => handleUpdateQuantity(medicine.id)}>
                                     Save
                                   </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline" 
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
                                     onClick={() => setEditingQuantity(prev => {
                                       const updated = { ...prev };
                                       delete updated[medicine.id];
@@ -400,8 +397,8 @@ export default function Pharmacy() {
                                   </Button>
                                 </div>
                               ) : (
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="outline"
                                   onClick={() => setEditingQuantity(prev => ({ ...prev, [medicine.id]: medicine.quantity.toString() }))}
                                 >
@@ -419,9 +416,8 @@ export default function Pharmacy() {
                     <Package className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No medicines found</h3>
                     <p className="text-gray-500 mb-4">Start by adding your first medicine to the inventory.</p>
-                    <Button onClick={() => setShowAddDialog(true)}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Medicine
+                    <Button onClick={() => setShowAddDialog(true)} title="Add Medicine">
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                 )}

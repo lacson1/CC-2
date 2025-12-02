@@ -3,20 +3,40 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger, 
-  DropdownMenuSeparator 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Plus, 
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import {
+  Calendar,
+  Clock,
+  User,
+  Plus,
   RefreshCw as Refresh,
   Edit,
   XCircle as Cancel,
@@ -26,7 +46,8 @@ import {
   Phone,
   MapPin,
   AlertCircle,
-  FileText
+  FileText,
+  CalendarIcon
 } from 'lucide-react';
 
 interface Appointment {
@@ -47,15 +68,27 @@ interface Appointment {
 }
 
 interface PatientAppointmentsTabProps {
-  patientId: number;
+  readonly patientId: number;
 }
 
 export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProps) {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [isSchedulingDialogOpen, setIsSchedulingDialogOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState('');
+  const [selectedDoctor, setSelectedDoctor] = useState('');
+  const [appointmentType, setAppointmentType] = useState('');
+  const [duration, setDuration] = useState('30');
+  const [notes, setNotes] = useState('');
+  const [priority, setPriority] = useState('medium');
 
   const { data: appointments = [], isLoading, isError, refetch } = useQuery<Appointment[]>({
     queryKey: [`/api/patients/${patientId}/appointments`],
+  });
+
+  const { data: doctors = [] } = useQuery<Array<{ id: number; name: string; username: string }>>({
+    queryKey: ['/api/users/doctors'],
   });
 
   const updateStatusMutation = useMutation({
@@ -77,6 +110,82 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
       });
     }
   });
+
+  const createAppointmentMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest('/api/appointments', 'POST', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/appointments`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/appointments'] });
+      setIsSchedulingDialogOpen(false);
+      resetForm();
+      toast({
+        title: "Success",
+        description: "Appointment scheduled successfully",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to schedule appointment",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const resetForm = () => {
+    setSelectedDate(undefined);
+    setSelectedTime('');
+    setSelectedDoctor('');
+    setAppointmentType('');
+    setDuration('30');
+    setNotes('');
+    setPriority('medium');
+  };
+
+  const handleCreateAppointment = () => {
+    if (!selectedDate || !selectedTime || !selectedDoctor || !appointmentType) {
+      const missingFields = [];
+      if (!selectedDate) missingFields.push('Date');
+      if (!selectedTime) missingFields.push('Time');
+      if (!selectedDoctor) missingFields.push('Healthcare Provider');
+      if (!appointmentType) missingFields.push('Appointment Type');
+
+      toast({
+        title: 'Validation Error',
+        description: `Please fill in: ${missingFields.join(', ')}`,
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    const appointmentDate = format(selectedDate, 'yyyy-MM-dd');
+
+    const appointmentData = {
+      patientId: patientId,
+      doctorId: Number.parseInt(selectedDoctor),
+      appointmentDate: appointmentDate,
+      appointmentTime: selectedTime,
+      duration: Number.parseInt(duration),
+      type: appointmentType,
+      status: 'scheduled',
+      priority: priority,
+      notes: notes || undefined
+    };
+
+    createAppointmentMutation.mutate(appointmentData);
+  };
+
+  // Generate time slots
+  const timeSlots = [];
+  for (let hour = 8; hour <= 17; hour++) {
+    for (let minute = 0; minute < 60; minute += 30) {
+      if (hour === 17 && minute > 0) break;
+      const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      timeSlots.push(timeString);
+    }
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -141,9 +250,9 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
@@ -151,7 +260,7 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
 
   const formatTime = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':');
-    const hour = parseInt(hours);
+    const hour = Number.parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
     return `${hour12}:${minutes} ${ampm}`;
@@ -174,8 +283,8 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
   };
 
   const renderAppointmentCard = (appointment: Appointment) => (
-    <div 
-      key={appointment.id} 
+    <div
+      key={appointment.id}
       className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
       data-testid={`appointment-card-${appointment.id}`}
     >
@@ -185,13 +294,13 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
             <div className="flex items-center gap-2">
               {getTypeIcon(appointment.type)}
               <h4 className="font-semibold text-slate-800 text-lg capitalize">
-                {appointment.type.replace(/-/g, ' ')}
+                {appointment.type.replaceAll('-', ' ')}
               </h4>
             </div>
             {getStatusBadge(appointment.status)}
             {appointment.priority !== 'medium' && getPriorityBadge(appointment.priority)}
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
             <div className="bg-blue-50 p-3 rounded-md">
               <span className="font-medium text-slate-700 flex items-center gap-1">
@@ -219,7 +328,7 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
               <p className="text-slate-800 mt-1">{appointment.doctorName || 'Not assigned'}</p>
             </div>
           </div>
-          
+
           {appointment.notes && (
             <div className="mt-4 p-3 bg-yellow-50 rounded-md border border-yellow-100">
               <span className="font-medium text-slate-700 flex items-center gap-2">
@@ -229,7 +338,7 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
               <p className="text-slate-800 mt-2">{appointment.notes}</p>
             </div>
           )}
-          
+
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
             <div className="flex items-center space-x-4 text-xs text-slate-500">
               <div className="flex items-center gap-1">
@@ -239,9 +348,9 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
             </div>
             <div className="flex items-center gap-2">
               {appointment.status === 'scheduled' && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="text-green-600 hover:text-green-800 border-green-200"
                   onClick={() => handleCheckIn(appointment.id)}
                   data-testid={`button-checkin-${appointment.id}`}
@@ -251,9 +360,9 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
                 </Button>
               )}
               {appointment.status === 'in-progress' && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="text-emerald-600 hover:text-emerald-800 border-emerald-200"
                   onClick={() => handleComplete(appointment.id)}
                   data-testid={`button-complete-${appointment.id}`}
@@ -280,14 +389,14 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
                   <DropdownMenuSeparator />
                   {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
                     <>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => handleMarkNoShow(appointment.id)}
                         data-testid={`menu-noshow-${appointment.id}`}
                       >
                         <AlertCircle className="w-3 h-3 mr-2 text-orange-600" />
                         Mark No-Show
                       </DropdownMenuItem>
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         onClick={() => handleCancel(appointment.id)}
                         className="text-red-600"
                         data-testid={`menu-cancel-${appointment.id}`}
@@ -333,7 +442,11 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
         <h3 className="text-lg font-medium text-gray-700 mb-2">{msg.title}</h3>
         <p className="text-sm text-gray-500 mb-4">{msg.description}</p>
         {type === 'upcoming' && (
-          <Button className="bg-blue-600 hover:bg-blue-700" data-testid="button-schedule-first-appointment">
+          <Button
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setIsSchedulingDialogOpen(true)}
+            data-testid="button-schedule-first-appointment"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Schedule First Appointment
           </Button>
@@ -354,7 +467,7 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
     return (
       <div className="flex flex-col items-center justify-center py-8 space-y-4">
         <div className="text-red-500">Failed to load appointments</div>
-        <Button 
+        <Button
           onClick={() => refetch()}
           variant="outline"
           size="sm"
@@ -367,78 +480,237 @@ export function PatientAppointmentsTab({ patientId }: PatientAppointmentsTabProp
   }
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <div className="flex items-center justify-between mb-4">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg">
-          <TabsTrigger 
-            value="upcoming" 
-            className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
-            data-testid="tab-upcoming-appointments"
-          >
-            <Calendar className="w-4 h-4" />
-            Upcoming ({upcomingAppointments.length})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="past" 
-            className="flex items-center gap-2 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-700 data-[state=active]:border-gray-200"
-            data-testid="tab-past-appointments"
-          >
-            <Clock className="w-4 h-4" />
-            Past ({pastAppointments.length})
-          </TabsTrigger>
-          <TabsTrigger 
-            value="cancelled" 
-            className="flex items-center gap-2 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:border-red-200"
-            data-testid="tab-cancelled-appointments"
-          >
-            <Cancel className="w-4 h-4" />
-            Cancelled ({cancelledAppointments.length})
-          </TabsTrigger>
-        </TabsList>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => refetch()}
-            data-testid="button-refresh-appointments"
-          >
-            <Refresh className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
-          <Button 
-            size="sm" 
-            className="bg-blue-600 hover:bg-blue-700"
-            data-testid="button-new-appointment"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Appointment
-          </Button>
+    <>
+      <Dialog open={isSchedulingDialogOpen} onOpenChange={setIsSchedulingDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Schedule New Appointment</DialogTitle>
+            <DialogDescription>
+              Schedule a new appointment for this patient
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            {/* Healthcare Provider */}
+            <div className="grid gap-2">
+              <Label htmlFor="doctor">Healthcare Provider *</Label>
+              <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                <SelectTrigger id="doctor">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  {doctors.map((doctor: any) => (
+                    <SelectItem key={doctor.id} value={doctor.id.toString()}>
+                      {doctor.name || doctor.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Date */}
+            <div className="grid gap-2">
+              <Label>Appointment Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "justify-start text-left font-normal",
+                      !selectedDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {selectedDate ? format(selectedDate, "PPP") : "Select date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarComponent
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {/* Time and Duration */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="time">Time *</Label>
+                <Select value={selectedTime} onValueChange={setSelectedTime}>
+                  <SelectTrigger id="time">
+                    <SelectValue placeholder="Select time" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeSlots.map((time) => (
+                      <SelectItem key={time} value={time}>
+                        {time}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="duration">Duration (minutes)</Label>
+                <Select value={duration} onValueChange={setDuration}>
+                  <SelectTrigger id="duration">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="45">45 minutes</SelectItem>
+                    <SelectItem value="60">60 minutes</SelectItem>
+                    <SelectItem value="90">90 minutes</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Type and Priority */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="type">Appointment Type *</Label>
+                <Select value={appointmentType} onValueChange={setAppointmentType}>
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="consultation">General Consultation</SelectItem>
+                    <SelectItem value="follow-up">Follow-up</SelectItem>
+                    <SelectItem value="emergency">Emergency</SelectItem>
+                    <SelectItem value="procedure">Procedure</SelectItem>
+                    <SelectItem value="check-up">Check-up</SelectItem>
+                    <SelectItem value="telemedicine">Telemedicine</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="priority">Priority</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger id="priority">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="grid gap-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Add any additional notes..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsSchedulingDialogOpen(false);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateAppointment}
+              disabled={createAppointmentMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {createAppointmentMutation.isPending ? 'Scheduling...' : 'Schedule Appointment'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList className="grid w-full grid-cols-3 max-w-lg">
+            <TabsTrigger
+              value="upcoming"
+              className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
+              data-testid="tab-upcoming-appointments"
+            >
+              <Calendar className="w-4 h-4" />
+              Upcoming ({upcomingAppointments.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="past"
+              className="flex items-center gap-2 data-[state=active]:bg-gray-50 data-[state=active]:text-gray-700 data-[state=active]:border-gray-200"
+              data-testid="tab-past-appointments"
+            >
+              <Clock className="w-4 h-4" />
+              Past ({pastAppointments.length})
+            </TabsTrigger>
+            <TabsTrigger
+              value="cancelled"
+              className="flex items-center gap-2 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 data-[state=active]:border-red-200"
+              data-testid="tab-cancelled-appointments"
+            >
+              <Cancel className="w-4 h-4" />
+              Cancelled ({cancelledAppointments.length})
+            </TabsTrigger>
+          </TabsList>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              data-testid="button-refresh-appointments"
+            >
+              <Refresh className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={() => setIsSchedulingDialogOpen(true)}
+              data-testid="button-new-appointment"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <TabsContent value="upcoming" className="space-y-4">
-        {upcomingAppointments.length > 0 ? (
-          <div className="grid gap-4">
-            {upcomingAppointments.map(renderAppointmentCard)}
-          </div>
-        ) : renderEmptyState('upcoming')}
-      </TabsContent>
+        <TabsContent value="upcoming" className="space-y-4">
+          {upcomingAppointments.length > 0 ? (
+            <div className="grid gap-4">
+              {upcomingAppointments.map(renderAppointmentCard)}
+            </div>
+          ) : renderEmptyState('upcoming')}
+        </TabsContent>
 
-      <TabsContent value="past" className="space-y-4">
-        {pastAppointments.length > 0 ? (
-          <div className="grid gap-4">
-            {pastAppointments.map(renderAppointmentCard)}
-          </div>
-        ) : renderEmptyState('past')}
-      </TabsContent>
+        <TabsContent value="past" className="space-y-4">
+          {pastAppointments.length > 0 ? (
+            <div className="grid gap-4">
+              {pastAppointments.map(renderAppointmentCard)}
+            </div>
+          ) : renderEmptyState('past')}
+        </TabsContent>
 
-      <TabsContent value="cancelled" className="space-y-4">
-        {cancelledAppointments.length > 0 ? (
-          <div className="grid gap-4">
-            {cancelledAppointments.map(renderAppointmentCard)}
-          </div>
-        ) : renderEmptyState('cancelled')}
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="cancelled" className="space-y-4">
+          {cancelledAppointments.length > 0 ? (
+            <div className="grid gap-4">
+              {cancelledAppointments.map(renderAppointmentCard)}
+            </div>
+          ) : renderEmptyState('cancelled')}
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }

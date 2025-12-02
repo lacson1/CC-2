@@ -97,10 +97,7 @@ export default function InsuranceManagement({ patientId }: InsuranceManagementPr
   // Create insurance mutation
   const createInsuranceMutation = useMutation({
     mutationFn: (data: InsuranceFormData) =>
-      apiRequest(`/api/patients/${patientId}/insurance`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      }),
+      apiRequest(`/api/patients/${patientId}/insurance`, 'POST', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/insurance`] });
       toast({
@@ -122,10 +119,7 @@ export default function InsuranceManagement({ patientId }: InsuranceManagementPr
   // Update insurance mutation
   const updateInsuranceMutation = useMutation({
     mutationFn: (data: InsuranceFormData) =>
-      apiRequest(`/api/patients/${patientId}/insurance/${editingInsurance?.id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(data)
-      }),
+      apiRequest(`/api/patients/${patientId}/insurance/${editingInsurance?.id}`, 'PATCH', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/insurance`] });
       toast({
@@ -148,9 +142,7 @@ export default function InsuranceManagement({ patientId }: InsuranceManagementPr
   // Delete insurance mutation
   const deleteInsuranceMutation = useMutation({
     mutationFn: (insuranceId: number) =>
-      apiRequest(`/api/patients/${patientId}/insurance/${insuranceId}`, {
-        method: 'DELETE'
-      }),
+      apiRequest(`/api/patients/${patientId}/insurance/${insuranceId}`, 'DELETE'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/insurance`] });
       toast({

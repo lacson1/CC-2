@@ -83,6 +83,260 @@ const MEDICAL_TEMPLATES = {
 
 // Specialized Care Templates
 const CARE_TEMPLATES = {
+  ophthalmologyExam: {
+    name: "Ophthalmology Examination",
+    description: "Comprehensive eye examination for ophthalmology consultations",
+    specialistRole: "ophthalmologist",
+    fields: [
+      // Chief Complaint
+      { id: "opth_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Vision problems, eye pain, or other concerns" },
+      { id: "opth_duration", label: "Duration of Symptoms", type: "text", required: true, section: "Presenting Complaint", placeholder: "How long symptoms present" },
+      
+      // Visual Acuity
+      { id: "opth_va_right_uncorrected", label: "Right Eye VA (Uncorrected)", type: "text", required: true, section: "Visual Acuity", placeholder: "e.g., 6/12" },
+      { id: "opth_va_left_uncorrected", label: "Left Eye VA (Uncorrected)", type: "text", required: true, section: "Visual Acuity", placeholder: "e.g., 6/12" },
+      { id: "opth_va_right_corrected", label: "Right Eye VA (Corrected)", type: "text", required: false, section: "Visual Acuity", placeholder: "With glasses/lenses" },
+      { id: "opth_va_left_corrected", label: "Left Eye VA (Corrected)", type: "text", required: false, section: "Visual Acuity", placeholder: "With glasses/lenses" },
+      { id: "opth_pinhole", label: "Pinhole Improvement", type: "select", required: false, section: "Visual Acuity", options: ["Yes", "No", "Not tested"] },
+      
+      // Refraction
+      { id: "opth_refraction_right", label: "Right Eye Refraction", type: "text", required: false, section: "Refraction", placeholder: "Sphere/Cylinder x Axis" },
+      { id: "opth_refraction_left", label: "Left Eye Refraction", type: "text", required: false, section: "Refraction", placeholder: "Sphere/Cylinder x Axis" },
+      { id: "opth_pupillary_distance", label: "Pupillary Distance (mm)", type: "number", required: false, section: "Refraction", validation: { min: 50, max: 80 } },
+      
+      // Anterior Segment
+      { id: "opth_iop_right", label: "Right Eye IOP (mmHg)", type: "number", required: true, section: "Intraocular Pressure", validation: { min: 5, max: 60 } },
+      { id: "opth_iop_left", label: "Left Eye IOP (mmHg)", type: "number", required: true, section: "Intraocular Pressure", validation: { min: 5, max: 60 } },
+      { id: "opth_iop_method", label: "IOP Measurement Method", type: "select", required: true, section: "Intraocular Pressure", options: ["Goldmann", "Non-contact", "Icare", "Palpation"] },
+      { id: "opth_pupils", label: "Pupil Assessment", type: "select", required: true, section: "Anterior Segment", options: ["PERRL", "Abnormal - see notes", "Afferent defect present", "Irregular"] },
+      { id: "opth_lids", label: "Eyelids", type: "select", required: false, section: "Anterior Segment", options: ["Normal", "Ptosis", "Entropion", "Ectropion", "Chalazion", "Other - see notes"] },
+      { id: "opth_conjunctiva", label: "Conjunctiva", type: "select", required: false, section: "Anterior Segment", options: ["Normal", "Injection", "Discharge", "Chemosis", "Pterygium", "Other"] },
+      { id: "opth_cornea", label: "Cornea", type: "select", required: false, section: "Anterior Segment", options: ["Clear", "Opacity", "Ulcer", "Dystrophy", "Scar", "Other"] },
+      { id: "opth_anterior_chamber", label: "Anterior Chamber", type: "select", required: false, section: "Anterior Segment", options: ["Deep and quiet", "Shallow", "Cells present", "Flare present", "Hypopyon"] },
+      { id: "opth_lens", label: "Lens Status", type: "select", required: true, section: "Anterior Segment", options: ["Clear", "Early cataract", "Mature cataract", "Pseudophakia", "Aphakia"] },
+      
+      // Posterior Segment
+      { id: "opth_optic_disc_right", label: "Right Optic Disc", type: "textarea", required: true, section: "Posterior Segment", placeholder: "Cup-to-disc ratio, color, margins" },
+      { id: "opth_optic_disc_left", label: "Left Optic Disc", type: "textarea", required: true, section: "Posterior Segment", placeholder: "Cup-to-disc ratio, color, margins" },
+      { id: "opth_macula", label: "Macula", type: "select", required: true, section: "Posterior Segment", options: ["Normal foveal reflex", "Drusen", "AMD changes", "Edema", "Hole", "Scar"] },
+      { id: "opth_vessels", label: "Retinal Vessels", type: "select", required: false, section: "Posterior Segment", options: ["Normal caliber", "Attenuated", "AV nipping", "Neovascularization", "Hemorrhages"] },
+      { id: "opth_peripheral_retina", label: "Peripheral Retina", type: "select", required: false, section: "Posterior Segment", options: ["Flat - no breaks", "Lattice degeneration", "Holes/tears", "Detachment", "Unable to visualize"] },
+      { id: "opth_vitreous", label: "Vitreous", type: "select", required: false, section: "Posterior Segment", options: ["Clear", "PVD", "Floaters", "Hemorrhage", "Inflammation"] },
+      
+      // Diagnosis and Plan
+      { id: "opth_diagnosis", label: "Diagnosis", type: "textarea", required: true, section: "Assessment", placeholder: "Primary and secondary diagnoses" },
+      { id: "opth_investigations", label: "Investigations Ordered", type: "checkbox", section: "Assessment", options: ["OCT", "Visual Field", "Fundus Photography", "FFA", "B-scan", "Corneal Topography", "Pachymetry"] },
+      { id: "opth_treatment", label: "Treatment Plan", type: "textarea", required: true, section: "Management", placeholder: "Medications, procedures, surgery plans" },
+      { id: "opth_followup", label: "Follow-up", type: "text", required: true, section: "Management", placeholder: "When to return" }
+    ]
+  },
+  
+  entExamination: {
+    name: "ENT Examination",
+    description: "Comprehensive ear, nose, and throat examination",
+    specialistRole: "ent_specialist",
+    fields: [
+      // Chief Complaint
+      { id: "ent_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Hearing loss, nasal congestion, sore throat, etc." },
+      { id: "ent_duration", label: "Duration", type: "text", required: true, section: "Presenting Complaint", placeholder: "How long symptoms present" },
+      { id: "ent_associated_symptoms", label: "Associated Symptoms", type: "checkbox", section: "Presenting Complaint", options: ["Fever", "Headache", "Facial pain", "Dizziness", "Tinnitus", "Voice changes", "Dysphagia", "Neck swelling"] },
+      
+      // Ear Examination
+      { id: "ent_ear_symptoms", label: "Ear Symptoms", type: "checkbox", section: "Ear Examination", options: ["Hearing loss", "Otalgia", "Otorrhea", "Tinnitus", "Vertigo", "Aural fullness"] },
+      { id: "ent_right_ear_canal", label: "Right External Canal", type: "select", required: true, section: "Ear Examination", options: ["Normal", "Wax impaction", "Otitis externa", "Foreign body", "Stenosis"] },
+      { id: "ent_left_ear_canal", label: "Left External Canal", type: "select", required: true, section: "Ear Examination", options: ["Normal", "Wax impaction", "Otitis externa", "Foreign body", "Stenosis"] },
+      { id: "ent_right_tympanic_membrane", label: "Right Tympanic Membrane", type: "select", required: true, section: "Ear Examination", options: ["Normal", "Retracted", "Bulging", "Perforation", "Effusion", "Cholesteatoma signs"] },
+      { id: "ent_left_tympanic_membrane", label: "Left Tympanic Membrane", type: "select", required: true, section: "Ear Examination", options: ["Normal", "Retracted", "Bulging", "Perforation", "Effusion", "Cholesteatoma signs"] },
+      { id: "ent_tuning_fork", label: "Tuning Fork Tests", type: "textarea", required: false, section: "Ear Examination", placeholder: "Weber/Rinne results" },
+      
+      // Nose Examination
+      { id: "ent_nasal_symptoms", label: "Nasal Symptoms", type: "checkbox", section: "Nose Examination", options: ["Congestion", "Rhinorrhea", "Epistaxis", "Hyposmia", "Post-nasal drip", "Sneezing"] },
+      { id: "ent_external_nose", label: "External Nose", type: "select", required: false, section: "Nose Examination", options: ["Normal", "Deformity", "Swelling", "Skin changes"] },
+      { id: "ent_nasal_septum", label: "Nasal Septum", type: "select", required: true, section: "Nose Examination", options: ["Midline", "Deviation left", "Deviation right", "Perforation", "Spur"] },
+      { id: "ent_turbinates", label: "Turbinates", type: "select", required: true, section: "Nose Examination", options: ["Normal", "Hypertrophied", "Atrophic", "Pale/allergic"] },
+      { id: "ent_nasal_mucosa", label: "Nasal Mucosa", type: "select", required: true, section: "Nose Examination", options: ["Normal pink", "Pale/boggy", "Erythematous", "Purulent discharge"] },
+      { id: "ent_polyps", label: "Polyps", type: "select", required: false, section: "Nose Examination", options: ["None", "Present right", "Present left", "Bilateral"] },
+      
+      // Throat Examination
+      { id: "ent_throat_symptoms", label: "Throat Symptoms", type: "checkbox", section: "Throat Examination", options: ["Sore throat", "Dysphagia", "Odynophagia", "Globus", "Voice change", "Cough"] },
+      { id: "ent_oral_cavity", label: "Oral Cavity", type: "select", required: false, section: "Throat Examination", options: ["Normal", "Ulcers", "Leukoplakia", "Mass", "Other - see notes"] },
+      { id: "ent_tonsils", label: "Tonsils", type: "select", required: true, section: "Throat Examination", options: ["Normal", "Enlarged", "Cryptic", "Exudate", "Absent (tonsillectomy)"] },
+      { id: "ent_pharynx", label: "Pharynx", type: "select", required: true, section: "Throat Examination", options: ["Normal", "Erythematous", "Post-nasal drip visible", "Granular", "Mass"] },
+      { id: "ent_larynx", label: "Laryngoscopy Findings", type: "textarea", required: false, section: "Throat Examination", placeholder: "Vocal cords, laryngeal structures" },
+      
+      // Neck Examination
+      { id: "ent_lymph_nodes", label: "Cervical Lymph Nodes", type: "select", required: true, section: "Neck Examination", options: ["Not palpable", "Palpable benign", "Suspicious - see notes"] },
+      { id: "ent_thyroid", label: "Thyroid", type: "select", required: false, section: "Neck Examination", options: ["Normal", "Enlarged", "Nodule palpable", "Tender"] },
+      { id: "ent_salivary_glands", label: "Salivary Glands", type: "select", required: false, section: "Neck Examination", options: ["Normal", "Parotid enlargement", "Submandibular enlargement", "Tender"] },
+      
+      // Assessment
+      { id: "ent_diagnosis", label: "Diagnosis", type: "textarea", required: true, section: "Assessment", placeholder: "Primary and secondary diagnoses" },
+      { id: "ent_investigations", label: "Investigations Ordered", type: "checkbox", section: "Assessment", options: ["Audiometry", "Tympanometry", "CT Sinuses", "CT Temporal Bone", "MRI", "Nasal endoscopy", "Sleep study"] },
+      { id: "ent_treatment", label: "Treatment Plan", type: "textarea", required: true, section: "Management", placeholder: "Medications, procedures, surgery plans" },
+      { id: "ent_followup", label: "Follow-up", type: "text", required: true, section: "Management", placeholder: "When to return" }
+    ]
+  },
+  
+  pediatricAssessment: {
+    name: "Pediatric Assessment",
+    description: "Comprehensive pediatric examination for children",
+    specialistRole: "pediatrician",
+    fields: [
+      // Demographics & History
+      { id: "ped_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Main concern or reason for visit" },
+      { id: "ped_birth_history", label: "Birth History", type: "select", required: true, section: "History", options: ["Term - normal delivery", "Term - C-section", "Preterm", "NICU admission", "Birth complications"] },
+      { id: "ped_feeding", label: "Feeding Method", type: "select", required: true, section: "History", options: ["Breastfed", "Formula fed", "Mixed feeding", "Solid foods started", "Self-feeding"] },
+      { id: "ped_immunizations", label: "Immunization Status", type: "select", required: true, section: "History", options: ["Up to date", "Behind schedule", "Catch-up needed", "Refused by parent"] },
+      { id: "ped_developmental_concerns", label: "Developmental Concerns", type: "checkbox", section: "History", options: ["None", "Motor delay", "Speech delay", "Social delay", "Cognitive concerns", "Behavioral issues"] },
+      
+      // Growth Parameters
+      { id: "ped_weight", label: "Weight (kg)", type: "number", required: true, section: "Growth", validation: { min: 0.5, max: 150 } },
+      { id: "ped_height", label: "Height/Length (cm)", type: "number", required: true, section: "Growth", validation: { min: 30, max: 200 } },
+      { id: "ped_head_circumference", label: "Head Circumference (cm)", type: "number", required: false, section: "Growth", validation: { min: 25, max: 60 } },
+      { id: "ped_weight_percentile", label: "Weight Percentile", type: "text", required: false, section: "Growth", placeholder: "e.g., 50th percentile" },
+      { id: "ped_height_percentile", label: "Height Percentile", type: "text", required: false, section: "Growth", placeholder: "e.g., 50th percentile" },
+      { id: "ped_bmi_percentile", label: "BMI Percentile", type: "text", required: false, section: "Growth", placeholder: "For children >2 years" },
+      
+      // Vital Signs
+      { id: "ped_temperature", label: "Temperature (°C)", type: "number", required: true, section: "Vital Signs", validation: { min: 34, max: 42 } },
+      { id: "ped_heart_rate", label: "Heart Rate (bpm)", type: "number", required: true, section: "Vital Signs", validation: { min: 40, max: 220 } },
+      { id: "ped_respiratory_rate", label: "Respiratory Rate", type: "number", required: true, section: "Vital Signs", validation: { min: 8, max: 80 } },
+      { id: "ped_bp", label: "Blood Pressure", type: "text", required: false, section: "Vital Signs", placeholder: "If age appropriate" },
+      { id: "ped_spo2", label: "Oxygen Saturation (%)", type: "number", required: false, section: "Vital Signs", validation: { min: 70, max: 100 } },
+      
+      // Physical Examination
+      { id: "ped_general_appearance", label: "General Appearance", type: "select", required: true, section: "Physical Examination", options: ["Well-appearing", "Ill-appearing", "Toxic-appearing", "In distress", "Irritable", "Lethargic"] },
+      { id: "ped_hydration", label: "Hydration Status", type: "select", required: true, section: "Physical Examination", options: ["Well hydrated", "Mild dehydration", "Moderate dehydration", "Severe dehydration"] },
+      { id: "ped_fontanelle", label: "Fontanelle (if applicable)", type: "select", required: false, section: "Physical Examination", options: ["Soft flat", "Bulging", "Sunken", "Closed", "N/A"] },
+      { id: "ped_ears", label: "Ears", type: "select", required: false, section: "Physical Examination", options: ["Normal bilateral", "Right AOM", "Left AOM", "Bilateral AOM", "OME present"] },
+      { id: "ped_throat", label: "Throat", type: "select", required: false, section: "Physical Examination", options: ["Normal", "Pharyngitis", "Tonsillar enlargement", "Exudate present"] },
+      { id: "ped_lungs", label: "Lungs", type: "select", required: true, section: "Physical Examination", options: ["Clear bilateral", "Wheezing", "Crackles", "Decreased breath sounds", "Stridor"] },
+      { id: "ped_heart", label: "Heart", type: "select", required: true, section: "Physical Examination", options: ["Regular rate rhythm no murmur", "Murmur present", "Irregular rhythm", "Tachycardia"] },
+      { id: "ped_abdomen", label: "Abdomen", type: "select", required: true, section: "Physical Examination", options: ["Soft non-tender", "Distended", "Tender", "Hepatomegaly", "Splenomegaly", "Mass palpable"] },
+      { id: "ped_skin", label: "Skin", type: "select", required: false, section: "Physical Examination", options: ["Normal", "Rash present", "Eczema", "Petechiae", "Jaundice", "Cyanosis"] },
+      { id: "ped_neurological", label: "Neurological", type: "select", required: false, section: "Physical Examination", options: ["Age appropriate", "Hypotonic", "Hypertonic", "Asymmetric findings", "Concerns noted"] },
+      
+      // Developmental Assessment
+      { id: "ped_gross_motor", label: "Gross Motor", type: "select", required: false, section: "Development", options: ["Age appropriate", "Advanced", "Delayed", "Not assessed"] },
+      { id: "ped_fine_motor", label: "Fine Motor", type: "select", required: false, section: "Development", options: ["Age appropriate", "Advanced", "Delayed", "Not assessed"] },
+      { id: "ped_language", label: "Language", type: "select", required: false, section: "Development", options: ["Age appropriate", "Advanced", "Delayed", "Not assessed"] },
+      { id: "ped_social", label: "Social/Emotional", type: "select", required: false, section: "Development", options: ["Age appropriate", "Concerns noted", "Not assessed"] },
+      
+      // Assessment & Plan
+      { id: "ped_diagnosis", label: "Diagnosis", type: "textarea", required: true, section: "Assessment", placeholder: "Primary and secondary diagnoses" },
+      { id: "ped_treatment", label: "Treatment Plan", type: "textarea", required: true, section: "Management", placeholder: "Medications, interventions, advice" },
+      { id: "ped_parent_education", label: "Parent Education Provided", type: "checkbox", section: "Management", options: ["Feeding advice", "Fever management", "Red flag symptoms", "Medication administration", "Follow-up signs", "Developmental activities"] },
+      { id: "ped_referrals", label: "Referrals", type: "checkbox", section: "Management", options: ["None needed", "Specialist", "Allied health", "Early intervention", "Hospital admission"] },
+      { id: "ped_followup", label: "Follow-up", type: "text", required: true, section: "Management", placeholder: "When to return" }
+    ]
+  },
+  
+  psychiatricEvaluation: {
+    name: "Psychiatric Evaluation",
+    description: "Comprehensive psychiatric assessment form",
+    specialistRole: "psychiatrist",
+    fields: [
+      // Presenting Problem
+      { id: "psych_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Problem", placeholder: "Primary reason for consultation in patient's words" },
+      { id: "psych_referral_source", label: "Referral Source", type: "select", required: true, section: "Presenting Problem", options: ["Self", "GP/Family Doctor", "Other specialist", "Emergency department", "Court/Legal", "Family member", "School/Workplace"] },
+      { id: "psych_history_present_illness", label: "History of Present Illness", type: "textarea", required: true, section: "Presenting Problem", placeholder: "Detailed chronological account of current symptoms" },
+      
+      // Past Psychiatric History
+      { id: "psych_previous_diagnosis", label: "Previous Psychiatric Diagnoses", type: "textarea", required: false, section: "Psychiatric History", placeholder: "List all known diagnoses" },
+      { id: "psych_hospitalizations", label: "Psychiatric Hospitalizations", type: "select", required: true, section: "Psychiatric History", options: ["None", "One", "Two to five", "More than five"] },
+      { id: "psych_previous_treatment", label: "Previous Treatments", type: "checkbox", section: "Psychiatric History", options: ["Outpatient therapy", "Inpatient", "Day program", "ECT", "TMS", "Ketamine", "None"] },
+      { id: "psych_medications_tried", label: "Previous Psychiatric Medications", type: "textarea", required: false, section: "Psychiatric History", placeholder: "List medications tried and response" },
+      { id: "psych_suicide_attempts", label: "History of Suicide Attempts", type: "select", required: true, section: "Psychiatric History", options: ["None", "One", "Two to five", "More than five", "Chronic ideation without attempts"] },
+      { id: "psych_self_harm", label: "History of Self-Harm", type: "select", required: true, section: "Psychiatric History", options: ["None", "Past only", "Current", "Chronic"] },
+      
+      // Substance Use
+      { id: "psych_alcohol", label: "Alcohol Use", type: "select", required: true, section: "Substance Use", options: ["None", "Social/occasional", "Regular use", "Problem drinking", "In recovery", "Dependence"] },
+      { id: "psych_tobacco", label: "Tobacco Use", type: "select", required: true, section: "Substance Use", options: ["Never", "Former", "Current", "Vaping only"] },
+      { id: "psych_cannabis", label: "Cannabis Use", type: "select", required: true, section: "Substance Use", options: ["Never", "Past only", "Occasional", "Regular", "Daily"] },
+      { id: "psych_other_substances", label: "Other Substances", type: "checkbox", section: "Substance Use", options: ["None", "Opioids", "Stimulants", "Benzodiazepines", "Hallucinogens", "Other"] },
+      
+      // Social History
+      { id: "psych_living_situation", label: "Living Situation", type: "select", required: true, section: "Social History", options: ["Alone", "With family", "With roommates", "Homeless", "Shelter", "Supportive housing", "Group home"] },
+      { id: "psych_employment", label: "Employment Status", type: "select", required: true, section: "Social History", options: ["Employed full-time", "Employed part-time", "Unemployed", "Disabled", "Student", "Retired", "Homemaker"] },
+      { id: "psych_relationships", label: "Relationship Status", type: "select", required: true, section: "Social History", options: ["Single", "In relationship", "Married", "Separated", "Divorced", "Widowed"] },
+      { id: "psych_support_system", label: "Support System", type: "select", required: true, section: "Social History", options: ["Strong", "Moderate", "Limited", "None", "Conflictual"] },
+      { id: "psych_legal_issues", label: "Legal Issues", type: "select", required: false, section: "Social History", options: ["None", "Current charges", "On probation/parole", "Past only"] },
+      
+      // Mental Status Examination
+      { id: "psych_appearance", label: "Appearance", type: "select", required: true, section: "Mental Status Exam", options: ["Well-groomed", "Disheveled", "Bizarre dress", "Poor hygiene", "Age appropriate"] },
+      { id: "psych_behavior", label: "Behavior", type: "select", required: true, section: "Mental Status Exam", options: ["Cooperative", "Guarded", "Agitated", "Withdrawn", "Hostile", "Bizarre movements"] },
+      { id: "psych_speech", label: "Speech", type: "select", required: true, section: "Mental Status Exam", options: ["Normal rate and tone", "Pressured", "Slow", "Monotone", "Loud", "Soft", "Mute"] },
+      { id: "psych_mood", label: "Mood (Patient's Words)", type: "text", required: true, section: "Mental Status Exam", placeholder: "Patient's description of their mood" },
+      { id: "psych_affect", label: "Affect", type: "select", required: true, section: "Mental Status Exam", options: ["Euthymic", "Depressed", "Anxious", "Irritable", "Flat", "Labile", "Euphoric", "Incongruent"] },
+      { id: "psych_thought_process", label: "Thought Process", type: "select", required: true, section: "Mental Status Exam", options: ["Linear goal-directed", "Circumstantial", "Tangential", "Flight of ideas", "Loose associations", "Thought blocking"] },
+      { id: "psych_thought_content", label: "Thought Content", type: "checkbox", section: "Mental Status Exam", options: ["No abnormality", "Suicidal ideation", "Homicidal ideation", "Delusions", "Obsessions", "Paranoia", "Ideas of reference"] },
+      { id: "psych_perceptions", label: "Perceptions", type: "checkbox", section: "Mental Status Exam", options: ["No abnormality", "Auditory hallucinations", "Visual hallucinations", "Tactile hallucinations", "Illusions"] },
+      { id: "psych_cognition", label: "Cognition", type: "select", required: true, section: "Mental Status Exam", options: ["Intact", "Impaired attention", "Impaired memory", "Disoriented", "Formal testing needed"] },
+      { id: "psych_insight", label: "Insight", type: "select", required: true, section: "Mental Status Exam", options: ["Good", "Fair", "Limited", "Poor", "Absent"] },
+      { id: "psych_judgment", label: "Judgment", type: "select", required: true, section: "Mental Status Exam", options: ["Good", "Fair", "Limited", "Poor", "Impaired"] },
+      
+      // Risk Assessment
+      { id: "psych_current_si", label: "Current Suicidal Ideation", type: "select", required: true, section: "Risk Assessment", options: ["None", "Passive (wish to be dead)", "Active without plan", "Active with plan", "With intent"] },
+      { id: "psych_current_hi", label: "Current Homicidal Ideation", type: "select", required: true, section: "Risk Assessment", options: ["None", "Non-specific anger", "Directed without plan", "Directed with plan"] },
+      { id: "psych_safety_plan", label: "Safety Plan", type: "select", required: true, section: "Risk Assessment", options: ["In place", "Developed today", "Needs to be created", "Patient declined"] },
+      { id: "psych_risk_level", label: "Overall Risk Level", type: "select", required: true, section: "Risk Assessment", options: ["Low", "Low-moderate", "Moderate", "Moderate-high", "High", "Imminent"] },
+      
+      // Assessment & Plan
+      { id: "psych_diagnosis", label: "Diagnoses (DSM-5)", type: "textarea", required: true, section: "Assessment", placeholder: "Primary and differential diagnoses" },
+      { id: "psych_treatment_plan", label: "Treatment Plan", type: "textarea", required: true, section: "Treatment", placeholder: "Pharmacotherapy, psychotherapy, other interventions" },
+      { id: "psych_disposition", label: "Disposition", type: "select", required: true, section: "Treatment", options: ["Outpatient follow-up", "Intensive outpatient", "Partial hospitalization", "Voluntary admission", "Involuntary hold", "ER evaluation"] },
+      { id: "psych_followup", label: "Follow-up", type: "text", required: true, section: "Treatment", placeholder: "Next appointment date and recommendations" }
+    ]
+  },
+  
+  cardiologyConsult: {
+    name: "Cardiology Consultation",
+    description: "Comprehensive cardiovascular assessment",
+    specialistRole: "cardiologist",
+    fields: [
+      // Presenting Problem
+      { id: "cardio_complaint", label: "Chief Complaint", type: "textarea", required: true, section: "Presenting Complaint", placeholder: "Main cardiovascular concern" },
+      { id: "cardio_symptoms", label: "Cardiovascular Symptoms", type: "checkbox", section: "Presenting Complaint", options: ["Chest pain", "Dyspnea", "Palpitations", "Syncope", "Pre-syncope", "Edema", "Fatigue", "Orthopnea", "PND"] },
+      { id: "cardio_symptom_duration", label: "Duration of Symptoms", type: "text", required: true, section: "Presenting Complaint", placeholder: "How long symptoms present" },
+      
+      // Cardiac History
+      { id: "cardio_known_conditions", label: "Known Cardiac Conditions", type: "checkbox", section: "Cardiac History", options: ["None", "CAD", "MI", "Heart failure", "Arrhythmia", "Valvular disease", "Cardiomyopathy", "Congenital heart disease"] },
+      { id: "cardio_procedures", label: "Previous Cardiac Procedures", type: "checkbox", section: "Cardiac History", options: ["None", "PCI/Stent", "CABG", "Pacemaker", "ICD", "Valve surgery", "Ablation", "Catheterization"] },
+      { id: "cardio_current_meds", label: "Current Cardiac Medications", type: "textarea", required: false, section: "Cardiac History", placeholder: "List all cardiac medications" },
+      
+      // Risk Factors
+      { id: "cardio_hypertension", label: "Hypertension", type: "select", required: true, section: "Risk Factors", options: ["No", "Controlled", "Uncontrolled", "Newly diagnosed"] },
+      { id: "cardio_diabetes", label: "Diabetes", type: "select", required: true, section: "Risk Factors", options: ["No", "Type 1", "Type 2 controlled", "Type 2 uncontrolled"] },
+      { id: "cardio_dyslipidemia", label: "Dyslipidemia", type: "select", required: true, section: "Risk Factors", options: ["No", "On treatment", "Untreated", "Unknown"] },
+      { id: "cardio_smoking", label: "Smoking Status", type: "select", required: true, section: "Risk Factors", options: ["Never", "Former", "Current", "Recently quit"] },
+      { id: "cardio_family_history", label: "Family History of CAD", type: "select", required: true, section: "Risk Factors", options: ["No", "Yes - first degree relative", "Yes - second degree", "Unknown"] },
+      { id: "cardio_obesity", label: "Obesity", type: "select", required: false, section: "Risk Factors", options: ["No", "Overweight", "Obese", "Morbidly obese"] },
+      
+      // Physical Examination
+      { id: "cardio_bp", label: "Blood Pressure", type: "text", required: true, section: "Examination", placeholder: "mmHg" },
+      { id: "cardio_hr", label: "Heart Rate", type: "number", required: true, section: "Examination", validation: { min: 30, max: 250 } },
+      { id: "cardio_rhythm", label: "Rhythm", type: "select", required: true, section: "Examination", options: ["Regular", "Irregular", "Irregularly irregular"] },
+      { id: "cardio_jvp", label: "JVP", type: "select", required: true, section: "Examination", options: ["Normal", "Elevated", "Unable to assess"] },
+      { id: "cardio_heart_sounds", label: "Heart Sounds", type: "select", required: true, section: "Examination", options: ["S1 S2 normal", "S3 present", "S4 present", "Murmur present"] },
+      { id: "cardio_murmur", label: "Murmur Details", type: "textarea", required: false, section: "Examination", placeholder: "Location, grade, radiation, timing" },
+      { id: "cardio_lung_exam", label: "Lung Examination", type: "select", required: true, section: "Examination", options: ["Clear", "Crackles base", "Crackles diffuse", "Wheezing", "Pleural effusion"] },
+      { id: "cardio_edema", label: "Peripheral Edema", type: "select", required: true, section: "Examination", options: ["None", "Trace", "1+", "2+", "3+", "4+"] },
+      { id: "cardio_pulses", label: "Peripheral Pulses", type: "select", required: false, section: "Examination", options: ["All present equal", "Diminished", "Absent - specify"] },
+      
+      // ECG Interpretation
+      { id: "cardio_ecg_rhythm", label: "ECG Rhythm", type: "select", required: false, section: "ECG", options: ["Sinus rhythm", "Sinus tachycardia", "Sinus bradycardia", "Atrial fibrillation", "Atrial flutter", "Heart block", "Paced rhythm", "Other"] },
+      { id: "cardio_ecg_findings", label: "ECG Findings", type: "checkbox", section: "ECG", options: ["Normal", "LVH", "RVH", "ST changes", "T wave inversion", "Q waves", "Bundle branch block", "Prolonged QTc"] },
+      { id: "cardio_ecg_interpretation", label: "ECG Interpretation", type: "textarea", required: false, section: "ECG", placeholder: "Detailed ECG interpretation" },
+      
+      // Assessment & Plan
+      { id: "cardio_diagnosis", label: "Diagnosis/Impression", type: "textarea", required: true, section: "Assessment", placeholder: "Working diagnosis" },
+      { id: "cardio_risk_stratification", label: "Risk Stratification", type: "select", required: false, section: "Assessment", options: ["Low risk", "Intermediate risk", "High risk", "Acute presentation"] },
+      { id: "cardio_investigations", label: "Investigations Ordered", type: "checkbox", section: "Plan", options: ["Echo", "Stress test", "Holter", "Event monitor", "Coronary angiography", "CT coronary", "Cardiac MRI", "BNP", "Troponin"] },
+      { id: "cardio_treatment", label: "Treatment Plan", type: "textarea", required: true, section: "Plan", placeholder: "Medications, interventions, lifestyle modifications" },
+      { id: "cardio_followup", label: "Follow-up", type: "text", required: true, section: "Plan", placeholder: "Next appointment and instructions" }
+    ]
+  },
+  
   diabetesManagement: {
     name: "Diabetes Management Assessment",
     description: "Comprehensive diabetes care template for routine monitoring and management",
@@ -601,14 +855,66 @@ export default function FormBuilder() {
                       <SelectValue placeholder="Select specialist role" />
                     </SelectTrigger>
                     <SelectContent>
+                      {/* Primary Care */}
+                      <SelectItem value="general_practitioner">General Practitioner</SelectItem>
+                      <SelectItem value="family_medicine">Family Medicine</SelectItem>
+                      <SelectItem value="internal_medicine">Internal Medicine</SelectItem>
+                      
+                      {/* Medical Specialties */}
                       <SelectItem value="cardiologist">Cardiologist</SelectItem>
                       <SelectItem value="neurologist">Neurologist</SelectItem>
-                      <SelectItem value="orthopedist">Orthopedist</SelectItem>
-                      <SelectItem value="psychiatrist">Psychiatrist</SelectItem>
-                      <SelectItem value="dermatologist">Dermatologist</SelectItem>
-                      <SelectItem value="endocrinologist">Endocrinologist</SelectItem>
                       <SelectItem value="pulmonologist">Pulmonologist</SelectItem>
                       <SelectItem value="gastroenterologist">Gastroenterologist</SelectItem>
+                      <SelectItem value="endocrinologist">Endocrinologist</SelectItem>
+                      <SelectItem value="nephrologist">Nephrologist</SelectItem>
+                      <SelectItem value="rheumatologist">Rheumatologist</SelectItem>
+                      <SelectItem value="oncologist">Oncologist</SelectItem>
+                      <SelectItem value="hematologist">Hematologist</SelectItem>
+                      <SelectItem value="infectious_disease">Infectious Disease</SelectItem>
+                      
+                      {/* Surgical Specialties */}
+                      <SelectItem value="orthopedist">Orthopedist</SelectItem>
+                      <SelectItem value="general_surgeon">General Surgeon</SelectItem>
+                      <SelectItem value="urologist">Urologist</SelectItem>
+                      <SelectItem value="neurosurgeon">Neurosurgeon</SelectItem>
+                      <SelectItem value="cardiothoracic_surgeon">Cardiothoracic Surgeon</SelectItem>
+                      
+                      {/* Sensory Specialties */}
+                      <SelectItem value="ophthalmologist">Ophthalmologist</SelectItem>
+                      <SelectItem value="ent_specialist">ENT Specialist</SelectItem>
+                      <SelectItem value="audiologist">Audiologist</SelectItem>
+                      
+                      {/* Mental Health */}
+                      <SelectItem value="psychiatrist">Psychiatrist</SelectItem>
+                      <SelectItem value="psychologist">Psychologist</SelectItem>
+                      <SelectItem value="addiction_specialist">Addiction Specialist</SelectItem>
+                      
+                      {/* Women & Children */}
+                      <SelectItem value="obgyn">OB/GYN</SelectItem>
+                      <SelectItem value="pediatrician">Pediatrician</SelectItem>
+                      <SelectItem value="neonatologist">Neonatologist</SelectItem>
+                      
+                      {/* Skin & Allergy */}
+                      <SelectItem value="dermatologist">Dermatologist</SelectItem>
+                      <SelectItem value="allergist">Allergist</SelectItem>
+                      
+                      {/* Allied Health */}
+                      <SelectItem value="physiotherapist">Physiotherapist</SelectItem>
+                      <SelectItem value="occupational_therapist">Occupational Therapist</SelectItem>
+                      <SelectItem value="speech_therapist">Speech Therapist</SelectItem>
+                      <SelectItem value="dietitian">Dietitian</SelectItem>
+                      <SelectItem value="podiatrist">Podiatrist</SelectItem>
+                      
+                      {/* Nursing */}
+                      <SelectItem value="nurse_practitioner">Nurse Practitioner</SelectItem>
+                      <SelectItem value="registered_nurse">Registered Nurse</SelectItem>
+                      <SelectItem value="midwife">Midwife</SelectItem>
+                      
+                      {/* Other */}
+                      <SelectItem value="pain_specialist">Pain Specialist</SelectItem>
+                      <SelectItem value="palliative_care">Palliative Care</SelectItem>
+                      <SelectItem value="sports_medicine">Sports Medicine</SelectItem>
+                      <SelectItem value="geriatrician">Geriatrician</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

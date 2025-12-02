@@ -41,9 +41,17 @@ export function GlobalMedicationSearch({
   const [searchTerm, setSearchTerm] = useState('');
   const [customMedication, setCustomMedication] = useState('');
 
-  // Fetch medications from the search API with intelligent filtering
+  // Fetch medications from the comprehensive medications database with fuzzy matching
   const { data: medications = [], isLoading: medicationsLoading } = useQuery({
-    queryKey: ['/api/medicines/search', searchTerm],
+    queryKey: ['/api/suggestions/medications', searchTerm],
+    queryFn: async () => {
+      if (!searchTerm || searchTerm.length === 0) return [];
+      const response = await fetch(`/api/suggestions/medications?q=${encodeURIComponent(searchTerm)}`, {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch medications');
+      return response.json();
+    },
     enabled: searchTerm.length > 0,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });

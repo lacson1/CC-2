@@ -1,9 +1,9 @@
-import type { Express } from "express";
+import type { Express, Response } from "express";
 import { createServer, type Server } from "http";
 import multer from "multer";
 import { storage } from "./storage";
 import { fileStorage } from "./storage-service";
-import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertDischargeLetterSchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertMedicationReviewAssignmentSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, insertPatientInsuranceSchema, insertPatientReferralSchema, insertPinnedConsultationFormSchema, insertTelemedicineSessionSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, labResults, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, medicationReviewAssignments, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices, medicalDocuments, vaccinations, roles, permissions, rolePermissions, patientInsurance, patientReferrals, pinnedConsultationForms, telemedicineSessions, userOrganizations, medicalHistory, dischargeLetters } from "@shared/schema";
+import { insertPatientSchema, insertVisitSchema, insertLabResultSchema, insertMedicineSchema, insertPrescriptionSchema, insertUserSchema, insertReferralSchema, insertLabTestSchema, insertConsultationFormSchema, insertConsultationRecordSchema, insertVaccinationSchema, insertAllergySchema, insertMedicalHistorySchema, insertDischargeLetterSchema, insertAppointmentSchema, insertSafetyAlertSchema, insertPharmacyActivitySchema, insertMedicationReviewSchema, insertMedicationReviewAssignmentSchema, insertProceduralReportSchema, insertConsentFormSchema, insertPatientConsentSchema, insertMessageSchema, insertAppointmentReminderSchema, insertAvailabilitySlotSchema, insertBlackoutDateSchema, insertInvoiceSchema, insertInvoiceItemSchema, insertPaymentSchema, insertInsuranceClaimSchema, insertServicePriceSchema, insertPatientInsuranceSchema, insertPatientReferralSchema, insertPinnedConsultationFormSchema, insertTelemedicineSessionSchema, users, auditLogs, labTests, medications, medicines, labOrders, labOrderItems, labResults, consultationForms, consultationRecords, organizations, visits, patients, vitalSigns, appointments, safetyAlerts, pharmacyActivities, medicationReviews, medicationReviewAssignments, prescriptions, pharmacies, proceduralReports, consentForms, patientConsents, messages, appointmentReminders, availabilitySlots, blackoutDates, invoices, invoiceItems, payments, insuranceClaims, servicePrices, medicalDocuments, vaccinations, roles, permissions, rolePermissions, patientInsurance, patientReferrals, pinnedConsultationForms, telemedicineSessions, userOrganizations, medicalHistory, dischargeLetters, dismissedNotifications } from "@shared/schema";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
@@ -29,6 +29,9 @@ import { setupSuperAdminRoutes } from "./super-admin-routes";
 import { setupComplianceReportRoutes } from "./routes/compliance-reports";
 import { setupLabSeedRoutes } from "./routes/lab-seed";
 import { setupLabPanelsRoutes } from "./routes/lab-panels";
+import adminDashboardRoutes from "./routes/admin-dashboard";
+import bulkUsersRoutes from "./routes/bulk-users";
+import auditLogsEnhancedRoutes from "./routes/audit-logs-enhanced";
 import { performanceMonitor, globalErrorHandler, setupErrorRoutes } from "./error-handler";
 import { getOptimizationTasks, implementOptimizationTask } from "./system-optimizer";
 import { setupNetworkValidationRoutes } from "./network-validator";
@@ -242,227 +245,952 @@ function generatePrescriptionHTML(prescriptionResult: any): string {
 </html>`;
 }
 
-// Helper function to generate lab order HTML for printing
+// Helper function to generate lab order HTML for printing (Global Standards Compliant)
 function generateLabOrderHTML(orderResult: any, orderItems: any[]): string {
   const formatDate = (date: string | Date) => {
-    return format(new Date(date), 'PPP');
+    return format(new Date(date), 'dd/MM/yyyy');
   };
 
   const formatDateTime = (date: string | Date) => {
-    return format(new Date(date), 'PPP p');
+    return format(new Date(date), 'dd/MM/yyyy HH:mm');
+  };
+
+  const formatTime = (date: string | Date) => {
+    return format(new Date(date), 'HH:mm');
   };
 
   // Use organization data from the requesting staff member
   const orgName = orderResult.organizationName || 'Medical Facility';
   const orgType = orderResult.organizationType || 'clinic';
-  const orgPhone = orderResult.organizationPhone || 'Contact facility directly';
-  const orgEmail = orderResult.organizationEmail || 'Contact facility directly';
-  const orgAddress = orderResult.organizationAddress || 'Address on file';
-  const orgTheme = orderResult.organizationTheme || '#2563eb';
+  const orgPhone = orderResult.organizationPhone || '';
+  const orgEmail = orderResult.organizationEmail || '';
+  const orgAddress = orderResult.organizationAddress || '';
+  const orgTheme = orderResult.organizationTheme || '#1a365d';
   
-  // Generate organization logo initials
-  const orgInitials = orgName.split(' ').map((word: string) => word.charAt(0)).join('').substring(0, 2).toUpperCase();
+  // Generate accession number
+  const accessionNumber = `ACC-${format(new Date(orderResult.createdAt), 'yyyyMMdd')}-${String(orderResult.orderId).padStart(4, '0')}`;
+  
+  // Calculate patient age
+  const patientAge = orderResult.patientDateOfBirth 
+    ? Math.floor((new Date().getTime() - new Date(orderResult.patientDateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    : null;
 
   return `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Lab Order - ${orderResult.orderId}</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratory Requisition - ${accessionNumber}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
-        .letterhead { border-bottom: 3px solid ${orgTheme}; padding-bottom: 20px; margin-bottom: 30px; }
-        .org-logo { float: left; width: 80px; height: 80px; background: ${orgTheme}; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
-        .org-info { margin-left: 100px; }
-        .org-name { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
-        .org-details { color: #64748b; line-height: 1.4; }
-        .document-title { text-align: center; font-size: 20px; font-weight: bold; color: #1e40af; margin: 30px 0; padding: 10px; border: 2px solid #e2e8f0; background: #f8fafc; }
-        .section { margin: 25px 0; }
-        .section-title { font-weight: bold; color: #374151; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .info-item { margin-bottom: 8px; }
-        .label { font-weight: bold; color: #4b5563; }
-        .value { color: #1f2937; }
-        .test-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-        .test-table th, .test-table td { border: 1px solid #d1d5db; padding: 10px; text-align: left; }
-        .test-table th { background: #f3f4f6; font-weight: bold; }
-        .status-pending { color: #d97706; font-weight: bold; }
-        .status-completed { color: #059669; font-weight: bold; }
-        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
-        .signature-area { margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
-        .signature-box { border-top: 1px solid #9ca3af; padding-top: 10px; text-align: center; }
-        .requesting-org { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 15px; border-radius: 8px; margin: 20px 0; }
-        .requesting-org-title { font-weight: bold; color: #0369a1; margin-bottom: 8px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-size: 11px;
+            line-height: 1.4;
+            color: #1a1a1a;
+            padding: 15px;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        
+        /* Header Section */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid ${orgTheme};
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .org-section {
+            flex: 1;
+        }
+        .org-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: ${orgTheme};
+            margin-bottom: 4px;
+        }
+        .org-details {
+            font-size: 10px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        .doc-info {
+            text-align: right;
+            min-width: 180px;
+        }
+        .doc-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: ${orgTheme};
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .accession {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f0f4f8;
+            padding: 6px 10px;
+            border: 1px solid #cbd5e0;
+            display: inline-block;
+        }
+        .barcode-placeholder {
+            margin-top: 8px;
+            font-family: 'Libre Barcode 39', monospace;
+            font-size: 28px;
+            letter-spacing: 2px;
+        }
+        
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* Info Boxes */
+        .info-box {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+        }
+        .info-box-header {
+            background: ${orgTheme};
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 5px 8px;
+            margin: -10px -10px 10px -10px;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 4px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 90px;
+            font-size: 10px;
+        }
+        .info-value {
+            color: #1a202c;
+            font-weight: 500;
+        }
+        .info-value-large {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        
+        /* Patient ID Badge */
+        .patient-id-badge {
+            display: inline-block;
+            background: #edf2f7;
+            border: 1px solid #a0aec0;
+            padding: 2px 8px;
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            font-size: 11px;
+        }
+        
+        /* Priority Indicator */
+        .priority-routine { color: #2d7d46; }
+        .priority-urgent { color: #c53030; font-weight: 700; }
+        .priority-stat { color: #c53030; font-weight: 700; background: #fed7d7; padding: 2px 6px; }
+        
+        /* Tests Table */
+        .tests-section {
+            margin-bottom: 15px;
+        }
+        .section-header {
+            background: ${orgTheme};
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+        }
+        .tests-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+        }
+        .tests-table th {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
+        .tests-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            vertical-align: top;
+        }
+        .tests-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        .test-code {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #718096;
+        }
+        .result-pending {
+            color: #718096;
+            font-style: italic;
+        }
+        .result-value {
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Specimen Section */
+        .specimen-section {
+            background: #fffbeb;
+            border: 1px solid #f6e05e;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .specimen-header {
+            font-weight: 600;
+            color: #744210;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .specimen-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        .specimen-item label {
+            font-size: 9px;
+            color: #744210;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .specimen-input {
+            border-bottom: 1px solid #d69e2e;
+            min-height: 18px;
+        }
+        
+        /* Clinical Info */
+        .clinical-section {
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+        }
+        .clinical-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+        }
+        .clinical-item label {
+            font-size: 9px;
+            color: #4a5568;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .clinical-input {
+            border: 1px dashed #cbd5e0;
+            min-height: 25px;
+            padding: 4px;
+        }
+        
+        /* Signatures */
+        .signatures-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .signature-box {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: center;
+        }
+        .signature-title {
+            font-size: 9px;
+            color: #4a5568;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+        .signature-line {
+            border-top: 1px solid #1a202c;
+            margin-top: 20px;
+            padding-top: 4px;
+            font-size: 9px;
+        }
+        .signature-prefilled {
+            font-weight: 600;
+            font-size: 11px;
+        }
+        
+        /* Footer */
+        .footer {
+            border-top: 2px solid ${orgTheme};
+            padding-top: 10px;
+            font-size: 9px;
+            color: #718096;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 15px;
+        }
+        .disclaimer {
+            font-style: italic;
+            line-height: 1.4;
+        }
+        .doc-tracking {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Print Optimization */
         @media print {
-            body { print-color-adjust: exact; }
-            .letterhead { page-break-inside: avoid; }
+            body { 
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+                padding: 0;
+            }
+            .info-box-header, .section-header {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+        
+        /* Page Break Control */
+        .tests-section, .signatures-section {
+            page-break-inside: avoid;
         }
     </style>
 </head>
 <body>
-    <div class="letterhead">
-        <div class="org-logo">${orgInitials}</div>
-        <div class="org-info">
+    <!-- Header -->
+    <div class="header">
+        <div class="org-section">
             <div class="org-name">${orgName}</div>
             <div class="org-details">
-                ${orgType.charAt(0).toUpperCase() + orgType.slice(1)} Healthcare Services<br>
-                ${orgAddress}<br>
-                Phone: ${orgPhone}<br>
-                Email: ${orgEmail}<br>
-                Laboratory Services Division
+                ${orgAddress ? `${orgAddress}<br>` : ''}
+                ${orgPhone ? `Tel: ${orgPhone}` : ''}${orgPhone && orgEmail ? ' | ' : ''}${orgEmail ? `Email: ${orgEmail}` : ''}<br>
+                Laboratory Services Department
             </div>
         </div>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div class="document-title">LABORATORY ORDER REQUEST</div>
-
-    <div class="section">
-        <div class="section-title">PATIENT INFORMATION</div>
-        <div class="info-grid">
-            <div>
-                <div class="info-item">
-                    <span class="label">Patient Name:</span> 
-                    <span class="value">${orderResult.patientFirstName} ${orderResult.patientLastName}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Date of Birth:</span> 
-                    <span class="value">${orderResult.patientDateOfBirth ? formatDate(orderResult.patientDateOfBirth) : 'Not specified'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Gender:</span> 
-                    <span class="value">${orderResult.patientGender || 'Not specified'}</span>
-                </div>
-            </div>
-            <div>
-                <div class="info-item">
-                    <span class="label">Patient ID:</span> 
-                    <span class="value">P${String(orderResult.patientId).padStart(6, '0')}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Phone:</span> 
-                    <span class="value">${orderResult.patientPhone || 'Not provided'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Order Date:</span> 
-                    <span class="value">${formatDate(orderResult.createdAt)}</span>
-                </div>
-            </div>
+        <div class="doc-info">
+            <div class="doc-title">Laboratory Requisition</div>
+            <div class="accession">${accessionNumber}</div>
+            <div class="barcode-placeholder">*${accessionNumber}*</div>
         </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">ORDERING PHYSICIAN</div>
-        <div class="info-grid">
-            <div>
-                <div class="info-item">
-                    <span class="label">Doctor:</span> 
-                    <span class="value">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Role:</span> 
-                    <span class="value">${orderResult.doctorRole ? orderResult.doctorRole.charAt(0).toUpperCase() + orderResult.doctorRole.slice(1) : 'Medical Staff'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Order ID:</span> 
-                    <span class="value">LAB-${String(orderResult.orderId).padStart(3, '0')}</span>
-                </div>
+    <!-- Patient & Order Info Grid -->
+    <div class="main-grid">
+        <!-- Patient Information -->
+        <div class="info-box">
+            <div class="info-box-header">Patient Information</div>
+            <div class="info-row">
+                <span class="info-label">Full Name:</span>
+                <span class="info-value-large">${orderResult.patientFirstName} ${orderResult.patientLastName}</span>
             </div>
-            <div>
-                <div class="info-item">
-                    <span class="label">Requesting Organization:</span> 
-                    <span class="value">${orderResult.organizationName || 'Not specified'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Organization Type:</span> 
-                    <span class="value">${orderResult.organizationType ? orderResult.organizationType.charAt(0).toUpperCase() + orderResult.organizationType.slice(1) : 'Healthcare Facility'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Contact:</span> 
-                    <span class="value">${orderResult.organizationPhone || 'See organization details'}</span>
-                </div>
+            <div class="info-row">
+                <span class="info-label">Patient ID:</span>
+                <span class="patient-id-badge">P${String(orderResult.patientId).padStart(6, '0')}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date of Birth:</span>
+                <span class="info-value">${orderResult.patientDateOfBirth ? formatDate(orderResult.patientDateOfBirth) : '—'}</span>
+                ${patientAge ? `<span style="margin-left: 8px; color: #718096;">(${patientAge} years)</span>` : ''}
+            </div>
+            <div class="info-row">
+                <span class="info-label">Gender:</span>
+                <span class="info-value">${orderResult.patientGender ? orderResult.patientGender.charAt(0).toUpperCase() + orderResult.patientGender.slice(1) : '—'}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Contact:</span>
+                <span class="info-value">${orderResult.patientPhone || '—'}</span>
+            </div>
+        </div>
+
+        <!-- Order Information -->
+        <div class="info-box">
+            <div class="info-box-header">Order Information</div>
+            <div class="info-row">
+                <span class="info-label">Order Date:</span>
+                <span class="info-value">${formatDate(orderResult.createdAt)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Order Time:</span>
+                <span class="info-value">${formatTime(orderResult.createdAt)}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Priority:</span>
+                <span class="info-value priority-routine">ROUTINE</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Ordering MD:</span>
+                <span class="info-value">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername || ''} ${orderResult.doctorLastName || ''}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Facility:</span>
+                <span class="info-value">${orderResult.organizationName || '—'}</span>
             </div>
         </div>
     </div>
 
-    ${orderResult.organizationName ? `
-    <div class="requesting-org">
-        <div class="requesting-org-title">REQUESTING ORGANIZATION DETAILS</div>
-        <div class="info-grid">
-            <div>
-                <div class="info-item">
-                    <span class="label">Organization:</span> 
-                    <span class="value">${orderResult.organizationName}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Address:</span> 
-                    <span class="value">${orderResult.organizationAddress || 'Address on file'}</span>
-                </div>
-            </div>
-            <div>
-                <div class="info-item">
-                    <span class="label">Phone:</span> 
-                    <span class="value">${orderResult.organizationPhone || 'Contact directly'}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Email:</span> 
-                    <span class="value">${orderResult.organizationEmail || 'Contact directly'}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-    ` : ''}
-
-    <div class="section">
-        <div class="section-title">LABORATORY TESTS REQUESTED</div>
-        <table class="test-table">
+    <!-- Tests Requested -->
+    <div class="tests-section">
+        <div class="section-header">Tests Requested (${orderItems.length})</div>
+        <table class="tests-table">
             <thead>
                 <tr>
-                    <th>Test Name</th>
-                    <th>Category</th>
-                    <th>Reference Range</th>
-                    <th>Status</th>
-                    <th>Result</th>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 35%;">Test Name</th>
+                    <th style="width: 20%;">Category</th>
+                    <th style="width: 25%;">Reference Range</th>
+                    <th style="width: 15%;">Result</th>
                 </tr>
             </thead>
             <tbody>
-                ${orderItems.map(item => `
+                ${orderItems.map((item, index) => `
                 <tr>
-                    <td>${item.testName || 'Unknown Test'}</td>
+                    <td style="text-align: center;">${index + 1}</td>
+                    <td>
+                        <strong>${item.testName || 'Unknown Test'}</strong>
+                    </td>
                     <td>${item.testCategory || 'General'}</td>
-                    <td>${item.referenceRange || 'See lab standards'}</td>
-                    <td><span class="status-${item.status}">${item.status?.charAt(0).toUpperCase() + item.status?.slice(1) || 'Pending'}</span></td>
-                    <td>${item.result || '-'}</td>
+                    <td>${item.referenceRange || '—'}</td>
+                    <td>${item.result ? `<span class="result-value">${item.result}</span>` : '<span class="result-pending">Pending</span>'}</td>
                 </tr>
                 `).join('')}
             </tbody>
         </table>
     </div>
 
-    <div class="section">
-        <div class="section-title">CLINICAL NOTES</div>
-        <div style="padding: 15px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
-            Laboratory tests requested for clinical assessment. Please process samples according to standard laboratory protocols and contact ordering physician if results are critical.
+    <!-- Specimen Collection (Lab Use) -->
+    <div class="specimen-section">
+        <div class="specimen-header">Specimen Collection (Laboratory Use Only)</div>
+        <div class="specimen-grid">
+            <div class="specimen-item">
+                <label>Collection Date</label>
+                <div class="specimen-input"></div>
+            </div>
+            <div class="specimen-item">
+                <label>Collection Time</label>
+                <div class="specimen-input"></div>
+            </div>
+            <div class="specimen-item">
+                <label>Collected By</label>
+                <div class="specimen-input"></div>
+            </div>
+            <div class="specimen-item">
+                <label>Specimen Type</label>
+                <div class="specimen-input"></div>
+            </div>
         </div>
     </div>
 
-    <div class="signature-area">
-        <div class="signature-box">
-            <strong>Ordering Physician</strong><br>
-            Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername} ${orderResult.doctorLastName || ''}<br>
-            Date: ${formatDate(orderResult.createdAt)}
-        </div>
-        <div class="signature-box">
-            <strong>Laboratory Use Only</strong><br>
-            Received By: ________________<br>
-            Date: _______________________
+    <!-- Clinical Information -->
+    <div class="clinical-section">
+        <div class="section-header">Clinical Information</div>
+        <div class="clinical-grid">
+            <div class="clinical-item">
+                <label>Diagnosis / ICD-10 Code</label>
+                <div class="clinical-input"></div>
+            </div>
+            <div class="clinical-item">
+                <label>Relevant Clinical History</label>
+                <div class="clinical-input"></div>
+            </div>
+            <div class="clinical-item">
+                <label>Current Medications</label>
+                <div class="clinical-input"></div>
+            </div>
+            <div class="clinical-item">
+                <label>Special Instructions</label>
+                <div class="clinical-input"></div>
+            </div>
         </div>
     </div>
 
+    <!-- Signatures -->
+    <div class="signatures-section">
+        <div class="signature-box">
+            <div class="signature-title">Ordering Physician</div>
+            <div class="signature-prefilled">Dr. ${orderResult.doctorFirstName || orderResult.doctorUsername || ''} ${orderResult.doctorLastName || ''}</div>
+            <div class="signature-line">Signature / Date: ${formatDate(orderResult.createdAt)}</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-title">Specimen Received By</div>
+            <div class="signature-line">Signature / Date</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-title">Results Verified By</div>
+            <div class="signature-line">Signature / Date</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
     <div class="footer">
-        <strong>Order ID:</strong> LAB-${String(orderResult.orderId).padStart(3, '0')} | 
-        <strong>Generated:</strong> ${formatDateTime(new Date())} | 
-        <strong>System:</strong> HealthCare Connect v2.0<br>
-        <em>This is an official medical document. Please handle with appropriate confidentiality and care.</em>
+        <div class="footer-grid">
+            <div class="disclaimer">
+                <strong>CONFIDENTIAL:</strong> This laboratory requisition contains protected health information (PHI). 
+                Handle in accordance with applicable privacy regulations. Results should be reviewed by qualified healthcare personnel.
+                Critical values will be communicated immediately to the ordering physician.
+            </div>
+            <div class="doc-tracking">
+                <strong>Accession:</strong> ${accessionNumber}<br>
+                <strong>Printed:</strong> ${formatDateTime(new Date())}<br>
+                <strong>Page:</strong> 1 of 1
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+}
+
+// Helper function to generate lab history HTML for printing (Global Standards Compliant)
+function generateLabHistoryHTML(patientData: any, labResultsData: any[], orgData: any): string {
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return '—';
+    return format(new Date(date), 'dd/MM/yyyy');
+  };
+
+  const formatDateTime = (date: string | Date) => {
+    return format(new Date(date), 'dd/MM/yyyy HH:mm');
+  };
+
+  // Use organization data
+  const orgName = orgData?.name || 'Medical Facility';
+  const orgPhone = orgData?.phone || '';
+  const orgEmail = orgData?.email || '';
+  const orgAddress = orgData?.address || '';
+  const orgTheme = orgData?.themeColor || '#1a365d';
+  
+  // Calculate patient age
+  const patientAge = patientData.dateOfBirth 
+    ? Math.floor((new Date().getTime() - new Date(patientData.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+    : null;
+    
+  // Generate report number
+  const reportNumber = `RPT-${format(new Date(), 'yyyyMMdd')}-${String(patientData.patientId).padStart(4, '0')}`;
+
+  // Group results by date for better organization
+  const groupedByDate = labResultsData.reduce((acc: any, result: any) => {
+    const dateKey = result.testDate ? format(new Date(result.testDate), 'yyyy-MM-dd') : 'unknown';
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(result);
+    return acc;
+  }, {});
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratory Report - ${patientData.firstName} ${patientData.lastName}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            font-size: 10px;
+            line-height: 1.4;
+            color: #1a1a1a;
+            padding: 15px;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 3px solid ${orgTheme};
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .org-section { flex: 1; }
+        .org-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: ${orgTheme};
+            margin-bottom: 4px;
+        }
+        .org-details {
+            font-size: 9px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+        .report-info {
+            text-align: right;
+            min-width: 160px;
+        }
+        .report-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: ${orgTheme};
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        .report-number {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            background: #f0f4f8;
+            padding: 4px 8px;
+            border: 1px solid #cbd5e0;
+            display: inline-block;
+        }
+        
+        /* Patient Card */
+        .patient-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid ${orgTheme};
+            padding: 12px 15px;
+            margin-bottom: 15px;
+        }
+        .patient-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 8px;
+        }
+        .patient-details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+        .patient-field label {
+            font-size: 8px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .patient-field span {
+            font-size: 10px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+        .patient-id-badge {
+            font-family: 'Courier New', monospace;
+            background: ${orgTheme};
+            color: white;
+            padding: 2px 6px;
+            font-size: 10px;
+        }
+        
+        /* Summary Stats */
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .stat-box {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: ${orgTheme};
+        }
+        .stat-label {
+            font-size: 8px;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Results Table */
+        .results-section {
+            margin-bottom: 15px;
+        }
+        .section-header {
+            background: ${orgTheme};
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 10px;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9px;
+        }
+        .results-table th {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            font-size: 8px;
+        }
+        .results-table td {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            vertical-align: middle;
+        }
+        .results-table tr:nth-child(even) {
+            background: #f7fafc;
+        }
+        .result-value {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .result-normal { color: #2d7d46; }
+        .result-abnormal { color: #c53030; }
+        .result-flag {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-size: 7px;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+        .flag-high { background: #fed7d7; color: #c53030; }
+        .flag-low { background: #feebc8; color: #c05621; }
+        .reference-range {
+            font-size: 8px;
+            color: #718096;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-style: italic;
+            background: #f7fafc;
+        }
+        
+        /* Date Group Header */
+        .date-group-header {
+            background: #edf2f7;
+            padding: 6px 10px;
+            font-weight: 600;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            border-bottom: none;
+            font-size: 10px;
+        }
+        
+        /* Interpretation Section */
+        .interpretation-section {
+            border: 1px solid #e2e8f0;
+            margin-bottom: 15px;
+        }
+        .interpretation-content {
+            padding: 12px;
+            font-size: 9px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        .interpretation-content ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+        .interpretation-content li {
+            margin-bottom: 4px;
+        }
+        
+        /* Footer */
+        .footer {
+            border-top: 2px solid ${orgTheme};
+            padding-top: 10px;
+            margin-top: 15px;
+        }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            font-size: 8px;
+        }
+        .footer-section h4 {
+            font-size: 9px;
+            color: ${orgTheme};
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .disclaimer {
+            font-style: italic;
+            color: #718096;
+            font-size: 8px;
+            margin-top: 10px;
+            padding: 8px;
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* Print */
+        @media print {
+            body { 
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+                padding: 0;
+            }
+            .results-table { page-break-inside: auto; }
+            .results-table tr { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="org-section">
+            <div class="org-name">${orgName}</div>
+            <div class="org-details">
+                ${orgAddress ? `${orgAddress}<br>` : ''}
+                ${orgPhone ? `Tel: ${orgPhone}` : ''}${orgPhone && orgEmail ? ' | ' : ''}${orgEmail ? `Email: ${orgEmail}` : ''}<br>
+                Laboratory Services Department
+            </div>
+        </div>
+        <div class="report-info">
+            <div class="report-title">Laboratory Report</div>
+            <div class="report-number">${reportNumber}</div>
+        </div>
+    </div>
+
+    <!-- Patient Card -->
+    <div class="patient-card">
+        <div class="patient-name">${patientData.firstName} ${patientData.lastName}</div>
+        <div class="patient-details">
+            <div class="patient-field">
+                <label>Patient ID</label>
+                <span class="patient-id-badge">P${String(patientData.patientId).padStart(6, '0')}</span>
+            </div>
+            <div class="patient-field">
+                <label>Date of Birth</label>
+                <span>${formatDate(patientData.dateOfBirth)}${patientAge ? ` (${patientAge}y)` : ''}</span>
+            </div>
+            <div class="patient-field">
+                <label>Gender</label>
+                <span>${patientData.gender ? patientData.gender.charAt(0).toUpperCase() + patientData.gender.slice(1) : '—'}</span>
+            </div>
+            <div class="patient-field">
+                <label>Contact</label>
+                <span>${patientData.phone || '—'}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="summary-bar">
+        <div class="stat-box">
+            <div class="stat-value">${labResultsData.length}</div>
+            <div class="stat-label">Total Tests</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">${Object.keys(groupedByDate).length}</div>
+            <div class="stat-label">Test Sessions</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">${labResultsData.filter(r => r.result).length}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">${labResultsData.filter(r => !r.result).length}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+    </div>
+
+    <!-- Results Table -->
+    <div class="results-section">
+        <div class="section-header">Laboratory Results</div>
+        ${labResultsData.length === 0 ? `
+        <div class="no-results">No laboratory results found for this patient.</div>
+        ` : `
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Date</th>
+                    <th style="width: 30%;">Test Name</th>
+                    <th style="width: 18%;">Result</th>
+                    <th style="width: 20%;">Reference Range</th>
+                    <th style="width: 20%;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${labResultsData.map((result, index) => `
+                <tr>
+                    <td>${formatDate(result.testDate)}</td>
+                    <td><strong>${result.testName || 'Unknown Test'}</strong></td>
+                    <td>
+                        ${result.result 
+                          ? `<span class="result-value">${result.result}</span>` 
+                          : '<span style="color: #718096; font-style: italic;">Pending</span>'}
+                    </td>
+                    <td><span class="reference-range">${result.normalRange || '—'}</span></td>
+                    <td style="font-size: 8px; color: #4a5568;">${result.notes || '—'}</td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        `}
+    </div>
+
+    <!-- Interpretation Notes -->
+    <div class="interpretation-section">
+        <div class="section-header">Clinical Notes</div>
+        <div class="interpretation-content">
+            <ul>
+                <li>This cumulative laboratory report contains all available test results for the patient.</li>
+                <li>Results should be interpreted in conjunction with clinical findings and patient history.</li>
+                <li>Reference ranges are method and instrument specific; variations between laboratories may occur.</li>
+                <li>For critical or significantly abnormal results, please contact the laboratory directly.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>Report Information</h4>
+                Report #: ${reportNumber}<br>
+                Generated: ${formatDateTime(new Date())}<br>
+                Total Results: ${labResultsData.length}
+            </div>
+            <div class="footer-section">
+                <h4>Patient Information</h4>
+                ID: P${String(patientData.patientId).padStart(6, '0')}<br>
+                ${patientData.firstName} ${patientData.lastName}<br>
+                ${patientData.phone || ''}
+            </div>
+            <div class="footer-section">
+                <h4>Facility</h4>
+                ${orgName}<br>
+                ${orgPhone ? `Tel: ${orgPhone}` : ''}<br>
+                ${orgEmail || ''}
+            </div>
+        </div>
+        <div class="disclaimer">
+            <strong>CONFIDENTIALITY NOTICE:</strong> This report contains protected health information (PHI) and is intended solely for the named patient and authorized healthcare providers. 
+            Unauthorized disclosure, copying, or distribution is prohibited. Results should be reviewed and interpreted by qualified medical personnel. 
+            This report does not constitute a diagnosis. Please consult with your healthcare provider for medical advice.
+        </div>
     </div>
 </body>
 </html>`;
@@ -1016,23 +1744,9 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   });
   
   // Patients routes - Medical staff only
-  app.post("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
-    try {
-      // Add the staff member's organization ID to ensure proper attribution
-      const patientData = insertPatientSchema.parse({
-        ...req.body,
-        organizationId: req.user?.organizationId
-      });
-      const patient = await storage.createPatient(patientData);
-      res.json(patient);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid patient data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create patient" });
-      }
-    }
-  });
+  // NOTE: Patient registration is handled by the modular route in server/routes/patients.ts
+  // which is registered first via setupRoutes(). This duplicate route has been removed
+  // to prevent conflicts. The route in patients.ts handles POST /api/patients
 
   // Enhanced patients endpoint with analytics
   app.get("/api/patients/enhanced", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
@@ -1056,17 +1770,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  app.get("/api/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
+  app.get("/api/patients", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
-      if (!userOrgId) {
-        return res.status(400).json({ message: "Organization context required" });
-      }
-      
       const search = req.query.search as string | undefined;
       
-      // Organization-filtered patients
-      let whereClause = eq(patients.organizationId, userOrgId);
+      // Organization-filtered patients (if organizationId is null, show all patients - authentication disabled mode)
+      let whereClause = userOrgId ? eq(patients.organizationId, userOrgId) : undefined;
       
       if (search) {
         const searchConditions = [
@@ -1074,16 +1784,20 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
           ilike(patients.lastName, `%${search}%`),
           ilike(patients.phone, `%${search}%`)
         ];
-        const combinedClause = and(
-          eq(patients.organizationId, userOrgId),
-          or(...searchConditions)
-        );
-        whereClause = combinedClause ?? eq(patients.organizationId, userOrgId);
+        if (userOrgId) {
+          const combinedClause = and(
+            eq(patients.organizationId, userOrgId),
+            or(...searchConditions)
+          );
+          whereClause = combinedClause ?? eq(patients.organizationId, userOrgId);
+        } else {
+          whereClause = or(...searchConditions);
+        }
       }
       
       const patientsResult = await db.select()
         .from(patients)
-        .where(whereClause)
+        .where(whereClause || undefined)
         .orderBy(desc(patients.createdAt));
       
       // Prevent caching to ensure fresh data
@@ -2305,185 +3019,71 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         SecurityManager.recordLoginAttempt(username, false);
       }
 
-      // Fallback Super Admin - Global access across all organizations
-      if (username === 'superadmin' && password === 'super123') {
-        (req.session as any).user = {
-          id: 999,
-          username: 'superadmin',
-          role: 'superadmin',
-          organizationId: null
-        };
-        
-        // Save session before sending response
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) {
-              console.error('Session save error:', err);
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
-        
-        return res.json({
-          user: {
-            id: 999,
-            username: 'superadmin',
-            role: 'superadmin',
-            organizationId: null,
-            organization: {
-              id: 0,
-              name: 'System Administration',
-              type: 'system',
-              themeColor: '#DC2626'
-            }
-          }
-        });
-      }
+      // Demo fallback: If user not found but matches demo credentials, create session
+      // These users should exist in the database from seeding
+      const demoCredentials: Record<string, { password: string; role: string }> = {
+        'superadmin': { password: 'super123', role: 'superadmin' },
+        'admin': { password: 'admin123', role: 'admin' },
+        'ade': { password: 'doctor123', role: 'doctor' },
+        'syb': { password: 'nurse123', role: 'nurse' },
+        'akin': { password: 'pharmacist123', role: 'pharmacist' },
+        'seye': { password: 'physio123', role: 'physiotherapist' },
+        'receptionist': { password: 'receptionist123', role: 'receptionist' }
+      };
       
-      if (username === 'ade' && password === 'doctor123') {
-        const org = await getOrganizationDetails(1);
+      const demoUser = demoCredentials[username];
+      if (demoUser && password === demoUser.password) {
+        // Try to find the demo user in database (should have been seeded)
+        const [dbUser] = await db.select()
+          .from(users)
+          .where(eq(users.username, username))
+          .limit(1);
         
-        (req.session as any).user = {
-          id: 10,
-          username: 'ade',
-          role: 'doctor',
-          organizationId: 1
-        };
-        
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) reject(err);
-            else resolve();
+        if (dbUser) {
+          // Use actual database user
+          const org = dbUser.organizationId ? await getOrganizationDetails(dbUser.organizationId) : null;
+          
+          (req.session as any).user = {
+            id: dbUser.id,
+            username: dbUser.username,
+            role: dbUser.role,
+            organizationId: dbUser.organizationId
+          };
+          
+          await new Promise<void>((resolve, reject) => {
+            req.session.save((err) => {
+              if (err) reject(err);
+              else resolve();
+            });
           });
-        });
-        
-        return res.json({
-          success: true,
-          user: {
-            id: 10,
-            username: 'ade',
-            role: 'doctor',
-            organizationId: 1,
-            organization: org ? {
-              id: org.id,
-              name: org.name,
-              type: org.type || 'clinic',
-              themeColor: org.themeColor || '#3B82F6'
-            } : null
-          },
-          message: 'Login successful',
-          organizationMessage: org ? `You are working at ${org.name}` : 'Working at Organization 1'
-        });
-      }
-      
-      if (username === 'syb' && password === 'nurse123') {
-        const org = await getOrganizationDetails(1);
-        
-        (req.session as any).user = {
-          id: 11,
-          username: 'syb',
-          role: 'nurse',
-          organizationId: 1
-        };
-        
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) reject(err);
-            else resolve();
+          
+          return res.json({
+            success: true,
+            user: {
+              id: dbUser.id,
+              username: dbUser.username,
+              role: dbUser.role,
+              firstName: dbUser.firstName,
+              lastName: dbUser.lastName,
+              organizationId: dbUser.organizationId,
+              organization: org ? {
+                id: org.id,
+                name: org.name,
+                type: org.type || 'clinic',
+                themeColor: org.themeColor || '#3B82F6'
+              } : (demoUser.role === 'superadmin' ? {
+                id: 0,
+                name: 'System Administration',
+                type: 'system',
+                themeColor: '#DC2626'
+              } : null)
+            },
+            message: 'Login successful'
           });
-        });
-        
-        return res.json({
-          success: true,
-          user: {
-            id: 11,
-            username: 'syb',
-            role: 'nurse',
-            organizationId: 1,
-            organization: org ? {
-              id: org.id,
-              name: org.name,
-              type: org.type || 'clinic',
-              themeColor: org.themeColor || '#3B82F6'
-            } : null
-          },
-          message: 'Login successful',
-          organizationMessage: org ? `You are working at ${org.name}` : 'Working at Organization 1'
-        });
-      }
-      
-      if (username === 'akin' && password === 'pharmacist123') {
-        const org = await getOrganizationDetails(1);
-        
-        (req.session as any).user = {
-          id: 12,
-          username: 'akin',
-          role: 'pharmacist',
-          organizationId: 1
-        };
-        
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-        
-        return res.json({
-          success: true,
-          user: {
-            id: 12,
-            username: 'akin',
-            role: 'pharmacist',
-            organizationId: 1,
-            organization: org ? {
-              id: org.id,
-              name: org.name,
-              type: org.type || 'clinic',
-              themeColor: org.themeColor || '#3B82F6'
-            } : null
-          },
-          message: 'Login successful',
-          organizationMessage: org ? `You are working at ${org.name}` : 'Working at Organization 1'
-        });
-      }
-      
-      if (username === 'seye' && password === 'physio123') {
-        const org = await getOrganizationDetails(1);
-        
-        (req.session as any).user = {
-          id: 13,
-          username: 'seye',
-          role: 'physiotherapist',
-          organizationId: 1
-        };
-        
-        await new Promise<void>((resolve, reject) => {
-          req.session.save((err) => {
-            if (err) reject(err);
-            else resolve();
-          });
-        });
-        
-        return res.json({
-          success: true,
-          user: {
-            id: 13,
-            username: 'seye',
-            role: 'physiotherapist',
-            organizationId: 1,
-            organization: org ? {
-              id: org.id,
-              name: org.name,
-              type: org.type || 'clinic',
-              themeColor: org.themeColor || '#3B82F6'
-            } : null
-          },
-          message: 'Login successful',
-          organizationMessage: org ? `You are working at ${org.name}` : 'Working at Organization 1'
-        });
+        } else {
+          // User doesn't exist in DB - shouldn't happen if seeded properly
+          console.warn(`Demo user ${username} not found in database. Run seed to create.`);
+        }
       }
       
       return res.status(401).json({ 
@@ -2631,6 +3231,27 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       }
 
       const userId = req.user.id;
+      
+      // Handle superadmin fallback user (id: 999) - doesn't exist in database
+      if (userId === 999 && req.user.role === 'superadmin') {
+        return res.json({
+          id: 999,
+          username: 'superadmin',
+          role: 'superadmin',
+          organizationId: undefined,
+          firstName: 'Super',
+          lastName: 'Admin',
+          email: undefined,
+          phone: null,
+          organization: {
+            id: 0,
+            name: 'System Administration',
+            type: 'system',
+            themeColor: '#DC2626'
+          }
+        });
+      }
+
       const [user] = await db.select()
         .from(users)
         .where(eq(users.id, userId))
@@ -2957,39 +3578,6 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  // Super Admin Analytics - System-wide statistics
-  app.get("/api/superadmin/analytics", authenticateToken, requireAnyRole(['super_admin', 'superadmin']), async (req: AuthRequest, res) => {
-    try {
-      // Get total organizations
-      const totalOrganizations = await db.select({ count: sql<number>`count(*)` }).from(organizations);
-      
-      // Get active organizations (assuming organizations without explicit inactive status are active)
-      const activeOrganizations = await db.select({ count: sql<number>`count(*)` }).from(organizations);
-      
-      // Get total users across all organizations
-      const totalUsers = await db.select({ count: sql<number>`count(*)` }).from(users);
-      
-      // Get total patients across all organizations
-      const totalPatients = await db.select({ count: sql<number>`count(*)` }).from(patients);
-      
-      // Get total appointments
-      const totalAppointments = await db.select({ count: sql<number>`count(*)` }).from(appointments);
-
-      res.json({
-        totalOrganizations: totalOrganizations[0]?.count || 0,
-        activeOrganizations: activeOrganizations[0]?.count || 0,
-        totalUsers: totalUsers[0]?.count || 0,
-        totalPatients: totalPatients[0]?.count || 0,
-        totalAppointments: totalAppointments[0]?.count || 0,
-        activeSessions: 12, // Mock data for demo
-        dailyActiveUsers: 45 // Mock data for demo
-      });
-    } catch (error) {
-      console.error("Error fetching super admin analytics:", error);
-      res.status(500).json({ message: "Failed to fetch analytics" });
-    }
-  });
-
   // Super Admin Organizations Management
   app.get("/api/superadmin/organizations", authenticateToken, requireAnyRole(['super_admin', 'superadmin']), async (req: AuthRequest, res) => {
     try {
@@ -3118,7 +3706,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
           status: sql<string>`'active'`,
           organizationId: users.organizationId,
           organizationName: sql<string>`COALESCE(organizations.name, 'No Organization')`,
-          lastLogin: sql<string>`COALESCE(users.last_login_at, '')`,
+          lastLogin: sql<string>`COALESCE(users.last_login_at::text, 'Never')`,
           createdAt: users.createdAt
         })
         .from(users)
@@ -3309,13 +3897,14 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       const userData = {
         username,
         password: hashedPassword,
-        email,
-        phone,
-        role,
-        firstName,
-        lastName,
-        title,
-        organizationId: targetOrgId
+        email: email || null,
+        phone: phone || null,
+        role: userRole, // Use userRole which is properly resolved from role or roleId
+        firstName: firstName || null,
+        lastName: lastName || null,
+        title: title || null,
+        organizationId: targetOrgId,
+        isActive: true
       };
       
       const user = await storage.createUser(userData);
@@ -3553,11 +4142,45 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       const patientId = parseInt(req.params.id);
       const userOrgId = req.user?.organizationId;
       
-      const [newInsurance] = await db.insert(patientInsurance).values({
-        ...req.body,
+      // Helper function to sanitize numeric fields
+      const sanitizeNumeric = (value: any): string | null => {
+        if (value === '' || value === undefined || value === null) return null;
+        const num = parseFloat(value);
+        return isNaN(num) ? null : String(num);
+      };
+
+      // Helper function to sanitize optional date fields
+      const sanitizeDate = (value: any): string | null => {
+        if (value === '' || value === undefined || value === null) return null;
+        return value;
+      };
+      
+      // Build sanitized data object, explicitly handling all fields
+      const sanitizedData = {
+        provider: req.body.provider,
+        policyNumber: req.body.policyNumber,
+        groupNumber: req.body.groupNumber || null,
+        membershipNumber: req.body.membershipNumber || null,
+        coverageType: req.body.coverageType,
+        policyStatus: req.body.policyStatus,
+        effectiveDate: req.body.effectiveDate,
+        expirationDate: sanitizeDate(req.body.expirationDate),
+        deductible: sanitizeNumeric(req.body.deductible),
+        copay: sanitizeNumeric(req.body.copay),
+        coinsurance: sanitizeNumeric(req.body.coinsurance),
+        maximumBenefit: sanitizeNumeric(req.body.maximumBenefit),
+        notes: req.body.notes || null,
+        providerPhone: req.body.providerPhone || null,
+        providerEmail: req.body.providerEmail || null,
+        providerAddress: req.body.providerAddress || null,
+        coverageDetails: req.body.coverageDetails || null,
+        preAuthRequired: req.body.preAuthRequired ?? false,
+        referralRequired: req.body.referralRequired ?? false,
         patientId,
         organizationId: userOrgId!
-      }).returning();
+      };
+      
+      const [newInsurance] = await db.insert(patientInsurance).values(sanitizedData).returning();
 
       res.status(201).json(newInsurance);
     } catch (error) {
@@ -3572,8 +4195,47 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       const insuranceId = parseInt(req.params.insuranceId);
       const userOrgId = req.user?.organizationId;
       
+      // Helper function to sanitize numeric fields
+      const sanitizeNumeric = (value: any): string | null => {
+        if (value === '' || value === undefined || value === null) return null;
+        const num = parseFloat(value);
+        return isNaN(num) ? null : String(num);
+      };
+
+      // Helper function to sanitize optional date fields
+      const sanitizeDate = (value: any): string | null => {
+        if (value === '' || value === undefined || value === null) return null;
+        return value;
+      };
+      
+      // Build sanitized update data
+      const sanitizedData: Record<string, any> = {
+        updatedAt: new Date()
+      };
+      
+      // Only include fields that are present in the request
+      if ('provider' in req.body) sanitizedData.provider = req.body.provider;
+      if ('policyNumber' in req.body) sanitizedData.policyNumber = req.body.policyNumber;
+      if ('groupNumber' in req.body) sanitizedData.groupNumber = req.body.groupNumber || null;
+      if ('membershipNumber' in req.body) sanitizedData.membershipNumber = req.body.membershipNumber || null;
+      if ('coverageType' in req.body) sanitizedData.coverageType = req.body.coverageType;
+      if ('policyStatus' in req.body) sanitizedData.policyStatus = req.body.policyStatus;
+      if ('effectiveDate' in req.body) sanitizedData.effectiveDate = req.body.effectiveDate;
+      if ('expirationDate' in req.body) sanitizedData.expirationDate = sanitizeDate(req.body.expirationDate);
+      if ('deductible' in req.body) sanitizedData.deductible = sanitizeNumeric(req.body.deductible);
+      if ('copay' in req.body) sanitizedData.copay = sanitizeNumeric(req.body.copay);
+      if ('coinsurance' in req.body) sanitizedData.coinsurance = sanitizeNumeric(req.body.coinsurance);
+      if ('maximumBenefit' in req.body) sanitizedData.maximumBenefit = sanitizeNumeric(req.body.maximumBenefit);
+      if ('notes' in req.body) sanitizedData.notes = req.body.notes || null;
+      if ('providerPhone' in req.body) sanitizedData.providerPhone = req.body.providerPhone || null;
+      if ('providerEmail' in req.body) sanitizedData.providerEmail = req.body.providerEmail || null;
+      if ('providerAddress' in req.body) sanitizedData.providerAddress = req.body.providerAddress || null;
+      if ('coverageDetails' in req.body) sanitizedData.coverageDetails = req.body.coverageDetails || null;
+      if ('preAuthRequired' in req.body) sanitizedData.preAuthRequired = req.body.preAuthRequired ?? false;
+      if ('referralRequired' in req.body) sanitizedData.referralRequired = req.body.referralRequired ?? false;
+      
       const [updated] = await db.update(patientInsurance)
-        .set({ ...req.body, updatedAt: new Date() })
+        .set(sanitizedData)
         .where(and(
           eq(patientInsurance.id, insuranceId),
           eq(patientInsurance.patientId, patientId),
@@ -3842,19 +4504,28 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         'dischargeCondition', 'specialInstructions', 'restrictions',
         'dietaryAdvice', 'warningSymptoms', 'emergencyContact', 'visitId', 'status'
       ];
+      const dateFields = ['admissionDate', 'dischargeDate', 'followUpDate'];
       const validatedData: Record<string, any> = {};
       for (const key of allowedFields) {
         if (key in req.body) {
-          validatedData[key] = req.body[key];
+          // Convert empty strings to null for date fields
+          if (dateFields.includes(key) && req.body[key] === '') {
+            validatedData[key] = null;
+          } else if (req.body[key] !== '') {
+            validatedData[key] = req.body[key];
+          }
         }
       }
       
-      const [newLetter] = await db.insert(dischargeLetters).values({
-        ...validatedData,
+      // Prepare insert data with validated fields
+      const insertData = {
         patientId,
         attendingPhysicianId: userId,
-        organizationId: userOrgId
-      }).returning();
+        organizationId: userOrgId,
+        ...validatedData
+      };
+      
+      const [newLetter] = await db.insert(dischargeLetters).values(insertData as any).returning();
 
       res.status(201).json(newLetter);
     } catch (error) {
@@ -3885,11 +4556,17 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         'dischargeCondition', 'specialInstructions', 'restrictions',
         'dietaryAdvice', 'warningSymptoms', 'emergencyContact', 'visitId', 'status'
       ];
+      const dateFields = ['admissionDate', 'dischargeDate', 'followUpDate'];
       
       const updateData: Record<string, any> = { updatedAt: new Date() };
       for (const key of allowedFields) {
         if (key in req.body) {
-          updateData[key] = req.body[key];
+          // Convert empty strings to null for date fields
+          if (dateFields.includes(key) && req.body[key] === '') {
+            updateData[key] = null;
+          } else if (req.body[key] !== '') {
+            updateData[key] = req.body[key];
+          }
         }
       }
       
@@ -4437,41 +5114,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  app.post('/api/users', authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      const userOrgId = req.user?.organizationId;
-      if (!userOrgId) {
-        return res.status(403).json({ message: "Organization access required" });
-      }
-
-      const { username, password, roleId, title, firstName, lastName, email, phone, organizationId } = req.body;
-
-      // Hash password
-      const hashedPassword = await hashPassword(password);
-
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          username,
-          password: hashedPassword,
-          roleId: parseInt(roleId),
-          role: "user", // Default role for backward compatibility
-          title,
-          firstName,
-          lastName,
-          email,
-          phone,
-          organizationId: parseInt(organizationId),
-          createdAt: new Date()
-        })
-        .returning();
-
-      res.status(201).json(newUser);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: "Failed to create user" });
-    }
-  });
+  // NOTE: Duplicate POST /api/users route removed - using the earlier definition with proper role mapping
 
   app.patch('/api/users/:id', authenticateToken, async (req: AuthRequest, res) => {
     try {
@@ -4696,6 +5339,31 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
         return res.status(400).json({ message: "Invalid lab test data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create lab test" });
+    }
+  });
+
+  // Seed comprehensive lab test catalog (admin only)
+  app.post('/api/lab-tests/seed-catalog', authenticateToken, requireAnyRole(['admin', 'superadmin', 'super_admin']), async (req: AuthRequest, res) => {
+    try {
+      const { seedComprehensiveLabTests } = await import('./seedComprehensiveLabTests');
+      const result = await seedComprehensiveLabTests();
+      
+      // Create audit log
+      const auditLogger = new AuditLogger(req);
+      await auditLogger.logSystemAction("Lab Test Catalog Seeded", {
+        addedCount: result.added,
+        skippedCount: result.skipped,
+        performedBy: req.user?.username
+      });
+      
+      res.json({ 
+        message: `Lab test catalog seeded successfully`,
+        added: result.added,
+        skipped: result.skipped
+      });
+    } catch (error) {
+      console.error("Error seeding lab test catalog:", error);
+      res.status(500).json({ message: "Failed to seed lab test catalog" });
     }
   });
 
@@ -5260,7 +5928,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
           eq(labOrders.patientId, patientId),
           eq(labOrders.organizationId, userOrgId)
         ))
-        .orderBy(labOrders.createdAt);
+        .orderBy(desc(labOrders.createdAt));
       
       // Set no-cache headers to ensure fresh data
       res.set({
@@ -5393,6 +6061,74 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     } catch (error) {
       console.error('Print lab order error:', error);
       res.status(500).json({ message: "Failed to generate lab order print" });
+    }
+  });
+
+  // Print patient lab history with professional letterhead
+  app.get('/api/patients/:id/lab-history/print', authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const userOrgId = req.user?.organizationId;
+      
+      if (!userOrgId) {
+        return res.status(400).json({ message: "Organization context required" });
+      }
+
+      // Get patient info with organization data
+      const [patientData] = await db.select({
+        patientId: patients.id,
+        firstName: patients.firstName,
+        lastName: patients.lastName,
+        dateOfBirth: patients.dateOfBirth,
+        gender: patients.gender,
+        phone: patients.phone,
+        email: patients.email,
+        organizationId: patients.organizationId
+      })
+      .from(patients)
+      .where(and(eq(patients.id, patientId), eq(patients.organizationId, userOrgId)));
+
+      if (!patientData) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      // Get organization info
+      const [orgData] = await db.select({
+        name: organizations.name,
+        type: organizations.type,
+        address: organizations.address,
+        phone: organizations.phone,
+        email: organizations.email,
+        website: organizations.website,
+        logoUrl: organizations.logoUrl,
+        themeColor: organizations.themeColor
+      })
+      .from(organizations)
+      .where(eq(organizations.id, userOrgId));
+
+      // Get lab results for the patient
+      const labResultsData = await db.select({
+        id: labResults.id,
+        testName: labResults.testName,
+        result: labResults.result,
+        normalRange: labResults.normalRange,
+        status: labResults.status,
+        notes: labResults.notes,
+        testDate: labResults.testDate,
+        createdAt: labResults.createdAt
+      })
+      .from(labResults)
+      .where(and(eq(labResults.patientId, patientId), eq(labResults.organizationId, userOrgId)))
+      .orderBy(desc(labResults.testDate));
+
+      // Generate HTML for printing
+      const html = generateLabHistoryHTML(patientData, labResultsData, orgData);
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(html);
+    } catch (error) {
+      console.error('Print lab history error:', error);
+      res.status(500).json({ message: "Failed to generate lab history print" });
     }
   });
 
@@ -8000,7 +8736,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     }
   });
 
-  app.get('/api/organizations', authenticateToken, requireSuperOrOrgAdmin(), async (req: AuthRequest, res) => {
+  app.get('/api/organizations', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const organizationsList = await db
         .select({
@@ -8377,13 +9113,17 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.get("/api/appointments", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
-      if (!userOrgId) {
+      const isSuperAdmin = req.user?.role === 'superadmin';
+      
+      // Allow superadmin to view all appointments, regular users need organization context
+      if (!isSuperAdmin && !userOrgId) {
         return res.status(400).json({ message: "Organization context required" });
       }
       
       const { date } = req.query;
       
-      const allAppointments = await db.select({
+      // Build query - superadmin sees all, others see only their organization
+      let query = db.select({
         id: appointments.id,
         patientId: appointments.patientId,
         patientName: patients.firstName,
@@ -8400,9 +9140,13 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       })
       .from(appointments)
       .leftJoin(patients, eq(appointments.patientId, patients.id))
-      .leftJoin(users, eq(appointments.doctorId, users.id))
-      .where(eq(appointments.organizationId, userOrgId))
-      .orderBy(appointments.appointmentDate, appointments.appointmentTime);
+      .leftJoin(users, eq(appointments.doctorId, users.id));
+      
+      // Filter by organization for non-superadmin users
+      const allAppointments = await (userOrgId && !isSuperAdmin 
+        ? query.where(eq(appointments.organizationId, userOrgId))
+        : query
+      ).orderBy(appointments.appointmentDate, appointments.appointmentTime);
       
       // Filter by date if provided
       let result = allAppointments;
@@ -10832,148 +11576,73 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   // Real-time notifications API
   app.get('/api/notifications', authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const organizationId = req.user!.organizationId!;
+      const userId = req.user?.id;
+      const organizationId = req.user?.organizationId;
       const notifications = [];
-
-      // Get recent active prescriptions
-      try {
-        const recentPrescriptions = await db
-          .select()
-          .from(prescriptions)
-          .where(and(
-            eq(prescriptions.organizationId, organizationId),
-            eq(prescriptions.status, 'active')
-          ))
-          .orderBy(desc(prescriptions.startDate))
-          .limit(3);
-
-        // Get patient names for prescriptions
-        if (recentPrescriptions.length > 0) {
-          const prescriptionPatientIds = recentPrescriptions.map(p => p.patientId).filter(Boolean);
-          let patientNames = {};
-          
-          if (prescriptionPatientIds.length > 0) {
-            const patientData = await db
-              .select()
-              .from(patients)
-              .where(inArray(patients.id, prescriptionPatientIds));
-            
-            patientData.forEach(patient => {
-              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
-            });
-          }
-
-          // Add prescription notifications
-          recentPrescriptions.forEach(prescription => {
-            const patientName = patientNames[prescription.patientId] || 'Unknown Patient';
-            notifications.push({
-              id: `prescription-${prescription.id}`,
-              type: 'prescription',
-              priority: 'medium',
-              title: 'Active Prescription',
-              description: `${patientName} - ${prescription.medicationName}`,
-              timestamp: prescription.startDate,
-              color: 'blue'
-            });
-          });
-        }
-      } catch (prescriptionError) {
-        console.log('Error fetching prescriptions for notifications:', prescriptionError);
+      
+      // If no organizationId, return empty notifications (authentication disabled mode)
+      if (!organizationId || !userId) {
+        return res.json([]);
       }
+      
+      // Get dismissed notifications for this user
+      const dismissedNotifs = await db
+        .select()
+        .from(dismissedNotifications)
+        .where(and(
+          eq(dismissedNotifications.userId, userId),
+          eq(dismissedNotifications.organizationId, organizationId)
+        ));
+      
+      const dismissedIds = new Set(dismissedNotifs.map(d => d.notificationId));
 
-      // Get recent visits
+      // Get staff messages (unread messages only)
       try {
-        const recentVisits = await db
-          .select()
-          .from(visits)
-          .where(eq(visits.organizationId, organizationId))
-          .orderBy(desc(visits.visitDate))
-          .limit(3);
-
-        // Get patient names for visits
-        if (recentVisits.length > 0) {
-          const visitPatientIds = recentVisits.map(v => v.patientId).filter(Boolean);
-          let patientNames = {};
-          
-          if (visitPatientIds.length > 0) {
-            const patientData = await db
-              .select()
-              .from(patients)
-              .where(inArray(patients.id, visitPatientIds));
-            
-            patientData.forEach(patient => {
-              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
-            });
-          }
-
-          // Add visit notifications
-          recentVisits.forEach(visit => {
-            const isRecent = new Date(visit.visitDate).getTime() > Date.now() - 24 * 60 * 60 * 1000;
-            const patientName = patientNames[visit.patientId] || 'Unknown Patient';
-            
-            notifications.push({
-              id: `visit-${visit.id}`,
-              type: 'visit',
-              priority: isRecent ? 'high' : 'medium',
-              title: isRecent ? 'Recent Visit' : 'Patient Visit',
-              description: `${patientName} - ${visit.purpose || 'General consultation'}`,
-              timestamp: visit.visitDate,
-              color: 'green'
-            });
-          });
-        }
-      } catch (visitError) {
-        console.log('Error fetching visits for notifications:', visitError);
-      }
-
-      // Get recent appointments
-      try {
-        const upcomingAppointments = await db
-          .select()
-          .from(appointments)
+        const staffMessages = await db
+          .select({
+            id: messages.id,
+            subject: messages.subject,
+            message: messages.message,
+            messageType: messages.messageType,
+            priority: messages.priority,
+            status: messages.status,
+            sentAt: messages.sentAt,
+            patientName: sql<string>`${patients.firstName} || ' ' || ${patients.lastName}`
+          })
+          .from(messages)
+          .leftJoin(patients, eq(messages.patientId, patients.id))
           .where(and(
-            eq(appointments.organizationId, organizationId),
-            inArray(appointments.status, ['scheduled', 'confirmed'])
+            eq(messages.organizationId, organizationId),
+            or(
+              eq(messages.assignedTo, userId),
+              isNull(messages.assignedTo),
+              eq(messages.recipientRole, req.user?.role)
+            ),
+            inArray(messages.status, ['sent', 'read']) // Only show unread and recently read messages
           ))
-          .orderBy(desc(appointments.appointmentDate))
-          .limit(3);
+          .orderBy(desc(messages.sentAt))
+          .limit(10);
 
-        // Get patient names for appointments
-        if (upcomingAppointments.length > 0) {
-          const appointmentPatientIds = upcomingAppointments.map(a => a.patientId).filter(Boolean);
-          let patientNames = {};
-          
-          if (appointmentPatientIds.length > 0) {
-            const patientData = await db
-              .select()
-              .from(patients)
-              .where(inArray(patients.id, appointmentPatientIds));
-            
-            patientData.forEach(patient => {
-              patientNames[patient.id] = `${patient.firstName} ${patient.lastName}`;
-            });
-          }
-
-          // Add appointment notifications
-          upcomingAppointments.forEach(appointment => {
-            const appointmentDate = new Date(appointment.appointmentDate);
-            const today = new Date();
-            const isToday = appointmentDate.toDateString() === today.toDateString();
-            const patientName = patientNames[appointment.patientId] || 'Unknown Patient';
+        // Add message notifications (excluding dismissed ones)
+        staffMessages.forEach(msg => {
+          const notificationId = `message-${msg.id}`;
+          if (!dismissedIds.has(notificationId)) {
+            const isUnread = msg.status === 'sent';
+            const isUrgent = msg.priority === 'urgent' || msg.priority === 'high';
             
             notifications.push({
-              id: `appointment-${appointment.id}`,
-              type: 'appointment',
-              priority: isToday ? 'high' : 'medium',
-              title: isToday ? 'Appointment Today' : 'Upcoming Appointment',
-              description: `${patientName} - ${appointment.appointmentTime}`,
-              timestamp: appointment.appointmentDate,
-              color: 'orange'
+              id: notificationId,
+              type: 'message',
+              priority: isUnread && isUrgent ? 'high' : isUnread ? 'medium' : 'low',
+              title: isUnread ? 'New Staff Message' : 'Staff Message',
+              description: `${msg.patientName || 'Patient'} - ${msg.subject}`,
+              timestamp: msg.sentAt,
+              color: isUnread ? 'bg-purple-500' : 'bg-gray-400'
             });
-          });
-        }
-      } catch (appointmentError) {
-        console.log('Error fetching appointments for notifications:', appointmentError);
+          }
+        });
+      } catch (messageError) {
+        console.log('Error fetching messages for notifications:', messageError);
       }
 
       // Sort notifications by priority and timestamp
@@ -10987,7 +11656,7 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
       res.json({
         notifications: notifications.slice(0, 6),
         totalCount: notifications.length,
-        unreadCount: notifications.filter(n => n.priority === 'high').length
+        unreadCount: notifications.filter(n => n.priority === 'high' || n.priority === 'medium').length
       });
 
     } catch (error) {
@@ -10999,15 +11668,46 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   // Clear all notifications endpoint
   app.post('/api/notifications/clear', authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const userId = req.user!.id;
       const organizationId = req.user!.organizationId!;
       
-      // Since notifications are dynamically generated from data, 
-      // we'll simulate clearing by returning an empty response
-      // In a real implementation, you might mark notifications as read/dismissed
+      // Get all current notification IDs
+      const currentNotifications = [];
+      
+      // Get staff messages
+      const staffMessages = await db
+        .select()
+        .from(messages)
+        .where(and(
+          eq(messages.organizationId, organizationId),
+          or(
+            eq(messages.assignedTo, userId),
+            isNull(messages.assignedTo),
+            eq(messages.recipientRole, req.user?.role)
+          ),
+          inArray(messages.status, ['sent', 'read'])
+        ))
+        .limit(10);
+      
+      staffMessages.forEach(msg => {
+        currentNotifications.push(`message-${msg.id}`);
+      });
+      
+      // Dismiss all current notifications
+      for (const notificationId of currentNotifications) {
+        await db.insert(dismissedNotifications)
+          .values({
+            userId,
+            organizationId,
+            notificationId
+          })
+          .onConflictDoNothing();
+      }
       
       res.json({ 
-        message: "Notifications cleared successfully",
-        success: true 
+        message: "All notifications cleared successfully",
+        success: true,
+        clearedCount: currentNotifications.length
       });
     } catch (error) {
       console.error('Error clearing notifications:', error);
@@ -11019,11 +11719,17 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.delete('/api/notifications/:notificationId', authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { notificationId } = req.params;
+      const userId = req.user!.id;
       const organizationId = req.user!.organizationId!;
       
-      // Since notifications are dynamically generated, we'll simulate deletion
-      // In a real implementation, you might mark specific notifications as dismissed
-      // and store that state in a dismissed_notifications table
+      // Mark this specific notification as dismissed
+      await db.insert(dismissedNotifications)
+        .values({
+          userId,
+          organizationId,
+          notificationId
+        })
+        .onConflictDoNothing();
       
       res.json({ 
         message: "Notification deleted successfully",
@@ -11122,6 +11828,22 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
     try {
       const userId = req.user!.id;
       
+      // Handle superadmin fallback user (id: 999) - doesn't exist in database
+      if (userId === 999 && req.user!.role === 'superadmin') {
+        return res.json({
+          id: 999,
+          username: 'superadmin',
+          role: 'superadmin',
+          organizationId: undefined,
+          organization: {
+            id: 0,
+            name: 'System Administration',
+            type: 'system',
+            themeColor: '#DC2626'
+          }
+        });
+      }
+      
       const [user] = await db.select()
         .from(users)
         .where(eq(users.id, userId))
@@ -11201,6 +11923,21 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   app.get("/api/profile", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
+      
+      // Handle superadmin fallback user (id: 999) - doesn't exist in database
+      if (userId === 999 && req.user!.role === 'superadmin') {
+        return res.json({
+          id: 999,
+          username: 'superadmin',
+          role: 'superadmin',
+          organizationId: undefined,
+          title: undefined,
+          firstName: 'Super',
+          lastName: 'Admin',
+          phone: undefined,
+          email: null
+        });
+      }
       
       const [userProfile] = await db.select({
         id: users.id,
@@ -11946,6 +12683,15 @@ Provide JSON response with: summary, systemHealth (score, trend, riskFactors), r
   
   // Setup lab panels management routes
   setupLabPanelsRoutes(app);
+  
+  // Setup admin dashboard routes
+  app.use('/api/admin', adminDashboardRoutes);
+  
+  // Setup bulk user operations routes
+  app.use('/api/admin/users', bulkUsersRoutes);
+  
+  // Setup enhanced audit logs routes
+  app.use('/api/audit-logs', auditLogsEnhancedRoutes);
 
   // Autocomplete suggestions API endpoints
   app.get("/api/autocomplete/:fieldType", authenticateToken, async (req: AuthRequest, res) => {
@@ -12742,7 +13488,7 @@ PRIORITY LEVEL: ${priorityLevel.toUpperCase()}
           priority: 'high',
           title: `Abnormal Lab Result: ${result.testName}`,
           description: `Result: ${result.result} (Normal: ${result.normalRange || 'N/A'})`,
-          timestamp: result.testDate.toISOString(),
+          timestamp: result.testDate ? result.testDate.toISOString() : new Date().toISOString(),
           actionRequired: true
         });
       });
@@ -12786,7 +13532,7 @@ PRIORITY LEVEL: ${priorityLevel.toUpperCase()}
             priority: 'medium',
             title: 'Medication Review Needed',
             description: `${prescription.medicationName || 'Medication'} prescription has expired`,
-            timestamp: prescription.endDate.toISOString(),
+            timestamp: prescription.endDate ? prescription.endDate.toISOString() : new Date().toISOString(),
             actionRequired: true
           });
         }
@@ -13102,3 +13848,5 @@ PRIORITY LEVEL: ${priorityLevel.toUpperCase()}
 
   return httpServer;
 }
+
+

@@ -22,7 +22,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    
+
     try {
       await login(username, password);
     } catch (error) {
@@ -34,7 +34,7 @@ export default function Login() {
     setError('');
     setUsername(demoUsername);
     setPassword(demoPassword);
-    
+
     try {
       await login(demoUsername, demoPassword);
     } catch (error) {
@@ -45,19 +45,19 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Futuristic Gradient Background */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center animate-[float_20s_ease-in-out_infinite]"
-        style={{ 
+        style={{
           backgroundImage: `url(${backgroundImage})`,
           backgroundSize: '120%'
         }}
       />
-      
+
       {/* Gradient Blend Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/30" />
-      
+
       <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-12 items-center">
-        
+
         {/* Left Side - Professional Branding */}
         <div className="hidden lg:block space-y-8">
           <div className="space-y-6">
@@ -74,7 +74,7 @@ export default function Login() {
                 </p>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               <h2 className="text-3xl font-bold text-slate-800">
                 Professional Clinical Management
@@ -84,7 +84,7 @@ export default function Login() {
               </p>
             </div>
           </div>
-          
+
           {/* Feature Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/70 backdrop-blur-md">
@@ -94,7 +94,7 @@ export default function Login() {
               <h3 className="font-semibold text-foreground mb-2">Smart Analytics</h3>
               <p className="text-sm text-muted-foreground">Intelligent diagnostic insights</p>
             </div>
-            
+
             <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/70 backdrop-blur-md">
               <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
                 <Heart className="w-6 h-6 text-accent" />
@@ -102,7 +102,7 @@ export default function Login() {
               <h3 className="font-semibold text-foreground mb-2">Vital Monitoring</h3>
               <p className="text-sm text-muted-foreground">Real-time health tracking</p>
             </div>
-            
+
             <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/70 backdrop-blur-md">
               <div className="w-12 h-12 bg-info/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-info/20 transition-colors">
                 <Users className="w-6 h-6 text-info" />
@@ -110,7 +110,7 @@ export default function Login() {
               <h3 className="font-semibold text-foreground mb-2">Patient Care</h3>
               <p className="text-sm text-muted-foreground">Comprehensive patient management</p>
             </div>
-            
+
             <div className="healthcare-card p-6 group hover:shadow-lg transition-all bg-white/70 backdrop-blur-md">
               <div className="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-success/20 transition-colors">
                 <Shield className="w-6 h-6 text-success" />
@@ -120,7 +120,7 @@ export default function Login() {
             </div>
           </div>
         </div>
-        
+
         {/* Right Side - Login Form */}
         <div className="w-full max-w-md mx-auto lg:mx-0">
           <Card className="healthcare-card shadow-2xl bg-transparent backdrop-blur-2xl border-white/20">
@@ -139,7 +139,7 @@ export default function Login() {
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -155,7 +155,7 @@ export default function Login() {
                     className="h-11"
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
                   <div className="relative">
@@ -182,16 +182,16 @@ export default function Login() {
                     </button>
                   </div>
                 </div>
-                
+
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                
-                <Button 
-                  type="submit" 
-                  className="w-full h-11" 
+
+                <Button
+                  type="submit"
+                  className="w-full h-11"
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -207,8 +207,8 @@ export default function Login() {
                   )}
                 </Button>
               </form>
-              
-              {/* Replit Auth - Social Login */}
+
+              {/* OAuth Login - Currently Disabled */}
               <div className="space-y-3">
                 <div className="relative">
                   <Separator />
@@ -216,64 +216,14 @@ export default function Login() {
                     OR CONTINUE WITH
                   </span>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-11"
-                    onClick={() => window.location.href = '/api/login?provider=google'}
-                    data-testid="button-login-google"
-                  >
-                    <SiGoogle className="mr-2 h-4 w-4" />
-                    Google
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-11"
-                    onClick={() => window.location.href = '/api/login?provider=github'}
-                    data-testid="button-login-github"
-                  >
-                    <SiGithub className="mr-2 h-4 w-4" />
-                    GitHub
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-11"
-                    onClick={() => window.location.href = '/api/login?provider=x'}
-                    data-testid="button-login-x"
-                  >
-                    <SiX className="mr-2 h-4 w-4" />
-                    X
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-11"
-                    onClick={() => window.location.href = '/api/login?provider=apple'}
-                    data-testid="button-login-apple"
-                  >
-                    <SiApple className="mr-2 h-4 w-4" />
-                    Apple
-                  </Button>
+
+                <div className="p-4 bg-muted/30 rounded-lg border border-border/30">
+                  <p className="text-sm text-muted-foreground text-center">
+                    OAuth login (Google, GitHub, etc.) is not yet available. Please use username/password login above.
+                  </p>
                 </div>
-                
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-11"
-                  onClick={() => window.location.href = '/api/login?provider=email'}
-                  data-testid="button-login-email"
-                >
-                  Continue with Email
-                </Button>
               </div>
-              
+
               {/* Demo Accounts */}
               <div className="p-4 bg-muted/50 rounded-lg border border-border/50">
                 <p className="text-sm font-semibold text-foreground mb-3 flex items-center">
@@ -282,7 +232,7 @@ export default function Login() {
                 </p>
                 <div className="space-y-2">
                   <Button
-                    onClick={() => handleDemoLogin('superadmin', 'admin123')}
+                    onClick={() => handleDemoLogin('superadmin', 'super123')}
                     disabled={isLoading}
                     variant="outline"
                     className="w-full h-10 justify-start"
@@ -290,7 +240,7 @@ export default function Login() {
                     <Shield className="w-4 h-4 mr-2 text-destructive" />
                     Super Admin
                   </Button>
-                  
+
                   <Button
                     onClick={() => handleDemoLogin('admin', 'admin123')}
                     disabled={isLoading}
@@ -300,7 +250,7 @@ export default function Login() {
                     <Users className="w-4 h-4 mr-2 text-primary" />
                     Admin
                   </Button>
-                  
+
                   <Button
                     onClick={() => handleDemoLogin('ade', 'doctor123')}
                     disabled={isLoading}
@@ -310,7 +260,7 @@ export default function Login() {
                     <Stethoscope className="w-4 h-4 mr-2 text-info" />
                     Doctor (Ade)
                   </Button>
-                  
+
                   <Button
                     onClick={() => handleDemoLogin('syb', 'nurse123')}
                     disabled={isLoading}
@@ -320,9 +270,9 @@ export default function Login() {
                     <Heart className="w-4 h-4 mr-2 text-success" />
                     Nurse (Syb)
                   </Button>
-                  
+
                   <Button
-                    onClick={() => handleDemoLogin('receptionist1', 'receptionist123')}
+                    onClick={() => handleDemoLogin('receptionist', 'receptionist123')}
                     disabled={isLoading}
                     variant="outline"
                     className="w-full h-10 justify-start"
@@ -334,7 +284,7 @@ export default function Login() {
               </div>
             </CardContent>
           </Card>
-          
+
           {/* Mobile Branding */}
           <div className="lg:hidden mt-6 text-center">
             <div className="flex items-center justify-center space-x-2 mb-2">

@@ -8,9 +8,8 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
-}
+// Check for Replit environment - optional for local development
+const isReplitEnvironment = !!process.env.REPLIT_DOMAINS;
 
 const getOidcConfig = memoize(
   async () => {
@@ -67,6 +66,12 @@ async function upsertUser(
 }
 
 export async function setupAuth(app: Express) {
+  // Skip Replit Auth setup in local development
+  if (!isReplitEnvironment) {
+    console.log('⚠️  Replit Auth disabled - running in local development mode');
+    return;
+  }
+
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -102,10 +107,21 @@ export async function setupAuth(app: Express) {
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+    // AUTHENTICATION DISABLED - Return success response for all login attempts
+    const provider = req.query.provider as string;
+    
+    // Return success response indicating auth is disabled
+    return res.status(200).json({ 
+      message: 'Authentication is disabled. You are already logged in as superadmin.',
+      authenticated: true,
+      user: {
+        id: 999,
+        username: 'superadmin',
+        role: 'superadmin',
+        organizationId: undefined
+      },
+      provider: provider || 'none'
+    });
   });
 
   app.get("/api/callback", (req, res, next) => {

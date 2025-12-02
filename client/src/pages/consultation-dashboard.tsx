@@ -34,11 +34,13 @@ export default function ConsultationDashboard() {
   // Fetch appointments data
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['/api/appointments'],
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchInterval: 3 * 60 * 1000, // Reduced from 30s to 3 minutes
+    staleTime: 90 * 1000, // Cache for 90 seconds
   });
 
   const { data: currentUser } = useQuery({
     queryKey: ['/api/profile'],
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes (user profile rarely changes)
   });
 
   // Update appointment status mutation

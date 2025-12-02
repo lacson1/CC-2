@@ -21,6 +21,13 @@ const FALLBACK_TABS: TabConfig[] = [
   { id: -3, key: 'lab', label: 'Lab Results', icon: 'TestTube', contentType: 'builtin_component', settings: {}, displayOrder: 30, isVisible: true, isSystemDefault: true, scope: 'system' },
   { id: -4, key: 'medications', label: 'Medications', icon: 'Pill', contentType: 'builtin_component', settings: {}, displayOrder: 40, isVisible: true, isSystemDefault: true, scope: 'system' },
   { id: -5, key: 'vitals', label: 'Vitals', icon: 'Activity', contentType: 'builtin_component', settings: {}, displayOrder: 50, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -6, key: 'documents', label: 'Documents', icon: 'FileText', contentType: 'builtin_component', settings: {}, displayOrder: 60, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -7, key: 'timeline', label: 'Timeline', icon: 'Clock', contentType: 'builtin_component', settings: {}, displayOrder: 70, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -8, key: 'safety', label: 'Safety', icon: 'Shield', contentType: 'builtin_component', settings: {}, displayOrder: 80, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -9, key: 'imaging', label: 'Imaging', icon: 'Scan', contentType: 'builtin_component', settings: {}, displayOrder: 90, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -10, key: 'allergies', label: 'Allergies', icon: 'AlertTriangle', contentType: 'builtin_component', settings: {}, displayOrder: 100, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -11, key: 'immunizations', label: 'Immunizations', icon: 'Syringe', contentType: 'builtin_component', settings: {}, displayOrder: 110, isVisible: true, isSystemDefault: true, scope: 'system' },
+  { id: -12, key: 'procedures', label: 'Procedures', icon: 'Scissors', contentType: 'builtin_component', settings: {}, displayOrder: 120, isVisible: true, isSystemDefault: true, scope: 'system' },
 ];
 
 // Bidirectional key mapping

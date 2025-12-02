@@ -93,15 +93,18 @@ export default function AIClinicalInsights() {
   // Queries
   const { data: insights = [], isLoading: insightsLoading } = useQuery({
     queryKey: ["/api/ai/clinical-insights"],
-    refetchInterval: 30000
+    refetchInterval: false, // Disabled auto-refresh - AI data is expensive
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
   const { data: riskProfiles = [] } = useQuery({
-    queryKey: ["/api/ai/risk-profiles"]
+    queryKey: ["/api/ai/risk-profiles"],
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
   const { data: metrics } = useQuery({
-    queryKey: ["/api/ai/clinical-metrics"]
+    queryKey: ["/api/ai/clinical-metrics"],
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 
   // Mutations

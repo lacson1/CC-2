@@ -46,7 +46,8 @@ export default function ClinicalActivityCenter() {
   // Fetch integrated clinical activity dashboard data
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
     queryKey: ["/api/clinical-activity/dashboard"],
-    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+    refetchInterval: 3 * 60 * 1000, // Reduced from 30s to 3 minutes
+    staleTime: 90 * 1000, // Cache for 90 seconds
   });
 
   // Extract data from integrated response

@@ -181,8 +181,9 @@ export const prescriptions = pgTable("prescriptions", {
   id: serial("id").primaryKey(),
   patientId: integer("patient_id").notNull().references(() => patients.id),
   visitId: integer("visit_id").references(() => visits.id),
-  medicationId: integer("medication_id").references(() => medicines.id), // Updated to reference medicines table
-  medicationName: text("medication_name"), // For manual entries when medication is not in database
+  medicationId: integer("medication_id"), // Optional reference - DO NOT use foreign key to allow flexibility
+  medicationDatabaseId: integer("medication_database_id").references(() => medications.id), // Reference to comprehensive medications database
+  medicationName: text("medication_name").notNull(), // For manual entries when medication is not in database OR to store name from medicines/medications
   dosage: text("dosage").notNull(),
   frequency: text("frequency").notNull(),
   duration: text("duration").notNull(),
@@ -1801,10 +1802,26 @@ export const insertClinicalNoteSchema = createInsertSchema(clinicalNotes).omit({
   updatedAt: true
 });
 
+// Dismissed Notifications - Track which notifications users have dismissed
+export const dismissedNotifications = pgTable('dismissed_notifications', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  organizationId: integer('organization_id').references(() => organizations.id).notNull(),
+  notificationId: varchar('notification_id', { length: 255 }).notNull(), // e.g., "visit-123", "prescription-456"
+  dismissedAt: timestamp('dismissed_at').defaultNow()
+});
+
+export const insertDismissedNotificationSchema = createInsertSchema(dismissedNotifications).omit({
+  id: true,
+  dismissedAt: true
+});
+
 export type AiConsultation = typeof aiConsultations.$inferSelect;
 export type InsertAiConsultation = z.infer<typeof insertAiConsultationSchema>;
 export type ClinicalNote = typeof clinicalNotes.$inferSelect;
 export type InsertClinicalNote = z.infer<typeof insertClinicalNoteSchema>;
+export type DismissedNotification = typeof dismissedNotifications.$inferSelect;
+export type InsertDismissedNotification = z.infer<typeof insertDismissedNotificationSchema>;
 
 // UserOrganizations schemas
 export const insertUserOrganizationSchema = createInsertSchema(userOrganizations).omit({

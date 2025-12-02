@@ -345,7 +345,11 @@ export function TabManager({ open, onOpenChange }: TabManagerProps) {
   // Create tab mutation
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      await apiRequest('/api/tab-configs', 'POST', data);
+      console.log('Creating tab with data:', data);
+      const response = await apiRequest('/api/tab-configs', 'POST', data);
+      const result = await response.json();
+      console.log('Tab creation result:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/tab-configs'] });
@@ -357,10 +361,31 @@ export function TabManager({ open, onOpenChange }: TabManagerProps) {
         description: 'Tab created successfully',
       });
     },
-    onError: () => {
+    onError: async (error: any) => {
+      console.error('Tab creation error:', error);
+      
+      let errorMessage = 'Failed to create tab';
+      
+      try {
+        // Try to parse error response
+        if (error?.message) {
+          const errorText = error.message;
+          // Extract JSON from error message if present
+          const jsonMatch = errorText.match(/\{.*\}/);
+          if (jsonMatch) {
+            const errorData = JSON.parse(jsonMatch[0]);
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } else {
+            errorMessage = errorText;
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse error:', e);
+      }
+      
       toast({
         title: 'Error',
-        description: 'Failed to create tab',
+        description: errorMessage,
         variant: 'destructive',
       });
     },

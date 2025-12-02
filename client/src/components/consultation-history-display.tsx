@@ -7,7 +7,16 @@ import {
   ChevronDown, 
   Search, 
   Clock,
-  Stethoscope
+  Stethoscope,
+  ClipboardList,
+  Eye,
+  Ear,
+  Baby,
+  Brain,
+  Heart,
+  Bone,
+  Pill,
+  Activity
 } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,17 +24,43 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ConsultationHistoryDisplayProps {
   patientId: number;
   patient?: any;
 }
 
+// Helper function to get specialty icon
+const getSpecialtyIcon = (role: string) => {
+  const roleMap: Record<string, any> = {
+    ophthalmologist: Eye,
+    ent_specialist: Ear,
+    pediatrician: Baby,
+    psychiatrist: Brain,
+    psychologist: Brain,
+    cardiologist: Heart,
+    orthopedist: Bone,
+    physiotherapist: Activity,
+    pharmacist: Pill,
+    nurse: Activity,
+    doctor: Stethoscope,
+  };
+  return roleMap[role?.toLowerCase()] || ClipboardList;
+};
+
+// Helper to format specialty role name
+const formatSpecialtyRole = (role: string) => {
+  if (!role) return 'Healthcare Staff';
+  return role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+};
+
 export default function ConsultationHistoryDisplay({ patientId, patient }: ConsultationHistoryDisplayProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<string>("timeline");
   
   // Fetch consultation records and visits
   const { data: consultationRecords = [], isLoading: historyLoading } = useQuery({
@@ -39,40 +74,67 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
   // Combine consultation records and visits into unified timeline
   const combinedRecords = React.useMemo(() => {
     const records = [
-      // Transform consultation records
+      // Transform consultation records (specialty forms)
       ...(consultationRecords as any[]).map((record: any) => ({
         ...record,
         type: 'consultation',
         date: record.createdAt,
-        title: record.formName || 'Consultation',
+        title: record.formName || 'Specialty Consultation',
         conductedBy: record.conductedByFullName || 'Healthcare Staff',
-        role: record.conductedByRole || 'staff',
+        role: record.conductedByRole || record.specialistRole || 'staff',
+        specialistRole: record.specialistRole,
+        isSpecialtyForm: true,
         uniqueKey: `consultation-${record.id}-${record.createdAt}`
       })),
-      // Transform visits
-      ...(visits as any[]).map((visit: any) => ({
-        ...visit,
-        id: `visit-${visit.id}`,
-        type: 'visit',
-        date: visit.visitDate || visit.createdAt,
-        title: `${visit.visitType?.charAt(0).toUpperCase() + visit.visitType?.slice(1) || 'Medical Visit'}`,
-        conductedBy: visit.doctorFirstName && visit.doctorLastName 
-          ? `${visit.doctorFirstName} ${visit.doctorLastName}`
-          : visit.doctorName || 'Healthcare Staff',
-        role: visit.doctorRole || 'doctor',
-        formName: visit.visitType,
-        complaint: visit.complaint,
-        diagnosis: visit.diagnosis,
-        treatment: visit.treatment,
-        uniqueKey: `visit-${visit.id}-${visit.visitDate || visit.createdAt}`
-      }))
+      // Transform visits (regular consultations)
+      ...(visits as any[]).map((visit: any) => {
+        // Check if visit has embedded specialty assessments in notes
+        let parsedNotes: any = null;
+        let embeddedSpecialtyAssessments: any[] = [];
+        try {
+          if (visit.notes && typeof visit.notes === 'string') {
+            parsedNotes = JSON.parse(visit.notes);
+            embeddedSpecialtyAssessments = parsedNotes?.specialtyAssessments || [];
+          }
+        } catch (e) {
+          // Notes is not JSON, that's fine
+        }
+        
+        return {
+          ...visit,
+          id: `visit-${visit.id}`,
+          type: 'visit',
+          date: visit.visitDate || visit.createdAt,
+          title: `${visit.visitType?.charAt(0).toUpperCase() + visit.visitType?.slice(1) || 'Medical Visit'}`,
+          conductedBy: visit.doctorFirstName && visit.doctorLastName 
+            ? `${visit.doctorFirstName} ${visit.doctorLastName}`
+            : visit.doctorName || 'Healthcare Staff',
+          role: visit.doctorRole || 'doctor',
+          formName: visit.visitType,
+          complaint: visit.chiefComplaint || visit.complaint,
+          diagnosis: visit.diagnosis,
+          treatment: visit.treatment,
+          parsedNotes,
+          embeddedSpecialtyAssessments,
+          hasSpecialtyAssessments: embeddedSpecialtyAssessments.length > 0,
+          uniqueKey: `visit-${visit.id}-${visit.visitDate || visit.createdAt}`
+        };
+      })
     ];
     
     return records.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [consultationRecords, visits]);
+  
+  // Separate specialty consultations and regular visits for tabs view
+  const specialtyConsultations = combinedRecords.filter((r: any) => r.type === 'consultation');
+  const regularVisits = combinedRecords.filter((r: any) => r.type === 'visit');
 
   // Apply filters
   const filteredRecords = combinedRecords.filter((record: any) => {
+    // Filter by view mode first
+    if (viewMode === "visits" && record.type !== "visit") return false;
+    if (viewMode === "specialty" && record.type !== "consultation") return false;
+    
     if (searchTerm && !record.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
         !record.conductedBy.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
@@ -209,6 +271,34 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                   </Button>
                 </div>
               )}
+              
+              {/* View Mode Tabs */}
+              <div className="flex gap-2 mt-3">
+                <Button
+                  variant={viewMode === "timeline" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("timeline")}
+                  className="text-xs h-7"
+                >
+                  All Records
+                </Button>
+                <Button
+                  variant={viewMode === "visits" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("visits")}
+                  className="text-xs h-7"
+                >
+                  Visits ({regularVisits.length})
+                </Button>
+                <Button
+                  variant={viewMode === "specialty" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setViewMode("specialty")}
+                  className="text-xs h-7"
+                >
+                  Specialty Forms ({specialtyConsultations.length})
+                </Button>
+              </div>
             </CardHeader>
 
             <CardContent className="px-4 pb-4">
@@ -229,16 +319,23 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                     {/* Professional Timeline Line */}
                     <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200"></div>
                     
-                    {filteredRecords.map((record: any, index: number) => (
+                    {filteredRecords.map((record: any, index: number) => {
+                      const SpecialtyIcon = record.type === 'consultation' 
+                        ? getSpecialtyIcon(record.specialistRole || record.role)
+                        : Stethoscope;
+                      
+                      return (
                       <div key={record.uniqueKey || record.id} className="relative flex items-start mb-3 last:mb-0">
                         {/* Timeline Dot */}
                         <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center border-2 border-white shadow-sm ${
                           record.type === 'consultation' 
-                            ? 'bg-blue-600' 
-                            : 'bg-emerald-600'
+                            ? 'bg-purple-600' 
+                            : record.hasSpecialtyAssessments 
+                              ? 'bg-gradient-to-br from-emerald-500 to-purple-500'
+                              : 'bg-emerald-600'
                         }`}>
                           {record.type === 'consultation' ? (
-                            <FileText className="w-3.5 h-3.5 text-white" />
+                            <SpecialtyIcon className="w-3.5 h-3.5 text-white" />
                           ) : (
                             <Stethoscope className="w-3.5 h-3.5 text-white" />
                           )}
@@ -246,7 +343,11 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                         
                         {/* Professional Record Content */}
                         <div className="ml-3 flex-1 min-w-0">
-                          <div className="bg-slate-50 border border-slate-200 rounded-lg p-3">
+                          <div className={`border rounded-lg p-3 ${
+                            record.type === 'consultation'
+                              ? 'bg-purple-50 border-purple-200'
+                              : 'bg-slate-50 border-slate-200'
+                          }`}>
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex-1 min-w-0">
                                 <h5 className="font-medium text-slate-900 text-sm truncate">
@@ -270,12 +371,31 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                                   </div>
                                 </div>
                               </div>
-                              <Badge 
-                                variant={record.type === 'consultation' ? 'default' : 'secondary'} 
-                                className="text-xs ml-2 flex-shrink-0"
-                              >
-                                {record.type === 'consultation' ? 'Consultation' : 'Visit'}
-                              </Badge>
+                              <div className="flex items-center gap-1 ml-2 flex-shrink-0">
+                                {record.type === 'consultation' && record.specialistRole && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs bg-purple-100 text-purple-800 border-purple-300"
+                                  >
+                                    {formatSpecialtyRole(record.specialistRole)}
+                                  </Badge>
+                                )}
+                                <Badge 
+                                  variant={record.type === 'consultation' ? 'default' : 'secondary'} 
+                                  className={`text-xs ${
+                                    record.type === 'consultation' 
+                                      ? 'bg-purple-600' 
+                                      : ''
+                                  }`}
+                                >
+                                  {record.type === 'consultation' ? 'Specialty' : 'Visit'}
+                                </Badge>
+                                {record.hasSpecialtyAssessments && (
+                                  <Badge variant="outline" className="text-xs bg-green-100 text-green-800 border-green-300">
+                                    +{record.embeddedSpecialtyAssessments.length} forms
+                                  </Badge>
+                                )}
+                              </div>
                             </div>
                             
                             {/* Professional Content Preview */}
@@ -325,23 +445,29 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                             {(record.type === 'consultation' && record.formData) && (
                               <Collapsible>
                                 <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full justify-start p-2 h-8 mt-2 text-xs text-blue-600 hover:text-blue-800 hover:bg-blue-50">
+                                  <Button variant="ghost" className="w-full justify-start p-2 h-8 mt-2 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50">
                                     <ChevronDown className="h-3 w-3 mr-1" />
-                                    Read Full Consultation
+                                    View Full Specialty Assessment
                                   </Button>
                                 </CollapsibleTrigger>
                                 <CollapsibleContent className="mt-2">
-                                  <div className="bg-white border border-slate-200 rounded p-2 space-y-2">
+                                  <div className="bg-white border border-purple-200 rounded p-2 space-y-2">
                                     {Object.entries(record.formData || {}).map(([key, value]) => {
-                                      if (!value || (typeof value === 'object' && !Object.values(value).some(v => v))) return null;
+                                      if (!value || (typeof value === 'object' && !Array.isArray(value) && !Object.values(value).some(v => v))) return null;
                                       
                                       return (
-                                        <div key={key} className="border-b border-slate-100 pb-2 last:border-b-0">
+                                        <div key={key} className="border-b border-purple-100 pb-2 last:border-b-0">
                                           <div className="font-medium text-slate-800 capitalize text-xs mb-1">
-                                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                            {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/^./, str => str.toUpperCase())}
                                           </div>
                                           <div className="text-slate-600 text-xs">
-                                            {typeof value === 'object' ? (
+                                            {Array.isArray(value) ? (
+                                              <div className="flex flex-wrap gap-1">
+                                                {value.map((item, i) => (
+                                                  <Badge key={i} variant="secondary" className="text-xs">{item}</Badge>
+                                                ))}
+                                              </div>
+                                            ) : typeof value === 'object' ? (
                                               <div className="space-y-1">
                                                 {Object.entries(value).map(([subKey, subValue]) => 
                                                   subValue ? (
@@ -363,10 +489,56 @@ export default function ConsultationHistoryDisplay({ patientId, patient }: Consu
                                 </CollapsibleContent>
                               </Collapsible>
                             )}
+                            
+                            {/* Show embedded specialty assessments for visits */}
+                            {record.type === 'visit' && record.hasSpecialtyAssessments && (
+                              <Collapsible>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" className="w-full justify-start p-2 h-8 mt-2 text-xs text-purple-600 hover:text-purple-800 hover:bg-purple-50">
+                                    <ChevronDown className="h-3 w-3 mr-1" />
+                                    View Attached Specialty Forms ({record.embeddedSpecialtyAssessments.length})
+                                  </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="mt-2">
+                                  <div className="space-y-2">
+                                    {record.embeddedSpecialtyAssessments.map((assessment: any, idx: number) => (
+                                      <div key={idx} className="bg-purple-50 border border-purple-200 rounded p-2">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Badge variant="outline" className="bg-purple-100 text-purple-800 text-xs">
+                                            {assessment.formName}
+                                          </Badge>
+                                          <span className="text-xs text-purple-600">
+                                            {formatSpecialtyRole(assessment.specialistRole)}
+                                          </span>
+                                        </div>
+                                        <div className="space-y-1">
+                                          {Object.entries(assessment.data || {}).slice(0, 4).map(([key, value]) => (
+                                            <div key={key} className="text-xs">
+                                              <span className="font-medium text-slate-700">
+                                                {key.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ')}:
+                                              </span>
+                                              <span className="text-slate-600 ml-1">
+                                                {Array.isArray(value) ? value.join(', ') : String(value).substring(0, 80)}
+                                                {typeof value === 'string' && value.length > 80 ? '...' : ''}
+                                              </span>
+                                            </div>
+                                          ))}
+                                          {Object.keys(assessment.data || {}).length > 4 && (
+                                            <p className="text-xs text-purple-600 italic">
+                                              +{Object.keys(assessment.data).length - 4} more fields
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CollapsibleContent>
+                              </Collapsible>
+                            )}
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 )}
               </div>

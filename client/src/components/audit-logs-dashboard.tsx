@@ -45,7 +45,8 @@ export function AuditLogsDashboard() {
 
   const { data: auditResponse, isLoading } = useQuery({
     queryKey: ["/api/audit-logs", filterAction, filterUser, dateRange],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 3 * 60 * 1000, // Cache for 3 minutes
   });
 
   const auditLogs = auditResponse?.data || [];
@@ -53,7 +54,8 @@ export function AuditLogsDashboard() {
 
   const { data: auditStats } = useQuery({
     queryKey: ["/api/audit-logs/stats"],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Filter logs based on search and filters

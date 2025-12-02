@@ -139,20 +139,24 @@ export default function LaboratoryEnhanced() {
   // Queries
   const { data: labOrders = [], isLoading: ordersLoading, refetch: refetchOrders } = useQuery({
     queryKey: ["/api/lab-orders/enhanced", filterStatus, filterPriority],
-    refetchInterval: 30000
+    refetchInterval: 3 * 60 * 1000, // Reduced from 30s to 3 minutes
+    staleTime: 90 * 1000, // Cache for 90 seconds
   });
 
   const { data: labTests = [], isLoading: testsLoading } = useQuery({
-    queryKey: ["/api/lab-tests"]
+    queryKey: ["/api/lab-tests"],
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes (static data)
   });
 
   const { data: patients = [] } = useQuery({
-    queryKey: ["/api/patients"]
+    queryKey: ["/api/patients"],
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: analytics } = useQuery({
     queryKey: ["/api/lab-analytics"],
-    refetchInterval: 60000
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   // Mutations

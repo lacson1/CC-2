@@ -9,14 +9,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Pill, 
-  Plus, 
-  Package, 
-  AlertTriangle, 
-  ShoppingCart, 
-  FileText, 
-  Clock, 
+import {
+  Pill,
+  Plus,
+  Package,
+  AlertTriangle,
+  ShoppingCart,
+  FileText,
+  Clock,
   Check,
   User,
   Calendar,
@@ -116,7 +116,7 @@ export function PharmacyWorkflow({ medicines }: PharmacyWorkflowProps) {
       if (medicine && medicine.quantity < data.quantity) {
         throw new Error("Insufficient stock for dispensing");
       }
-      
+
       // Update medicine quantity
       const response = await apiRequest(`/api/medicines/${data.medicineId}`, "PATCH", {
         quantity: medicine.quantity - data.quantity
@@ -255,8 +255,8 @@ export function PharmacyWorkflow({ medicines }: PharmacyWorkflowProps) {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Medicine Dispensing</h3>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowMedicationGuide(true)}
                 className="flex items-center gap-2"
               >
@@ -265,128 +265,128 @@ export function PharmacyWorkflow({ medicines }: PharmacyWorkflowProps) {
               </Button>
             </div>
           </div>
-          
+
           <Dialog open={showDispensingDialog} onOpenChange={setShowDispensingDialog}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Dispense Medicine
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Dispense Medicine</DialogTitle>
-                  </DialogHeader>
-                <Form {...dispensingForm}>
-                  <form onSubmit={dispensingForm.handleSubmit((data) => dispenseMutation.mutate(data))} className="space-y-4">
-                    <FormField
-                      control={dispensingForm.control}
-                      name="prescriptionId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Prescription ID</FormLabel>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Dispense Medicine
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Dispense Medicine</DialogTitle>
+              </DialogHeader>
+              <Form {...dispensingForm}>
+                <form onSubmit={dispensingForm.handleSubmit((data) => dispenseMutation.mutate(data))} className="space-y-4">
+                  <FormField
+                    control={dispensingForm.control}
+                    name="prescriptionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Prescription ID</FormLabel>
+                        <FormControl>
+                          <Input placeholder="RX001" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={dispensingForm.control}
+                    name="patientName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Patient Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Patient name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={dispensingForm.control}
+                    name="medicineId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Medicine</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(Number(value))}>
                           <FormControl>
-                            <Input placeholder="RX001" {...field} />
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select medicine" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                          <SelectContent>
+                            {medicines?.map((medicine) => (
+                              <SelectItem key={medicine.id} value={medicine.id.toString()}>
+                                {medicine.name} (Stock: {medicine.quantity})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={dispensingForm.control}
-                      name="patientName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Patient Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Patient name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={dispensingForm.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Quantity</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={dispensingForm.control}
-                      name="medicineId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Medicine</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(Number(value))}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select medicine" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {medicines?.map((medicine) => (
-                                <SelectItem key={medicine.id} value={medicine.id.toString()}>
-                                  {medicine.name} (Stock: {medicine.quantity})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={dispensingForm.control}
+                    name="instructions"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Instructions</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Take 2 tablets twice daily..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={dispensingForm.control}
-                      name="quantity"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Quantity</FormLabel>
-                          <FormControl>
-                            <Input type="number" min="1" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <FormField
+                    control={dispensingForm.control}
+                    name="dispensedBy"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dispensed By</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Pharmacist name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                    <FormField
-                      control={dispensingForm.control}
-                      name="instructions"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Instructions</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="Take 2 tablets twice daily..." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setShowDispensingDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={dispenseMutation.isPending}>
+                      {dispenseMutation.isPending ? "Dispensing..." : "Dispense"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
 
-                    <FormField
-                      control={dispensingForm.control}
-                      name="dispensedBy"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Dispensed By</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Pharmacist name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex justify-end space-x-2">
-                      <Button type="button" variant="outline" onClick={() => setShowDispensingDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={dispenseMutation.isPending}>
-                        {dispenseMutation.isPending ? "Dispensing..." : "Dispense"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </DialogContent>
-            </Dialog>
-          
           {/* Pending Prescriptions */}
           <Card>
             <CardHeader>
@@ -663,13 +663,14 @@ export function PharmacyWorkflow({ medicines }: PharmacyWorkflowProps) {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
       </Tabs>
-      
+
       {/* Medication Selection Guide */}
-      <MedicationSelectionGuide 
-        isOpen={showMedicationGuide} 
-        onClose={() => setShowMedicationGuide(false)} 
+      <MedicationSelectionGuide
+        isOpen={showMedicationGuide}
+        onClose={() => setShowMedicationGuide(false)}
       />
     </div>
   );

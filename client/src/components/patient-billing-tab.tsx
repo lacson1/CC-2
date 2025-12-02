@@ -48,10 +48,8 @@ export function PatientBillingTab({ patient }: PatientBillingTabProps) {
           </p>
         </div>
         <Link href="/billing">
-          <Button data-testid="go-to-billing">
-            <Plus className="mr-2 h-4 w-4" />
-            Manage Billing
-            <ExternalLink className="ml-2 h-4 w-4" />
+          <Button data-testid="go-to-billing" title="Manage Billing">
+            <Plus className="h-4 w-4" />
           </Button>
         </Link>
       </div>
@@ -96,9 +94,9 @@ export function PatientBillingTab({ patient }: PatientBillingTabProps) {
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                     <TableCell>{new Date(invoice.createdAt).toLocaleDateString()}</TableCell>
-                    <TableCell>₦{parseFloat(invoice.totalAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell>₦{Number.parseFloat(invoice.totalAmount || 0).toFixed(2)}</TableCell>
                     <TableCell>{getStatusBadge(invoice.status)}</TableCell>
-                    <TableCell>₦{parseFloat(invoice.balanceAmount || 0).toFixed(2)}</TableCell>
+                    <TableCell>₦{Number.parseFloat(invoice.balanceAmount || 0).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

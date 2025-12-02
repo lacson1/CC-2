@@ -27,7 +27,7 @@ export interface OptimizedPharmacyDashboard {
 export function useOptimizedPharmacyDashboard() {
   return useQuery<OptimizedPharmacyDashboard>({
     queryKey: ["/api/pharmacy/dashboard"],
-    staleTime: 60 * 1000, // 60 seconds - pharmacy data updates frequently
-    refetchInterval: 60 * 1000, // Auto-refresh every minute
+    staleTime: 2 * 60 * 1000, // 2 minutes - pharmacy data updates frequently
+    refetchInterval: false, // Disabled auto-refresh, rely on manual refresh or staleTime
   });
 }

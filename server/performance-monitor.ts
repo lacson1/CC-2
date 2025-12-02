@@ -79,9 +79,9 @@ class PerformanceMonitor {
   private async flushMetrics() {
     if (this.metricsBuffer.length === 0) return;
 
+    const metrics = this.metricsBuffer.splice(0);
+    
     try {
-      const metrics = this.metricsBuffer.splice(0);
-      
       await db.insert(performanceMetrics).values(
         metrics.map(metric => ({
           endpoint: metric.endpoint,

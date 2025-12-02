@@ -574,10 +574,12 @@ export default function ReferralManagement({ patientId }: ReferralManagementProp
                   </div>
                 )}
 
-                <div className="border-t pt-3 text-xs text-gray-500">
-                  Referred by Dr. {referral.referringDoctor.firstName || referral.referringDoctor.username} 
-                  ({referral.referringDoctor.role})
-                </div>
+                {referral.referringDoctor && (
+                  <div className="border-t pt-3 text-xs text-gray-500">
+                    Referred by Dr. {referral.referringDoctor.firstName || referral.referringDoctor.username} 
+                    ({referral.referringDoctor.role})
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

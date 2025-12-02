@@ -325,9 +325,8 @@ export function PatientHistoryTab({ patientId }: PatientHistoryTabProps) {
             ? 'Add medical history entries to maintain a complete patient record.' 
             : `No ${typeLabels[type] || type} recorded for this patient.`}
         </p>
-        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-history-empty">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Medical History
+        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-history-empty" title="Add Medical History">
+          <Plus className="w-4 h-4" />
         </Button>
       </div>
     );
@@ -550,8 +549,7 @@ export function PatientHistoryTab({ patientId }: PatientHistoryTabProps) {
               Refresh
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-history">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Entry
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         </div>

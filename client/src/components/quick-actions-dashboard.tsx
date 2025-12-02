@@ -35,25 +35,29 @@ export function QuickActionsDashboard() {
   const { user } = useRole();
   const [, setLocation] = useLocation();
 
-  // Fetch real-time data for quick actions
+  // Fetch data for quick actions
   const { data: urgentLabResults } = useQuery({
     queryKey: ['/api/lab-results/urgent'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 5 * 60 * 1000, // Reduced from 30s to 5 minutes
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
   const { data: pendingPrescriptions } = useQuery({
     queryKey: ['/api/prescriptions/pending'],
-    refetchInterval: 30000
+    refetchInterval: 5 * 60 * 1000, // Reduced from 30s to 5 minutes
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
   const { data: unreadMessages } = useQuery({
     queryKey: ['/api/staff/messages/unread'],
-    refetchInterval: 10000 // Check messages more frequently
+    refetchInterval: 2 * 60 * 1000, // Reduced from 10s to 2 minutes
+    staleTime: 60 * 1000, // Cache for 1 minute
   });
 
   const { data: todaysAppointments } = useQuery({
     queryKey: ['/api/appointments/today'],
-    refetchInterval: 60000
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const quickActions: QuickActionCard[] = [

@@ -358,6 +358,79 @@ router.get('/users/:userId/permissions', authenticateToken, async (req: AuthRequ
   }
 });
 
+// Get staff statistics for dashboard (must be before /staff route)
+router.get('/staff/stats', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const isSuperAdmin = req.user.role === 'superadmin' || req.user.role === 'super_admin';
+    const orgCondition = isSuperAdmin ? sql`1=1` : eq(users.organizationId, req.user.organizationId!);
+
+    // Get counts
+    const [totalCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(orgCondition);
+
+    const [activeCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(orgCondition, eq(users.isActive, true)));
+
+    const [inactiveCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(orgCondition, eq(users.isActive, false)));
+
+    const [noRoleCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(orgCondition, sql`${users.roleId} IS NULL`));
+
+    // Get role distribution
+    const roleDistribution = await db
+      .select({
+        roleId: users.roleId,
+        roleName: roles.name,
+        count: sql<number>`count(*)`
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.id))
+      .where(orgCondition)
+      .groupBy(users.roleId, roles.name);
+
+    // Get recent logins (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const [recentLoginsCount] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .where(and(
+        orgCondition,
+        sql`${users.lastLoginAt} >= ${sevenDaysAgo.toISOString()}`
+      ));
+
+    res.json({
+      total: Number(totalCount.count),
+      active: Number(activeCount.count),
+      inactive: Number(inactiveCount.count),
+      noRole: Number(noRoleCount.count),
+      recentLogins: Number(recentLoginsCount.count),
+      roleDistribution: roleDistribution.map(r => ({
+        roleId: r.roleId,
+        roleName: r.roleName || 'No Role',
+        count: Number(r.count)
+      }))
+    });
+  } catch (error) {
+    console.error("Error fetching staff stats:", error);
+    res.status(500).json({ message: "Failed to fetch staff statistics" });
+  }
+});
+
 // Get staff members with their roles and permissions (organization-scoped)
 router.get('/staff', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -424,6 +497,95 @@ router.get('/staff', authenticateToken, async (req: AuthRequest, res) => {
   } catch (error) {
     console.error("Error fetching staff:", error);
     res.status(500).json({ message: "Failed to fetch staff" });
+  }
+});
+
+// Toggle user active status
+router.patch('/users/:userId/toggle-status', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const { isActive } = req.body;
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    // Check if user has permission to manage users
+    if (req.user.role !== 'admin' && req.user.role !== 'superadmin' && req.user.role !== 'super_admin') {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+
+    // Prevent self-deactivation
+    if (userId === req.user.id) {
+      return res.status(400).json({ message: 'Cannot modify your own status' });
+    }
+
+    // Update user status
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        isActive: isActive,
+        updatedAt: new Date()
+      })
+      .where(
+        req.user.role === 'superadmin' || req.user.role === 'super_admin'
+          ? eq(users.id, userId)
+          : and(eq(users.id, userId), eq(users.organizationId, req.user.organizationId!))
+      )
+      .returning();
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found or access denied" });
+    }
+
+    // Audit log
+    await db.insert(auditLogs).values({
+      userId: req.user.id,
+      action: isActive ? 'ACTIVATE_USER' : 'DEACTIVATE_USER',
+      entityType: 'user',
+      entityId: userId,
+      details: JSON.stringify({ targetUserId: userId, isActive }),
+      ipAddress: req.ip || '',
+      userAgent: req.headers['user-agent'] || ''
+    });
+
+    res.json({ 
+      message: isActive ? 'User activated successfully' : 'User deactivated successfully',
+      user: updatedUser 
+    });
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    res.status(500).json({ message: "Failed to update user status" });
+  }
+});
+
+// Get user activity log
+router.get('/users/:userId/activity', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    const activities = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        entityType: auditLogs.entityType,
+        details: auditLogs.details,
+        createdAt: auditLogs.createdAt,
+        ipAddress: auditLogs.ipAddress
+      })
+      .from(auditLogs)
+      .where(eq(auditLogs.userId, userId))
+      .orderBy(sql`${auditLogs.createdAt} DESC`)
+      .limit(20);
+
+    res.json(activities);
+  } catch (error) {
+    console.error("Error fetching user activity:", error);
+    res.status(500).json({ message: "Failed to fetch user activity" });
   }
 });
 

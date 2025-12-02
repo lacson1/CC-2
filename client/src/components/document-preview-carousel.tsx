@@ -257,14 +257,62 @@ export function DocumentPreviewCarousel({
     );
   };
 
-  const renderDocumentPreview = (doc: Document) => {
-    if (doc.mimeType.startsWith('image/')) {
+  const ImageViewer = ({ doc }: { doc: Document }) => {
+    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      const loadImage = async () => {
+        try {
+          const token = localStorage.getItem('clinic_token');
+          const response = await fetch(`/api/files/medical/${doc.fileName}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+            credentials: 'include'
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setImageUrl(url);
+            setError(null);
+          } else {
+            setError('Failed to load image');
+          }
+        } catch (err) {
+          setError('Error loading image');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadImage();
+
+      return () => {
+        if (imageUrl) {
+          URL.revokeObjectURL(imageUrl);
+        }
+      };
+    }, [doc.fileName]);
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
+          <div className="text-center p-8">
+            <MedicalIcons.image className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-pulse" />
+            <p className="text-sm text-gray-500">Loading image...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (error || !imageUrl) {
       return (
         <div className="flex items-center justify-center h-full bg-gray-50 rounded-lg">
           <div className="text-center p-8">
             <MedicalIcons.image className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">{doc.originalName}</h3>
-            <p className="text-sm text-gray-500 mb-4">Image preview requires authentication</p>
+            <p className="text-sm text-gray-500 mb-4">{error || 'Image preview requires authentication'}</p>
             <Button
               onClick={() => downloadDocument(doc)}
               className="bg-blue-600 hover:bg-blue-700"
@@ -275,6 +323,22 @@ export function DocumentPreviewCarousel({
           </div>
         </div>
       );
+    }
+
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-900 rounded-lg p-4">
+        <img
+          src={imageUrl}
+          alt={doc.originalName}
+          className="max-w-full max-h-full object-contain rounded shadow-2xl"
+        />
+      </div>
+    );
+  };
+
+  const renderDocumentPreview = (doc: Document) => {
+    if (doc.mimeType.startsWith('image/')) {
+      return <ImageViewer doc={doc} />;
     } else if (doc.mimeType === 'application/pdf') {
       return (
         <div className="flex flex-col h-full bg-gray-50 rounded-lg">

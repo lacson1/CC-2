@@ -14,19 +14,70 @@ const router = Router();
  */
 export function setupPatientRoutes(): Router {
   
-  // Create patient
-  router.post("/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin']), async (req: AuthRequest, res) => {
+  // Create patient - Allow all authenticated users to register patients
+  router.post("/patients", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      console.log('=== PATIENT REGISTRATION REQUEST ===');
+      console.log('req.user:', req.user);
+      console.log('req.body:', req.body);
+      
+      // authenticateToken middleware should always set req.user
+      // If it's not set, there's an issue with the middleware
+      if (!req.user) {
+        console.error('ERROR: req.user is not set after authenticateToken middleware');
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Validate organizationId - use from body if provided, otherwise from user context
+      const organizationId = req.body.organizationId || req.user?.organizationId;
+      if (!organizationId) {
+        return res.status(400).json({ 
+          message: "Organization ID is required. Please provide organizationId in request body or ensure your account is assigned to an organization." 
+        });
+      }
+      
+      // Check if patient with same phone already exists in this organization
+      if (req.body.phone) {
+        const existingPatient = await db
+          .select()
+          .from(patients)
+          .where(and(
+            eq(patients.phone, req.body.phone),
+            eq(patients.organizationId, organizationId)
+          ))
+          .limit(1);
+        
+        if (existingPatient.length > 0) {
+          return res.status(400).json({ 
+            message: "A patient with this phone number already exists in this organization." 
+          });
+        }
+      }
+      
       // Add the staff member's organization ID to ensure proper attribution
       const patientData = insertPatientSchema.parse({
         ...req.body,
-        organizationId: req.user?.organizationId
+        organizationId: organizationId
       });
+      
+      console.log('Creating patient with data:', patientData);
       const patient = await storage.createPatient(patientData);
+      console.log('Patient created successfully:', patient.id);
+      
       res.json(patient);
     } catch (error) {
+      console.error('Patient registration error:', error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid patient data", errors: error.errors });
+      } else if (error instanceof Error) {
+        // Handle database constraint errors
+        if (error.message.includes('duplicate key') || error.message.includes('UNIQUE constraint')) {
+          res.status(400).json({ message: "A patient with this information already exists." });
+        } else if (error.message.includes('foreign key') || error.message.includes('organization_id')) {
+          res.status(400).json({ message: "Invalid organization ID. The specified organization does not exist." });
+        } else {
+          res.status(500).json({ message: "Failed to create patient", error: error.message });
+        }
       } else {
         res.status(500).json({ message: "Failed to create patient" });
       }
@@ -59,14 +110,10 @@ export function setupPatientRoutes(): Router {
   router.get("/patients", authenticateToken, requireAnyRole(['doctor', 'nurse', 'admin', 'pharmacist']), async (req: AuthRequest, res) => {
     try {
       const userOrgId = req.user?.organizationId;
-      if (!userOrgId) {
-        return res.status(400).json({ message: "Organization context required" });
-      }
-      
       const search = req.query.search as string | undefined;
       
-      // Organization-filtered patients
-      let whereClause = eq(patients.organizationId, userOrgId);
+      // Organization-filtered patients (if organizationId is null, show all patients - authentication disabled mode)
+      let whereClause = userOrgId ? eq(patients.organizationId, userOrgId) : undefined;
       
       if (search) {
         const searchConditions = [
@@ -74,16 +121,20 @@ export function setupPatientRoutes(): Router {
           ilike(patients.lastName, `%${search}%`),
           ilike(patients.phone, `%${search}%`)
         ];
-        const combinedClause = and(
-          eq(patients.organizationId, userOrgId),
-          or(...searchConditions)
-        );
-        whereClause = combinedClause ?? eq(patients.organizationId, userOrgId);
+        if (userOrgId) {
+          const combinedClause = and(
+            eq(patients.organizationId, userOrgId),
+            or(...searchConditions)
+          );
+          whereClause = combinedClause ?? eq(patients.organizationId, userOrgId);
+        } else {
+          whereClause = or(...searchConditions);
+        }
       }
       
       const patientsResult = await db.select()
         .from(patients)
-        .where(whereClause)
+        .where(whereClause || undefined)
         .orderBy(desc(patients.createdAt));
       
       // Prevent caching to ensure fresh data
@@ -94,6 +145,13 @@ export function setupPatientRoutes(): Router {
       res.json(patientsResult);
     } catch (error) {
       console.error('Error fetching patients:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      }
       res.status(500).json({ message: "Failed to fetch patients" });
     }
   });

@@ -46,7 +46,7 @@ export default function NursingAssessment({ patientId, visitId }: NursingAssessm
         title: "Success",
         description: "Nursing assessment saved successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/patients', patientId, 'consultation-records'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/consultation-records`] });
       setAssessmentData({
         vitalSigns: {
           bloodPressure: '',

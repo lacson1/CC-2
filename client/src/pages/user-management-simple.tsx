@@ -57,6 +57,8 @@ import {
   UserX,
   Crown
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import BulkUserOperations from "@/components/bulk-user-operations";
 
 // Schemas
 const userSchema = z.object({
@@ -118,6 +120,7 @@ export default function UserManagementSimple() {
   const [filterRole, setFilterRole] = useState("all");
   const [filterOrg, setFilterOrg] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -125,11 +128,13 @@ export default function UserManagementSimple() {
   // Queries
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ["/api/staff"],
-    refetchInterval: 30000
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 3 * 60 * 1000, // Cache for 3 minutes
   });
 
   const { data: organizations = [] } = useQuery({
-    queryKey: ["/api/organizations"]
+    queryKey: ["/api/organizations"],
+    staleTime: 10 * 60 * 1000, // Cache for 10 minutes (rarely changes)
   });
 
   // Mutations
@@ -141,7 +146,10 @@ export default function UserManagementSimple() {
         credentials: "include",
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error("Failed to create user");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || "Failed to create user");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -325,6 +333,12 @@ export default function UserManagementSimple() {
           <p className="text-gray-600 mt-1">Manage users and organizations with access control</p>
         </div>
         <div className="flex gap-2">
+          {selectedUsers.length > 0 && (
+            <BulkUserOperations 
+              selectedUsers={selectedUsers}
+              onComplete={() => setSelectedUsers([])}
+            />
+          )}
           <Button variant="outline" size="sm" onClick={() => queryClient.invalidateQueries()}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
@@ -581,6 +595,18 @@ export default function UserManagementSimple() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedUsers(filteredUsers.map((u: User) => u.id));
+                          } else {
+                            setSelectedUsers([]);
+                          }
+                        }}
+                      />
+                    </TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Organization</TableHead>
@@ -591,19 +617,31 @@ export default function UserManagementSimple() {
                 <TableBody>
                   {usersLoading ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
+                      <TableCell colSpan={6} className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                       </TableCell>
                     </TableRow>
                   ) : filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                         No users found
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredUsers.map((user: User) => (
                       <TableRow key={user.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedUsers.includes(user.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedUsers([...selectedUsers, user.id]);
+                              } else {
+                                setSelectedUsers(selectedUsers.filter(id => id !== user.id));
+                              }
+                            }}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <div className="font-medium">

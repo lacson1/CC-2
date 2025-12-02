@@ -50,7 +50,7 @@ export default function PharmacyReview({ patientId, visitId }: PharmacyReviewPro
         title: "Success",
         description: "Pharmacy review saved successfully",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/patients', patientId, 'consultation-records'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/consultation-records`] });
       setReviewData({
         drugInteractions: '',
         allergyCheck: '',

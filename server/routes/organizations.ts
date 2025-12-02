@@ -6,6 +6,55 @@ import { authenticateToken, type AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Get all organizations (root route)
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    // If user is superadmin, return all organizations
+    if (req.user.role === 'superadmin') {
+      const allOrgs = await db
+        .select()
+        .from(organizations)
+        .orderBy(organizations.name);
+      return res.json(allOrgs);
+    }
+
+    // Otherwise, return user's organizations
+    const userOrgs = await db
+      .select({
+        id: organizations.id,
+        name: organizations.name,
+        type: organizations.type,
+        themeColor: organizations.themeColor,
+        logoUrl: organizations.logoUrl,
+        address: organizations.address,
+        phone: organizations.phone,
+        email: organizations.email,
+        website: organizations.website,
+        isActive: organizations.isActive
+      })
+      .from(userOrganizations)
+      .innerJoin(organizations, eq(userOrganizations.organizationId, organizations.id))
+      .where(eq(userOrganizations.userId, req.user.id))
+      .orderBy(organizations.name);
+
+    res.json(userOrgs);
+  } catch (error) {
+    console.error('Error fetching organizations:', error);
+    if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    res.status(500).json({ message: 'Failed to fetch organizations' });
+  }
+});
+
 // Get user's organizations (with full org details)
 router.get('/user-organizations', authenticateToken, async (req: AuthRequest, res) => {
   try {
@@ -142,7 +191,7 @@ router.post('/switch', authenticateToken, async (req: AuthRequest, res) => {
           console.error('Session save error:', err);
           return res.status(500).json({ message: 'Failed to switch organization' });
         }
-        res.json({ 
+        res.json({
           message: 'Organization switched successfully',
           organizationId
         });
@@ -188,7 +237,7 @@ router.post('/switch/:organizationId', authenticateToken, async (req: AuthReques
           console.error('Session save error:', err);
           return res.status(500).json({ message: 'Failed to switch organization' });
         }
-        res.json({ 
+        res.json({
           message: 'Organization switched successfully',
           organizationId
         });
@@ -320,7 +369,7 @@ router.post('/add-staff', authenticateToken, async (req: AuthRequest, res) => {
         );
     }
 
-    res.json({ 
+    res.json({
       message: 'Staff member added to organization successfully',
       userId,
       organizationId

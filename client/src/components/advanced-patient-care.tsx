@@ -3,15 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Heart, Activity, TrendingUp, AlertTriangle, CheckCircle, 
-  Calendar, Clock, FileText, Users, Stethoscope, Pill,
-  BarChart3, LineChart, Target, Shield, Brain, Zap
+import {
+  Heart, TrendingUp, AlertTriangle, CheckCircle,
+  Target, Shield
 } from 'lucide-react';
 
 interface VitalTrend {
@@ -42,7 +39,7 @@ interface CareAlert {
 }
 
 interface AdvancedPatientCareProps {
-  patientId: number;
+  readonly patientId: number;
 }
 
 export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
@@ -51,7 +48,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d');
 
   // Fetch comprehensive patient health data
-  const { data: healthMetrics = [], isLoading: loadingMetrics } = useQuery<HealthMetric[]>({
+  const { data: healthMetrics = [] } = useQuery<HealthMetric[]>({
     queryKey: ['/api/patients', patientId, 'health-metrics', selectedTimeframe],
     queryFn: async () => {
       const response = await fetch(`/api/patients/${patientId}/health-metrics?timeframe=${selectedTimeframe}`);
@@ -60,7 +57,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
     }
   });
 
-  const { data: vitalTrends = [], isLoading: loadingTrends } = useQuery<VitalTrend[]>({
+  const { data: vitalTrends = [] } = useQuery<VitalTrend[]>({
     queryKey: ['/api/patients', patientId, 'vital-trends', selectedTimeframe],
     queryFn: async () => {
       const response = await fetch(`/api/patients/${patientId}/vital-trends?timeframe=${selectedTimeframe}`);
@@ -69,7 +66,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
     }
   });
 
-  const { data: careAlerts = [], isLoading: loadingAlerts } = useQuery<CareAlert[]>({
+  const { data: careAlerts = [] } = useQuery<CareAlert[]>({
     queryKey: ['/api/patients', patientId, 'care-alerts'],
     queryFn: async () => {
       const response = await fetch(`/api/patients/${patientId}/care-alerts`);
@@ -81,7 +78,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
   // Health Score Calculation
   const calculateHealthScore = () => {
     if (!healthMetrics.length) return 0;
-    
+
     const normalCount = healthMetrics.filter(m => m.status === 'normal').length;
     return Math.round((normalCount / healthMetrics.length) * 100);
   };
@@ -92,7 +89,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
   const getRiskLevel = () => {
     const criticalCount = careAlerts.filter(a => a.priority === 'critical').length;
     const highCount = careAlerts.filter(a => a.priority === 'high').length;
-    
+
     if (criticalCount > 0) return { level: 'High Risk', color: 'destructive' };
     if (highCount > 1) return { level: 'Moderate Risk', color: 'warning' };
     return { level: 'Low Risk', color: 'default' };
@@ -199,7 +196,7 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
                 <div key={alert.id} className={`p-2 rounded-lg border ${getPriorityColor(alert.priority)}`}>
                   <div className="flex items-center justify-between">
                     <AlertTriangle className="h-4 w-4" />
-                    <Badge variant="outline" size="sm">{alert.priority}</Badge>
+                    <Badge variant="outline">{alert.priority}</Badge>
                   </div>
                   <p className="text-xs font-medium mt-1">{alert.title}</p>
                 </div>
@@ -230,8 +227,8 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
         <TabsContent value={selectedTimeframe} className="space-y-6">
           {/* Health Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {healthMetrics.map((metric, index) => (
-              <Card key={index}>
+            {healthMetrics.map((metric) => (
+              <Card key={`${metric.name}-${metric.lastUpdated}`}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -305,35 +302,6 @@ export function AdvancedPatientCare({ patientId }: AdvancedPatientCareProps) {
             </CardContent>
           </Card>
 
-          {/* Quick Actions Panel */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Zap className="h-5 w-5 mr-2" />
-                Quick Care Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Button variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
-                  <Stethoscope className="h-6 w-6" />
-                  <span className="text-sm">New Visit</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
-                  <Pill className="h-6 w-6" />
-                  <span className="text-sm">Prescribe</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
-                  <FileText className="h-6 w-6" />
-                  <span className="text-sm">Lab Order</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex flex-col items-center space-y-2">
-                  <Calendar className="h-6 w-6" />
-                  <span className="text-sm">Schedule</span>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>

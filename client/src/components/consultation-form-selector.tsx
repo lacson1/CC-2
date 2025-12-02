@@ -7,11 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Send, Clock, User, Calendar, Activity, Pill, Search, ChevronDown, ChevronUp, Filter, Pin, PinOff, Star } from "lucide-react";
+import { FileText, Send, Clock, User, Calendar, Activity, Pill, Search, ChevronDown, ChevronUp, Filter, Pin, PinOff, Star, X, Stethoscope, ArrowLeft, CheckCircle2, ClipboardList } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import ConsultationHistoryDisplay from "./consultation-history-display";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ConsultationForm {
   id: number;
@@ -56,11 +57,12 @@ export default function ConsultationFormSelector({
   patient,
   onFormSubmit 
 }: ConsultationFormSelectorProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterByRole, setFilterByRole] = useState("");
-  const [isFormSelectorOpen, setIsFormSelectorOpen] = useState(true);
+  const [filterByRole, setFilterByRole] = useState("all");
+  const [step, setStep] = useState<'select' | 'fill'>('select');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -101,12 +103,12 @@ export default function ConsultationFormSelector({
     mutationFn: (data: any) => apiRequest('/api/consultation-records', 'POST', data),
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Consultation record created successfully",
+        title: "Consultation Saved",
+        description: "The consultation record has been created successfully",
       });
-      setFormData({});
-      setSelectedFormId(null);
-      queryClient.invalidateQueries({ queryKey: ['/api/patients', patientId, 'consultation-records'] });
+      handleCloseDialog();
+      // Invalidate the correct query key format used by ConsultationHistoryDisplay
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/consultation-records`] });
       if (onFormSubmit) onFormSubmit(formData);
     },
     onError: (error: any) => {
@@ -123,8 +125,8 @@ export default function ConsultationFormSelector({
     mutationFn: (formId: number) => apiRequest(`/api/consultation-forms/${formId}/pin`, 'POST'),
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Form pinned successfully",
+        title: "Form Pinned",
+        description: "This form will now appear at the top of your list",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/consultation-forms'] });
     },
@@ -142,8 +144,8 @@ export default function ConsultationFormSelector({
     mutationFn: (formId: number) => apiRequest(`/api/consultation-forms/${formId}/pin`, 'DELETE'),
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Form unpinned successfully",
+        title: "Form Unpinned",
+        description: "Form removed from pinned list",
       });
       queryClient.invalidateQueries({ queryKey: ['/api/consultation-forms'] });
     },
@@ -163,12 +165,32 @@ export default function ConsultationFormSelector({
     }));
   };
 
-  const handlePinToggle = (formId: number, isPinned: boolean) => {
+  const handlePinToggle = (formId: number, isPinned: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isPinned) {
       unpinFormMutation.mutate(formId);
     } else {
       pinFormMutation.mutate(formId);
     }
+  };
+
+  const handleSelectForm = (formId: number) => {
+    setSelectedFormId(formId);
+    setStep('fill');
+  };
+
+  const handleBackToSelect = () => {
+    setStep('select');
+    setFormData({});
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedFormId(null);
+    setFormData({});
+    setStep('select');
+    setSearchQuery("");
+    setFilterByRole("all");
   };
 
   const handleSubmit = () => {
@@ -199,6 +221,7 @@ export default function ConsultationFormSelector({
             value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
+            className="bg-white dark:bg-slate-800"
           />
         );
 
@@ -212,6 +235,7 @@ export default function ConsultationFormSelector({
             required={field.required}
             min={field.validation?.min}
             max={field.validation?.max}
+            className="bg-white dark:bg-slate-800"
           />
         );
 
@@ -223,6 +247,7 @@ export default function ConsultationFormSelector({
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
             rows={4}
+            className="bg-white dark:bg-slate-800"
           />
         );
 
@@ -232,7 +257,7 @@ export default function ConsultationFormSelector({
             value={fieldValue}
             onValueChange={(value) => handleInputChange(field.id, value)}
           >
-            <SelectTrigger>
+            <SelectTrigger className="bg-white dark:bg-slate-800">
               <SelectValue placeholder={field.placeholder || 'Select an option'} />
             </SelectTrigger>
             <SelectContent>
@@ -249,16 +274,16 @@ export default function ConsultationFormSelector({
         return (
           <div className="space-y-2">
             {field.options?.map((option) => (
-              <label key={option} className="flex items-center space-x-2">
+              <label key={option} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
                 <input
                   type="radio"
                   name={field.id}
                   value={option}
                   checked={fieldValue === option}
                   onChange={(e) => handleInputChange(field.id, e.target.value)}
-                  className="radio"
+                  className="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                 />
-                <span>{option}</span>
+                <span className="text-sm">{option}</span>
               </label>
             ))}
           </div>
@@ -268,7 +293,7 @@ export default function ConsultationFormSelector({
         return (
           <div className="space-y-2">
             {field.options?.map((option) => (
-              <label key={option} className="flex items-center space-x-2">
+              <label key={option} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
                 <input
                   type="checkbox"
                   value={option}
@@ -281,9 +306,9 @@ export default function ConsultationFormSelector({
                       handleInputChange(field.id, currentValues.filter((v: any) => v !== option));
                     }
                   }}
-                  className="checkbox"
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                 />
-                <span>{option}</span>
+                <span className="text-sm">{option}</span>
               </label>
             ))}
           </div>
@@ -296,6 +321,7 @@ export default function ConsultationFormSelector({
             value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
+            className="bg-white dark:bg-slate-800"
           />
         );
 
@@ -306,6 +332,7 @@ export default function ConsultationFormSelector({
             value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
+            className="bg-white dark:bg-slate-800"
           />
         );
 
@@ -317,6 +344,7 @@ export default function ConsultationFormSelector({
             value={fieldValue}
             onChange={(e) => handleInputChange(field.id, e.target.value)}
             required={field.required}
+            className="bg-white dark:bg-slate-800"
           />
         );
     }
@@ -330,274 +358,283 @@ export default function ConsultationFormSelector({
     return acc;
   }, {} as Record<string, FormField[]>) || {};
 
-  if (formsLoading) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
-            Loading consultation forms...
+  const FormCard = ({ form, isPinned }: { form: ConsultationForm; isPinned: boolean }) => (
+    <div
+      data-testid="form-card"
+      className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 group ${
+        isPinned
+          ? 'border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 hover:border-amber-300 hover:shadow-md'
+          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 hover:shadow-md hover:bg-blue-50/50 dark:hover:bg-blue-900/20'
+      }`}
+      onClick={() => handleSelectForm(form.id)}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            {isPinned && <Star className="h-4 w-4 text-amber-500 fill-amber-500 flex-shrink-0" />}
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate">{form.name}</h3>
           </div>
-        </CardContent>
-      </Card>
-    );
-  }
+          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{form.description}</p>
+          <div className="flex items-center gap-2 mt-3">
+            <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 border-0">
+              {form.specialistRole}
+            </Badge>
+            <Badge variant="outline" className="text-slate-500 dark:text-slate-400">
+              {form.formStructure?.fields?.length || 0} fields
+            </Badge>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => handlePinToggle(form.id, form.isPinned || false, e)}
+          disabled={pinFormMutation.isPending || unpinFormMutation.isPending}
+          className={`h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+            isPinned ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-100' : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'
+          }`}
+          title={isPinned ? "Unpin form" : "Pin form"}
+        >
+          <Star className={`h-4 w-4 ${isPinned ? 'fill-current' : ''}`} />
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6" data-testid="consultation-forms">
-      {/* Form Selection */}
-      <Collapsible open={isFormSelectorOpen} onOpenChange={setIsFormSelectorOpen}>
-        <Card>
-          <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-gray-50 transition-colors">
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Select Consultation Form
-                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                    {filteredForms.length} available
-                  </Badge>
-                </div>
-                {isFormSelectorOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </CardTitle>
-            </CardHeader>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent>
-            <CardContent className="space-y-4">
-              {/* Search and Filter Controls */}
-              {forms.length > 0 && (
-                <div className="flex flex-col sm:flex-row gap-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Search forms by name or description..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-gray-400" />
-                    <Select value={filterByRole} onValueChange={setFilterByRole}>
-                      <SelectTrigger className="w-48">
-                        <SelectValue placeholder="Filter by specialist role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        {uniqueRoles.map((role) => (
-                          <SelectItem key={role} value={role}>
-                            {role}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
+      {/* Trigger Button */}
+      <Card className="border-2 border-dashed border-blue-200 dark:border-blue-800 bg-gradient-to-br from-blue-50/50 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/20 hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-200">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
+                <Stethoscope className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100">Start New Consultation</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {forms.length} specialist forms available
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              size="lg"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <ClipboardList className="h-5 w-5 mr-2" />
+              Select Consultation Form
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* Form List */}
-              {filteredForms.length === 0 ? (
-                <div className="text-center py-8">
-                  {forms.length === 0 ? (
-                    <div>
-                      <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-gray-500">No consultation forms available. Please create forms first.</p>
+      {/* Consultation Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={(open) => !open && handleCloseDialog()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+          {/* Dialog Header */}
+          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-slate-50 to-blue-50/50 dark:from-slate-900 dark:to-blue-900/20">
+            <div className="flex items-center gap-3">
+              {step === 'fill' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToSelect}
+                  className="h-8 w-8 p-0 mr-1"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              )}
+              <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+                {step === 'select' ? (
+                  <ClipboardList className="h-5 w-5 text-white" />
+                ) : (
+                  <FileText className="h-5 w-5 text-white" />
+                )}
+              </div>
+              <div>
+                <DialogTitle className="text-lg">
+                  {step === 'select' ? 'Select Consultation Form' : selectedForm?.name}
+                </DialogTitle>
+                <DialogDescription className="text-sm">
+                  {step === 'select' 
+                    ? `Choose a specialist form for ${patient?.firstName || 'the patient'}'s consultation`
+                    : selectedForm?.description
+                  }
+                </DialogDescription>
+              </div>
+            </div>
+            {step === 'fill' && selectedForm && (
+              <Badge className="absolute top-4 right-6 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                {selectedForm.specialistRole}
+              </Badge>
+            )}
+          </DialogHeader>
+
+          {/* Dialog Content */}
+          <ScrollArea className="max-h-[calc(90vh-180px)]">
+            <div className="p-6">
+              {step === 'select' ? (
+                <div className="space-y-4">
+                  {/* Search and Filter */}
+                  {forms.length > 0 && (
+                    <div className="flex flex-col sm:flex-row gap-3 p-4 bg-gradient-to-r from-slate-50 to-blue-50/30 dark:from-slate-800/50 dark:to-blue-900/20 rounded-xl border border-slate-200/60 dark:border-slate-700/60">
+                      <div className="flex-1 relative group">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                        <Input
+                          placeholder="Search forms..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                          <Filter className="h-4 w-4 text-blue-500" />
+                          <Select value={filterByRole} onValueChange={setFilterByRole}>
+                            <SelectTrigger className="w-40 border-0 shadow-none p-0 h-auto focus:ring-0 bg-transparent">
+                              <SelectValue placeholder="All Specialists" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Specialists</SelectItem>
+                              {uniqueRoles.map((role) => (
+                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {(searchQuery || filterByRole !== "all") && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              setSearchQuery("");
+                              setFilterByRole("all");
+                            }}
+                            className="text-slate-500 hover:text-red-500 hover:bg-red-50"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  ) : (
+                  )}
+
+                  {/* Loading State */}
+                  {formsLoading && (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+                      <span className="text-slate-600">Loading forms...</span>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {!formsLoading && filteredForms.length === 0 && (
+                    <div className="text-center py-12">
+                      <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                        <FileText className="h-8 w-8 text-slate-400" />
+                      </div>
+                      <h3 className="font-medium text-slate-900 dark:text-slate-100 mb-1">
+                        {forms.length === 0 ? 'No Forms Available' : 'No Matching Forms'}
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-4">
+                        {forms.length === 0 
+                          ? 'Create consultation forms in the Form Builder first'
+                          : 'Try adjusting your search or filter criteria'
+                        }
+                      </p>
+                      {forms.length > 0 && (
+                        <Button variant="outline" size="sm" onClick={() => { setSearchQuery(""); setFilterByRole("all"); }}>
+                          Clear Filters
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Pinned Forms */}
+                  {filteredPinnedForms.length > 0 && (
                     <div>
-                      <Search className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-gray-500">No forms match your search criteria.</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-2"
-                        onClick={() => {
-                          setSearchQuery("");
-                          setFilterByRole("all");
-                        }}
-                      >
-                        Clear Filters
-                      </Button>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                        <h4 className="font-medium text-slate-900 dark:text-slate-100">Pinned Forms</h4>
+                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 border-0">
+                          {filteredPinnedForms.length}
+                        </Badge>
+                      </div>
+                      <div className="grid gap-3">
+                        {filteredPinnedForms.map((form) => (
+                          <FormCard key={form.id} form={form} isPinned={true} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Regular Forms */}
+                  {filteredRegularForms.length > 0 && (
+                    <div>
+                      {filteredPinnedForms.length > 0 && (
+                        <div className="flex items-center gap-2 mb-3 mt-6">
+                          <FileText className="h-4 w-4 text-slate-500" />
+                          <h4 className="font-medium text-slate-900 dark:text-slate-100">All Forms</h4>
+                          <Badge variant="secondary">{filteredRegularForms.length}</Badge>
+                        </div>
+                      )}
+                      <div className="grid gap-3">
+                        {filteredRegularForms.map((form) => (
+                          <FormCard key={form.id} form={form} isPinned={false} />
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {/* Pinned Forms Section */}
-                  {filteredPinnedForms.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                        <h4 className="font-medium text-gray-900">Pinned Forms</h4>
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                          {filteredPinnedForms.length}
-                        </Badge>
-                      </div>
-                      <div className="grid gap-3 mb-4">
-                        {filteredPinnedForms.map((form) => (
-                          <div
-                            key={form.id}
-                            data-testid="form-card"
-                            className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                              selectedFormId === form.id
-                                ? 'border-blue-500 bg-blue-50 shadow-md'
-                                : 'border-yellow-200 bg-yellow-50 hover:border-yellow-300 hover:bg-yellow-100'
-                            }`}
-                            onClick={() => {
-                              setSelectedFormId(form.id);
-                              setIsFormSelectorOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900">{form.name}</h3>
-                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{form.description}</p>
-                              </div>
-                              <div className="flex items-center gap-2 ml-4">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePinToggle(form.id, form.isPinned || false);
-                                  }}
-                                  disabled={pinFormMutation.isPending || unpinFormMutation.isPending}
-                                  className="h-8 w-8 p-0 hover:bg-yellow-200"
-                                  title="Unpin form"
-                                >
-                                  <Star className="h-4 w-4 text-yellow-600 fill-yellow-600" />
-                                </Button>
-                                <Badge variant="secondary" className="bg-blue-100 text-blue-800" data-testid="specialist-role">
-                                  {form.specialistRole}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {form.formStructure?.fields?.length || 0} fields
-                                </Badge>
-                              </div>
-                            </div>
+                /* Form Filling View */
+                <div className="space-y-6" data-testid="consultation-form">
+                  {/* Form Fields by Section */}
+                  {Object.entries(groupedFields).map(([sectionName, fields]) => (
+                    <div key={sectionName} className="space-y-4">
+                      {sectionName !== 'General' && (
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700">
+                          <div className="p-1.5 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
+                            <Activity className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Regular Forms Section */}
-                  {filteredRegularForms.length > 0 && (
-                    <div>
-                      {filteredPinnedForms.length > 0 && (
-                        <div className="flex items-center gap-2 mb-3">
-                          <FileText className="h-4 w-4 text-gray-500" />
-                          <h4 className="font-medium text-gray-900">All Forms</h4>
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
-                            {filteredRegularForms.length}
-                          </Badge>
+                          <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+                            {sectionName}
+                          </h3>
                         </div>
                       )}
-                      <div className="grid gap-3 max-h-60 overflow-y-auto">
-                        {filteredRegularForms.map((form) => (
-                          <div
-                            key={form.id}
-                            data-testid="form-card"
-                            className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                              selectedFormId === form.id
-                                ? 'border-blue-500 bg-blue-50 shadow-md'
-                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                            }`}
-                            onClick={() => {
-                              setSelectedFormId(form.id);
-                              setIsFormSelectorOpen(false);
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900">{form.name}</h3>
-                                <p className="text-sm text-gray-600 mt-1 line-clamp-2">{form.description}</p>
-                              </div>
-                              <div className="flex items-center gap-2 ml-4">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePinToggle(form.id, form.isPinned || false);
-                                  }}
-                                  disabled={pinFormMutation.isPending || unpinFormMutation.isPending}
-                                  className="h-8 w-8 p-0 hover:bg-gray-100"
-                                  title="Pin form"
-                                >
-                                  <Star className="h-4 w-4 text-gray-400 hover:text-yellow-500" />
-                                </Button>
-                                <Badge variant="secondary" className="bg-blue-100 text-blue-800" data-testid="specialist-role">
-                                  {form.specialistRole}
-                                </Badge>
-                                <Badge variant="outline">
-                                  {form.formStructure?.fields?.length || 0} fields
-                                </Badge>
-                              </div>
-                            </div>
+                      <div className="grid gap-4">
+                        {fields.map((field) => (
+                          <div key={field.id} className="space-y-2">
+                            <Label htmlFor={field.id} className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                              {field.label}
+                              {field.required && <span className="text-red-500 ml-1">*</span>}
+                            </Label>
+                            {renderFormField(field)}
                           </div>
                         ))}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
-
-      {/* Selected Form */}
-      {selectedForm && (
-        <Card data-testid="selected-form">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {selectedForm.name}
-              </div>
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {selectedForm.specialistRole}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6" data-testid="consultation-form">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <p className="text-blue-800 text-sm">{selectedForm.description}</p>
-            </div>
-
-            {/* Render form fields by section */}
-            {Object.entries(groupedFields).map(([sectionName, fields]) => (
-              <div key={sectionName} className="space-y-4">
-                {sectionName !== 'General' && (
-                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    {sectionName}
-                  </h3>
-                )}
-                <div className="grid gap-4">
-                  {fields.map((field) => (
-                    <div key={field.id} className="space-y-2">
-                      <Label htmlFor={field.id} className="text-sm font-medium text-gray-700">
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </Label>
-                      {renderFormField(field)}
                     </div>
                   ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+          </ScrollArea>
 
-            <div className="flex justify-end pt-4 border-t border-gray-200">
+          {/* Dialog Footer */}
+          {step === 'fill' && (
+            <div className="px-6 py-4 border-t bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between gap-4">
+              <Button
+                variant="outline"
+                onClick={handleBackToSelect}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={createConsultationMutation.isPending}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 min-w-[140px]"
                 data-testid="submit-consultation"
               >
                 {createConsultationMutation.isPending ? (
@@ -607,15 +644,15 @@ export default function ConsultationFormSelector({
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
                     Save Consultation
                   </>
                 )}
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Consultation History */}
       <ConsultationHistoryDisplay patientId={patientId} patient={patient} />

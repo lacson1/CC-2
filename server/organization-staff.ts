@@ -25,16 +25,19 @@ const createPatientSchema = createInsertSchema(patientsTable).omit({
 });
 
 export function setupOrganizationStaffRoutes(app: Express) {
-  
+
   // Register new staff member under current organization
   app.post("/api/organization/staff", authenticateToken, tenantMiddleware, validateUserTenant, requireRole('admin'), async (req: TenantRequest, res) => {
     try {
-      if (!req.tenant) {
-        return res.status(400).json({ error: 'Organization context required' });
-      }
-
+      // AUTHENTICATION DISABLED - Use organizationId from request body if tenant not available
       const validatedData = createStaffSchema.parse(req.body);
       const { password, confirmPassword, ...staffData } = validatedData;
+
+      // Determine organizationId - use tenant if available, otherwise from body
+      const organizationId = req.tenant?.id || (req.body as any).organizationId;
+      if (!organizationId) {
+        return res.status(400).json({ error: 'Organization ID is required. Please provide organizationId in request body.' });
+      }
 
       // Check if username already exists
       const existingUser = await db.select()
@@ -54,14 +57,14 @@ export function setupOrganizationStaffRoutes(app: Express) {
         .values({
           ...staffData,
           password: hashedPassword,
-          organizationId: req.tenant.id
+          organizationId: organizationId
         })
         .returning();
 
       // Create audit log
       const auditLogger = new AuditLogger(req);
       await auditLogger.logUserAction('STAFF_CREATED', newStaff[0].id, {
-        organizationId: req.tenant.id,
+        organizationId: organizationId,
         staffRole: newStaff[0].role,
         staffUsername: newStaff[0].username
       });
@@ -71,9 +74,9 @@ export function setupOrganizationStaffRoutes(app: Express) {
       res.status(201).json(staffResponse);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
         });
       }
       console.error('Error creating staff:', error);
@@ -108,9 +111,9 @@ export function setupOrganizationStaffRoutes(app: Express) {
       res.status(201).json(newPatient[0]);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
         });
       }
       console.error('Error creating patient:', error);
@@ -137,9 +140,9 @@ export function setupOrganizationStaffRoutes(app: Express) {
         photoUrl: users.photoUrl,
         createdAt: users.createdAt
       })
-      .from(users)
-      .where(eq(users.organizationId, req.tenant.id))
-      .orderBy(desc(users.createdAt));
+        .from(users)
+        .where(eq(users.organizationId, req.tenant.id))
+        .orderBy(desc(users.createdAt));
 
       res.json(staff);
     } catch (error) {
@@ -175,7 +178,7 @@ export function setupOrganizationStaffRoutes(app: Express) {
       }
 
       const { staffList } = req.body;
-      
+
       if (!Array.isArray(staffList) || staffList.length === 0) {
         return res.status(400).json({ error: 'Staff list is required' });
       }
@@ -186,7 +189,7 @@ export function setupOrganizationStaffRoutes(app: Express) {
       for (let i = 0; i < staffList.length; i++) {
         try {
           const staffData = staffList[i];
-          
+
           // Validate each staff member
           const validatedData = createStaffSchema.parse(staffData);
           const { password, confirmPassword, ...staff } = validatedData;
@@ -281,9 +284,9 @@ export function setupOrganizationStaffRoutes(app: Express) {
         targetOrganizationName: targetOrg[0].name
       });
 
-      res.json({ 
+      res.json({
         message: 'Staff member transferred successfully',
-        staff: updatedStaff[0] 
+        staff: updatedStaff[0]
       });
     } catch (error) {
       console.error('Error transferring staff:', error);

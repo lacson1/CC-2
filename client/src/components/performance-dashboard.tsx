@@ -55,17 +55,20 @@ export function PerformanceDashboard() {
 
   const { data: stats, isLoading, refetch } = useQuery<PerformanceStats>({
     queryKey: ['/api/performance/stats', timeframe],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: false, // Disabled auto-refresh, use manual refresh
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 
   const { data: optimizationTasks, isLoading: isLoadingTasks, refetch: refetchTasks } = useQuery({
     queryKey: ['/api/optimization/tasks'],
-    refetchInterval: 60000, // Refresh every minute
+    refetchInterval: false, // Disabled auto-refresh, use manual refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: aiOptimizationTasks, isLoading: isLoadingAITasks, refetch: refetchAITasks } = useQuery({
     queryKey: ['/api/ai-optimization/tasks'],
-    refetchInterval: 120000, // Refresh every 2 minutes (AI analysis is more expensive)
+    refetchInterval: false, // Disabled auto-refresh, use manual refresh
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const implementOptimization = useMutation({

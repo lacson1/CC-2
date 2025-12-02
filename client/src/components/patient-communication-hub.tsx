@@ -8,9 +8,109 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, Bell, Calendar, Settings, Send, Clock } from 'lucide-react';
+import { MessageSquare, Bell, Calendar, Settings, Send, Clock, Copy, FileText, Pill, Heart, CreditCard, Stethoscope, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+
+// Message templates data
+const MESSAGE_TEMPLATES = [
+  {
+    id: 'appointment-reminder',
+    name: 'Appointment Reminder',
+    category: 'appointment',
+    icon: Calendar,
+    content: `Dear {patientName},
+
+This is a friendly reminder about your upcoming appointment scheduled for {appointmentDate} at {appointmentTime}.
+
+Please arrive 15 minutes early to complete any necessary paperwork. If you need to reschedule, please contact us at least 24 hours in advance.
+
+We look forward to seeing you!
+
+Best regards,
+{clinicName}`
+  },
+  {
+    id: 'lab-results',
+    name: 'Lab Results Ready',
+    category: 'lab_result',
+    icon: FileText,
+    content: `Dear {patientName},
+
+Your recent lab results are now available. Please log into your patient portal to view them, or contact our office to schedule a follow-up appointment with your healthcare provider.
+
+If you have any questions about your results, please don't hesitate to reach out.
+
+Best regards,
+{clinicName}`
+  },
+  {
+    id: 'prescription-refill',
+    name: 'Prescription Refill Reminder',
+    category: 'treatment_plan',
+    icon: Pill,
+    content: `Dear {patientName},
+
+This is a reminder that your prescription for {medicationName} is due for a refill. Please contact our office or visit your pharmacy to ensure you don't run out of your medication.
+
+If you have any questions or need to discuss your treatment plan, please schedule an appointment with your healthcare provider.
+
+Best regards,
+{clinicName}`
+  },
+  {
+    id: 'follow-up',
+    name: 'Follow-up Visit Request',
+    category: 'appointment',
+    icon: Stethoscope,
+    content: `Dear {patientName},
+
+We hope you're doing well. It's time for your follow-up visit to review your progress and discuss your ongoing care.
+
+Please contact our office to schedule your next appointment at your earliest convenience.
+
+We look forward to seeing you soon!
+
+Best regards,
+{clinicName}`
+  },
+  {
+    id: 'health-tips',
+    name: 'General Health Tips',
+    category: 'general',
+    icon: Heart,
+    content: `Dear {patientName},
+
+Here are some helpful health tips for this season:
+
+• Stay hydrated by drinking plenty of water
+• Maintain a balanced diet rich in fruits and vegetables
+• Get regular exercise - aim for at least 30 minutes daily
+• Ensure adequate sleep (7-9 hours for adults)
+• Schedule your annual check-up
+
+If you have any health concerns, please don't hesitate to contact us.
+
+Best regards,
+{clinicName}`
+  },
+  {
+    id: 'payment-reminder',
+    name: 'Payment Reminder',
+    category: 'general',
+    icon: CreditCard,
+    content: `Dear {patientName},
+
+This is a friendly reminder regarding your outstanding balance of {amountDue}. 
+
+Please log into your patient portal to make a payment, or contact our billing department if you have any questions or would like to discuss payment options.
+
+Thank you for your prompt attention to this matter.
+
+Best regards,
+{clinicName}`
+  }
+];
 
 interface Message {
   id: number;
@@ -53,6 +153,8 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
     sms: 'enabled',
     phone: 'disabled'
   });
+  const [activeTab, setActiveTab] = useState('messages');
+  const [copiedTemplate, setCopiedTemplate] = useState<string | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -161,6 +263,52 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
     }
   };
 
+  const handleUseTemplate = (template: typeof MESSAGE_TEMPLATES[0]) => {
+    setNewMessage(template.content);
+    setMessageType(template.category as any);
+    setActiveTab('messages');
+    toast({
+      title: "Template Applied",
+      description: `${template.name} template has been loaded into the message editor.`,
+    });
+  };
+
+  const handleCopyTemplate = async (template: typeof MESSAGE_TEMPLATES[0]) => {
+    try {
+      await navigator.clipboard.writeText(template.content);
+      setCopiedTemplate(template.id);
+      toast({
+        title: "Template Copied",
+        description: `${template.name} template copied to clipboard.`,
+      });
+      setTimeout(() => setCopiedTemplate(null), 2000);
+    } catch (err) {
+      toast({
+        title: "Copy Failed",
+        description: "Could not copy template to clipboard.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'appointment': return 'bg-blue-100 text-blue-800';
+      case 'lab_result': return 'bg-purple-100 text-purple-800';
+      case 'treatment_plan': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'appointment': return 'Appointment';
+      case 'lab_result': return 'Lab Result';
+      case 'treatment_plan': return 'Treatment';
+      default: return 'General';
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       <Card className="healthcare-card">
@@ -171,7 +319,7 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="messages" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="reminders">Reminders</TabsTrigger>
@@ -356,11 +504,73 @@ export function PatientCommunicationHub({ patientId }: { patientId?: number }) {
 
             {/* Templates Tab */}
             <TabsContent value="templates" className="space-y-4">
-              <h3 className="text-lg font-semibold">Message Templates</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Message Templates</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Select a template to quickly compose messages. Use placeholders like {'{patientName}'} for personalization.
+                  </p>
+                </div>
+              </div>
               
-              <div className="text-center py-8 text-gray-500">
-                <p>Message templates are now dynamically generated based on real patient appointments and visit data.</p>
-                <p className="mt-2 text-sm">Use the Messages tab to send personalized communications to patients.</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {MESSAGE_TEMPLATES.map((template) => {
+                  const IconComponent = template.icon;
+                  const isCopied = copiedTemplate === template.id;
+                  
+                  return (
+                    <Card key={template.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <IconComponent className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                              <CardTitle className="text-sm font-medium">{template.name}</CardTitle>
+                              <Badge variant="outline" className={`text-xs mt-1 ${getCategoryColor(template.category)}`}>
+                                {getCategoryLabel(template.category)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <p className="text-xs text-muted-foreground line-clamp-3 mb-4">
+                          {template.content.substring(0, 120)}...
+                        </p>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleCopyTemplate(template)}
+                          >
+                            {isCopied ? (
+                              <>
+                                <Check className="h-3 w-3 mr-1" />
+                                Copied
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3 mr-1" />
+                                Copy
+                              </>
+                            )}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            className="flex-1"
+                            onClick={() => handleUseTemplate(template)}
+                          >
+                            <Send className="h-3 w-3 mr-1" />
+                            Use
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </TabsContent>
 

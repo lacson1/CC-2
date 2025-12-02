@@ -15,13 +15,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { getDisplayName, getInitials, hasPersonalInfo } from '@/utils/name-utils';
-import { 
-  User, 
-  Edit3, 
-  Save, 
-  X, 
-  Mail, 
-  Phone, 
+import {
+  User,
+  Edit3,
+  Save,
+  X,
+  Mail,
+  Phone,
   Calendar,
   Building
 } from 'lucide-react';
@@ -116,7 +116,7 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
       </div>
     );
   }
@@ -135,8 +135,8 @@ export default function Profile() {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">Manage your personal information and settings</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">My Profile</h1>
+          <p className="text-gray-600 dark:text-gray-400">Manage your personal information and settings</p>
         </div>
         {!isEditing && (
           <Button onClick={() => setIsEditing(true)} className="flex items-center gap-2">
@@ -148,20 +148,20 @@ export default function Profile() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Overview */}
-        <Card>
+        <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Avatar className="h-20 w-20">
-                <AvatarFallback className="text-lg font-semibold bg-blue-100 text-blue-700">
-                  {getInitials({ 
+                <AvatarFallback className="text-lg font-semibold bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                  {getInitials({
                     firstName: (profileData as any)?.firstName,
                     lastName: (profileData as any)?.lastName,
-                    username: user?.username 
+                    username: user?.username
                   })}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <CardTitle className="text-xl">
+            <CardTitle className="text-xl text-gray-900 dark:text-gray-100">
               {getDisplayName({
                 title: (profileData as any)?.title,
                 firstName: (profileData as any)?.firstName,
@@ -169,7 +169,7 @@ export default function Profile() {
                 username: user?.username
               })}
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-400">
               <Badge variant="secondary" className="capitalize">
                 {user?.role || 'User'}
               </Badge>
@@ -177,15 +177,15 @@ export default function Profile() {
           </CardHeader>
           <CardContent className="space-y-4">
             <Separator />
-            
+
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-gray-500" />
+              <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 <span>Role: {user?.role || 'User'}</span>
               </div>
               {user?.organizationId && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Building className="h-4 w-4 text-gray-500" />
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Building className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                   <span>Organization: {organizationData?.name || `ID: ${user.organizationId}`}</span>
                 </div>
               )}
@@ -194,13 +194,13 @@ export default function Profile() {
         </Card>
 
         {/* Profile Details Form */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
               <User className="h-5 w-5" />
               Personal Information
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-400">
               Update your personal details
             </CardDescription>
           </CardHeader>
@@ -213,9 +213,9 @@ export default function Profile() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Title</FormLabel>
-                      <Select 
-                        disabled={!isEditing} 
-                        onValueChange={field.onChange} 
+                      <Select
+                        disabled={!isEditing}
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -297,8 +297,8 @@ export default function Profile() {
                       <X className="h-4 w-4" />
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={updateProfileMutation.isPending}
                       className="flex items-center gap-2"
                     >

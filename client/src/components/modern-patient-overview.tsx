@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -11,7 +10,7 @@ import { PatientTimeline } from './patient-timeline';
 import { PatientAlertsPanel } from './patient-alerts-panel';
 import { PatientSafetyAlertsRealtime, QuickSafetyIndicator } from './patient-safety-alerts-realtime';
 import PatientVitalSignsTracker from './patient-vital-signs-tracker';
-import { formatPatientName, getPatientInitials } from '@/lib/patient-utils';
+import { formatPatientName } from '@/lib/patient-utils';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,11 +23,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Stethoscope, 
+import {
+  Stethoscope,
   Plus,
-  Sparkles,
   X,
   FileText,
   User,
@@ -42,12 +39,7 @@ import {
   FileImage as Referral,
   Maximize,
   UserCheck as Patient,
-  Heart as HeartRate,
   Activity as Vitals,
-  Monitor,
-  Syringe as Injection,
-  Calendar,
-  MessageSquare as Message,
   RefreshCw as Refresh,
   Edit,
   Printer as Print,
@@ -61,13 +53,21 @@ import {
   Copy,
   Trash as Delete,
   Upload,
-  History
+  History,
+  Settings,
+  CheckCircle,
+  MoreVertical,
+  Eye,
+  Download,
+  Share,
+  Printer,
+  Shield,
+  Calendar
 } from "lucide-react";
 import { GlobalMedicationSearch } from "@/components/global-medication-search";
 import { usePatientTabs } from "@/hooks/use-patient-tabs";
 import { TabManager } from "@/components/tab-manager";
 import { getTabIcon } from "@/lib/tab-icons";
-import { Settings } from "lucide-react";
 
 // Comprehensive visit form schema
 const comprehensiveVisitSchema = z.object({
@@ -75,7 +75,7 @@ const comprehensiveVisitSchema = z.object({
   visitType: z.string().min(1, "Visit type is required"),
   chiefComplaint: z.string().min(1, "Chief complaint is required"),
   historyOfPresentIllness: z.string().default(""),
-  
+
   // Vital Signs
   bloodPressure: z.string().default(""),
   heartRate: z.string().default(""),
@@ -84,7 +84,7 @@ const comprehensiveVisitSchema = z.object({
   height: z.string().default(""),
   respiratoryRate: z.string().default(""),
   oxygenSaturation: z.string().default(""),
-  
+
   // Physical Examination
   generalAppearance: z.string().default(""),
   cardiovascularSystem: z.string().default(""),
@@ -92,19 +92,19 @@ const comprehensiveVisitSchema = z.object({
   gastrointestinalSystem: z.string().default(""),
   neurologicalSystem: z.string().default(""),
   musculoskeletalSystem: z.string().default(""),
-  
+
   // Assessment and Plan
   assessment: z.string().default(""),
   diagnosis: z.string().min(1, "Primary diagnosis is required"),
   secondaryDiagnoses: z.string().default(""),
   treatmentPlan: z.string().min(1, "Treatment plan is required"),
   medications: z.string().default(""),
-  
+
   // Follow-up and Instructions
   patientInstructions: z.string().default(""),
   followUpDate: z.string().default(""),
   followUpInstructions: z.string().default(""),
-  
+
   // Additional Notes
   additionalNotes: z.string().default(""),
 });
@@ -113,7 +113,6 @@ type VisitFormData = z.infer<typeof comprehensiveVisitSchema>;
 
 import { PatientCommunicationHub } from './patient-communication-hub';
 import ConsultationFormSelector from './consultation-form-selector';
-import { PatientDropdownMenu } from './patient-dropdown-menu';
 import { EditPatientModal } from './edit-patient-modal';
 import LabOrderForm from './lab-order-form';
 import LabOrdersList from './lab-orders-list';
@@ -140,9 +139,12 @@ import { PatientDischargeLetterTab } from './patient-discharge-letter-tab';
 import { MedicationReviewAssignmentsList } from './medication-review-assignments-list';
 import VaccinationManagement from './vaccination-management';
 import { useAuth } from '@/contexts/AuthContext';
-import { CheckCircle, MoreVertical, Eye, Download, Share, Printer, Shield } from 'lucide-react';
 import { LabResultPersonalityIntegration } from './LabResultPersonalityIntegration';
 import ConsentCapture from './consent-capture';
+import { PatientAllergies } from './patient-allergies';
+import { PatientImmunizations } from './patient-immunizations';
+import { PatientImaging } from './patient-imaging';
+import { PatientProcedures } from './patient-procedures';
 import InsuranceManagement from './insurance-management';
 import ReferralManagement from './referral-management';
 // All icons now imported via MedicalIcons system
@@ -163,12 +165,12 @@ interface CompletedLabResult {
 }
 
 // PatientReviewedResults Component
-function PatientReviewedResults({ 
-  patientId, 
-  showDeleteVisitConfirm, 
+function PatientReviewedResults({
+  patientId,
+  showDeleteVisitConfirm,
   setShowDeleteVisitConfirm,
-  confirmDeleteVisit 
-}: { 
+  confirmDeleteVisit
+}: {
   patientId: number;
   showDeleteVisitConfirm: boolean;
   setShowDeleteVisitConfirm: (value: boolean) => void;
@@ -246,7 +248,7 @@ function PatientReviewedResults({
     try {
       // Create downloadable PDF content
       const content = `Lab Result: ${result.testName}\nResult: ${result.result} ${result.units || ''}\nNormal Range: ${result.normalRange}\nStatus: ${result.status}\nCompleted: ${new Date(result.completedDate).toLocaleDateString()}\nReviewed by: ${result.reviewedBy}`;
-      
+
       const blob = new Blob([content], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -256,7 +258,7 @@ function PatientReviewedResults({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Export Complete",
         description: `${result.testName} result exported successfully`,
@@ -304,7 +306,7 @@ function PatientReviewedResults({
       abnormal: 'bg-yellow-100 text-yellow-800 border-yellow-200',
       critical: 'bg-red-100 text-red-800 border-red-200'
     };
-    
+
     return (
       <Badge className={statusColors[status as keyof typeof statusColors] || 'bg-gray-100 text-gray-800'}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -341,7 +343,7 @@ function PatientReviewedResults({
                     <h4 className="font-medium text-lg">{result.testName}</h4>
                     {getStatusBadge(result.status)}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="font-medium text-muted-foreground">Result:</span>
@@ -360,19 +362,19 @@ function PatientReviewedResults({
                       <p>{new Date(result.completedDate).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  
+
                   {result.remarks && (
                     <div className="mt-3 text-sm">
                       <span className="font-medium text-muted-foreground">Remarks:</span>
                       <p className="mt-1 text-gray-700">{result.remarks}</p>
                     </div>
                   )}
-                  
+
                   <div className="mt-2 text-xs text-muted-foreground">
                     Reviewed by: {result.reviewedBy} • Order #{result.orderId}
                   </div>
                 </div>
-                
+
                 {/* Actions Dropdown Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -460,7 +462,7 @@ const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectio
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   const getDocumentIcon = (category: string) => {
@@ -505,11 +507,11 @@ const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectio
                 <Maximize className="w-4 h-4" />
               </Button>
             </div>
-            
+
             <h4 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">
               {doc.originalName}
             </h4>
-            
+
             <div className="space-y-1 text-xs text-gray-500">
               <p>Size: {formatFileSize(doc.size)}</p>
               <p>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</p>
@@ -526,16 +528,18 @@ const DocumentsListSection = ({ patientId, onViewDocument }: DocumentsListSectio
 
 interface Patient {
   id: number;
-  title?: string;
+  title: string | null;
   firstName: string;
   lastName: string;
   dateOfBirth: string;
   gender: string;
   phone: string;
-  email?: string;
-  address?: string;
-  allergies?: string;
-  medicalHistory?: string;
+  email: string | null;
+  address: string | null;
+  allergies: string | null;
+  medicalHistory: string | null;
+  createdAt: Date;
+  organizationId: number | null;
 }
 
 interface Visit {
@@ -562,10 +566,10 @@ interface ModernPatientOverviewProps {
   onPrintRecord?: () => void;
 }
 
-export function ModernPatientOverview({ 
-  patient, 
-  visits, 
-  recentLabs = [], 
+export function ModernPatientOverview({
+  patient,
+  visits,
+  recentLabs = [],
   activePrescriptions = [],
   onAddPrescription,
   onRecordVisit,
@@ -581,16 +585,16 @@ export function ModernPatientOverview({
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [showMedicationReviewAssignmentModal, setShowMedicationReviewAssignmentModal] = useState(false);
   const [selectedPrescriptionForReview, setSelectedPrescriptionForReview] = useState<any>(null);
-  
+
   // Dynamic tab management
   const { tabs, isLoading: tabsLoading, isError: tabsError, defaultTabKey } = usePatientTabs();
   const [showTabManager, setShowTabManager] = useState(false);
-  
+
   // Visit Recording Form State
   const [isVisitFormVisible, setIsVisitFormVisible] = useState(false);
   const [additionalDiagnoses, setAdditionalDiagnoses] = useState<string[]>([]);
   const [medicationList, setMedicationList] = useState<string[]>([]);
-  
+
   // Visit form configuration
   const visitForm = useForm<VisitFormData>({
     resolver: zodResolver(comprehensiveVisitSchema),
@@ -654,13 +658,13 @@ export function ModernPatientOverview({
           title: "Visit Recorded Successfully",
           description: "Patient visit has been documented and saved.",
         });
-        
+
         // Reset form and close
         visitForm.reset();
         setAdditionalDiagnoses([]);
         setMedicationList([]);
         setIsVisitFormVisible(false);
-        
+
         // Refresh patient data
         queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
         queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/visits`] });
@@ -688,7 +692,7 @@ export function ModernPatientOverview({
         description: visit.complaint || visit.diagnosis || 'No details recorded'
       }))
     ];
-    
+
     return allVisits.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [visits]);
 
@@ -714,7 +718,7 @@ Diagnosis: ${visit.diagnosis || 'N/A'}
 Treatment: ${visit.treatment || 'N/A'}
 Blood Pressure: ${visit.bloodPressure || 'N/A'}
 Heart Rate: ${visit.heartRate || 'N/A'}`;
-    
+
     navigator.clipboard.writeText(visitDetails);
     toast({
       title: "Visit details copied",
@@ -784,10 +788,10 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
       await apiRequest(`/api/prescriptions/${prescriptionId}/status`, 'PATCH', { status: newStatus });
 
       queryClient.invalidateQueries({ queryKey: ['/api/patients', patient.id, 'prescriptions'] });
-      
-      const statusText = newStatus === 'completed' ? 'completed' : 
-                        newStatus === 'discontinued' ? 'discontinued' : 'reactivated';
-      
+
+      const statusText = newStatus === 'completed' ? 'completed' :
+        newStatus === 'discontinued' ? 'discontinued' : 'reactivated';
+
       toast({
         title: "Medication Status Updated",
         description: `Medication has been ${statusText}`,
@@ -804,7 +808,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
 
   const handleSendToRepeatMedications = async (prescription: any) => {
     try {
-      await apiRequest(`/api/prescriptions/${prescription.id}`, 'PATCH', { 
+      await apiRequest(`/api/prescriptions/${prescription.id}`, 'PATCH', {
         duration: 'Ongoing as directed',
         instructions: (prescription.instructions || '') + ' [Added to repeat medications]'
       });
@@ -867,15 +871,15 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   const [visitToDelete, setVisitToDelete] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState('');
   const [documentDescription, setDocumentDescription] = useState('');
-  
+
   // Document carousel state
   const [showDocumentCarousel, setShowDocumentCarousel] = useState(false);
   const [selectedDocumentIndex, setSelectedDocumentIndex] = useState(0);
-  
+
   // Custom print dialog states
   const [showPrescriptionPrint, setShowPrescriptionPrint] = useState(false);
   const [showLabOrderPrint, setShowLabOrderPrint] = useState(false);
-  
+
 
 
   // Document upload mutation
@@ -887,12 +891,12 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         credentials: 'include', // Use secure session cookies
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to upload document: ${errorText}`);
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -976,28 +980,28 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
   }, [patientPrescriptions, activePrescriptions, prescriptionsLoading, prescriptionsError]);
 
   // Fetch patient lab orders from the API for printing functionality
-  const { data: patientLabOrders = [], isLoading: labOrdersLoading } = useQuery({
+  const { data: patientLabOrders = [] } = useQuery<any[]>({
     queryKey: ['/api/patients', patient.id, 'lab-orders'],
     enabled: !!patient.id
   });
 
   // Filter prescriptions by status for better organization
   const activeMedications = React.useMemo(() => {
-    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) => 
+    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) =>
       p.status === 'active' || p.status === 'pending' || !p.status
     ) : [];
   }, [displayPrescriptions]);
 
   const discontinuedMedications = React.useMemo(() => {
-    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) => 
+    return Array.isArray(displayPrescriptions) ? displayPrescriptions.filter((p: any) =>
       p.status === 'completed' || p.status === 'discontinued' || p.status === 'stopped'
     ) : [];
   }, [displayPrescriptions]);
 
   const repeatMedications = React.useMemo(() => {
-    return activeMedications.filter((prescription: any) => 
-      prescription.isRepeat || 
-      prescription.duration?.toLowerCase().includes('ongoing') || 
+    return activeMedications.filter((prescription: any) =>
+      prescription.isRepeat ||
+      prescription.duration?.toLowerCase().includes('ongoing') ||
       prescription.duration?.toLowerCase().includes('long') ||
       prescription.duration?.toLowerCase().includes('term') ||
       prescription.duration === 'Ongoing as directed'
@@ -1046,7 +1050,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
       if (response.ok) {
         const reviewData = await response.json();
         queryClient.invalidateQueries({ queryKey: ['/api/patients', patient.id, 'prescriptions'] });
-        
+
         // Notify relevant staff about the review assignment
         try {
           const notificationResponse = await fetch('/api/notifications/staff', {
@@ -1065,7 +1069,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
               message: `Medication review required for ${medicationName} - Patient: ${formatPatientName(patient)}`
             }),
           });
-          
+
           if (notificationResponse.ok) {
             await notificationResponse.json();
           } else {
@@ -1074,7 +1078,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         } catch (notifyError) {
           console.error('❌ Error sending staff notification:', notifyError);
         }
-        
+
         // Update local state to show review was scheduled
         localStorage.setItem(`review_${prescriptionId}`, JSON.stringify({
           scheduled: true,
@@ -1082,7 +1086,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
           reviewId: reviewData.id || 'pending',
           staffNotified: true
         }));
-        
+
         toast({
           title: "Review Scheduled & Staff Notified",
           description: `Medication review scheduled for ${medicationName} - Staff have been notified`,
@@ -1098,7 +1102,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         date: new Date().toISOString(),
         reviewId: 'local_' + Date.now()
       }));
-      
+
       toast({
         title: "Review Scheduled",
         description: `Medication review has been scheduled for ${medicationName}`,
@@ -1123,7 +1127,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
       if (response.ok) {
         const repeatData = await response.json();
         queryClient.invalidateQueries({ queryKey: ['/api/patients', patient.id, 'prescriptions'] });
-        
+
         // Notify pharmacy about new repeat prescription
         try {
           const pharmacyNotificationResponse = await fetch('/api/notifications/staff', {
@@ -1142,7 +1146,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
               message: `New repeat prescription ready for dispensing: ${medicationName} - Patient: ${formatPatientName(patient)}`
             }),
           });
-          
+
           if (pharmacyNotificationResponse.ok) {
             await pharmacyNotificationResponse.json();
           } else {
@@ -1151,7 +1155,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         } catch (notifyError) {
           console.error('❌ Error sending pharmacy notification:', notifyError);
         }
-        
+
         // Update local state to show repeat was issued
         localStorage.setItem(`repeat_${prescriptionId}`, JSON.stringify({
           issued: true,
@@ -1159,7 +1163,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
           repeatId: repeatData.id || 'pending',
           pharmacyNotified: true
         }));
-        
+
         toast({
           title: "Repeat Issued & Pharmacy Notified",
           description: `New repeat prescription issued for ${medicationName} - Pharmacy has been notified`,
@@ -1175,7 +1179,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         date: new Date().toISOString(),
         repeatId: 'local_' + Date.now()
       }));
-      
+
       toast({
         title: "Repeat Issued",
         description: `New repeat prescription issued for ${medicationName}`,
@@ -1187,7 +1191,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
     try {
       // Use the custom prescription print component with active organization branding
       setShowPrescriptionPrint(true);
-      
+
       toast({
         title: "Opening Print Preview",
         description: "Prescription print preview is being prepared with organization branding.",
@@ -1206,7 +1210,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
     try {
       // Use the custom lab order print component with active organization branding
       setShowLabOrderPrint(true);
-      
+
       toast({
         title: "Opening Lab Orders Print",
         description: "Lab order print preview is being prepared with organization branding.",
@@ -1237,7 +1241,7 @@ Heart Rate: ${visit.heartRate || 'N/A'}`;
         startDate: new Date().toISOString(),
         organizationId: user?.organizationId || 2
       };
-      
+
       const response = await fetch(`/api/patients/${prescription.patientId}/prescriptions`, {
         method: 'POST',
         headers: {
@@ -1338,11 +1342,19 @@ EXPIRES: ${prescriptionData.prescription.expiryDate}
 VERIFICATION: ${prescriptionData.verification.hash}
 
 This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.`;
-      
+
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(prescriptionText)}`;
-      
+
       // Open comprehensive prescription QR code in new window
       const qrWindow = window.open('', '_blank', 'width=500,height=700');
+      if (!qrWindow) {
+        toast({
+          title: "QR Code Failed",
+          description: "Unable to open QR code window. Please check your popup blocker settings.",
+          variant: "destructive",
+        });
+        return;
+      }
       qrWindow.document.write(`
         <html>
           <head>
@@ -1482,7 +1494,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           </body>
         </html>
       `);
-      
+
       toast({
         title: "QR Code Generated",
         description: "QR code opened in new window for pharmacy scanning.",
@@ -1496,7 +1508,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
       });
     }
   };
-  
+
   const getPatientAge = (dateOfBirth: string) => {
     const birth = new Date(dateOfBirth);
     const today = new Date();
@@ -1542,42 +1554,45 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
     <div className="space-y-4 min-h-screen w-full">
       {/* Enhanced Tabbed Interface - Full Width with Dynamic Tabs */}
       <Tabs defaultValue={defaultTabKey} className="w-full h-full">
-        <div className="relative">
-          <TabsList className="grid w-full grid-cols-12 mb-8 h-20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border-2 border-blue-200/60 rounded-2xl p-3 shadow-2xl backdrop-blur-lg ring-1 ring-blue-100/50">
-            {tabsLoading ? (
-              <div className="col-span-full flex items-center justify-center py-4 text-blue-600">
-                <Clock className="w-5 h-5 animate-spin mr-2" />
-                <span className="font-semibold">Loading tabs...</span>
-              </div>
-            ) : (
-              tabs.map((tab) => {
-                const IconComponent = getTabIcon(tab.icon);
-                return (
-                  <TabsTrigger
-                    key={tab.id}
-                    value={tab.key}
-                    className="flex flex-col items-center gap-1.5 text-xs font-bold px-3 py-4 rounded-xl transition-all duration-300 data-[state=active]:bg-white data-[state=active]:shadow-xl data-[state=active]:text-blue-900 data-[state=active]:border-2 data-[state=active]:border-blue-300 data-[state=active]:scale-105 hover:bg-white/80 hover:shadow-lg hover:scale-102 text-blue-800 group"
-                    data-testid={`tab-trigger-${tab.key}`}
-                  >
-                    <IconComponent className="w-6 h-6" />
-                    <span className="font-semibold">{tab.label}</span>
-                  </TabsTrigger>
-                );
-              })
-            )}
-          </TabsList>
+        <div className="relative mb-4">
+          {/* Scrollable Tab List Container */}
+          <div className="relative bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 border border-blue-200/60 rounded-xl p-2 shadow-lg backdrop-blur-lg ring-1 ring-blue-100/50">
+            <TabsList className="w-full h-auto bg-transparent flex flex-wrap gap-1.5 justify-start items-start">
+              {tabsLoading ? (
+                <div className="w-full flex items-center justify-center py-6 text-blue-600">
+                  <Clock className="w-4 h-4 animate-spin mr-2" />
+                  <span className="text-sm font-semibold">Loading tabs...</span>
+                </div>
+              ) : (
+                tabs.map((tab) => {
+                  const IconComponent = getTabIcon(tab.icon);
+                  return (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.key}
+                      className="flex flex-col items-center gap-1 min-w-[85px] px-2.5 py-2 rounded-lg transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-lg data-[state=active]:text-blue-900 data-[state=active]:border data-[state=active]:border-blue-400 data-[state=active]:scale-105 hover:bg-white/70 hover:shadow-md hover:scale-102 text-blue-800 bg-white/40 border border-transparent group"
+                      data-testid={`tab-trigger-${tab.key}`}
+                    >
+                      <IconComponent className="w-4 h-4 group-data-[state=active]:w-4.5 group-data-[state=active]:h-4.5 transition-all" />
+                      <span className="text-[10px] font-semibold text-center leading-tight whitespace-nowrap">{tab.label}</span>
+                    </TabsTrigger>
+                  );
+                })
+              )}
+            </TabsList>
 
-          {/* TabManager Settings Button */}
-          <Button
-            onClick={() => setShowTabManager(true)}
-            size="sm"
-            variant="ghost"
-            className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-white/60"
-            data-testid="button-open-tab-manager"
-            title="Customize Tabs"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+            {/* TabManager Settings Button */}
+            <Button
+              onClick={() => setShowTabManager(true)}
+              size="sm"
+              variant="ghost"
+              className="absolute top-1 right-1 h-5 w-5 p-0 bg-white/70 hover:bg-white hover:shadow-sm rounded border border-slate-200/50 transition-all opacity-60 hover:opacity-100"
+              data-testid="button-open-tab-manager"
+              title="Customize Tabs"
+            >
+              <Settings className="h-2.5 w-2.5 text-slate-500" />
+            </Button>
+          </div>
         </div>
 
         {/* Medications Tab */}
@@ -1593,32 +1608,32 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               <Tabs defaultValue="current" className="w-full">
                 <div className="flex items-center justify-between mb-4">
                   <TabsList className="grid w-full grid-cols-4 max-w-2xl">
-                    <TabsTrigger 
-                      value="current" 
+                    <TabsTrigger
+                      value="current"
                       className="flex items-center gap-2 data-[state=active]:bg-green-50 data-[state=active]:text-green-700 data-[state=active]:border-green-200"
                       data-testid="tab-current-medications"
                     >
                       <Medication className="w-4 h-4" />
                       Current ({activeMedications.length})
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="past" 
+                    <TabsTrigger
+                      value="past"
                       className="flex items-center gap-2 data-[state=active]:bg-orange-50 data-[state=active]:text-orange-700 data-[state=active]:border-orange-200"
                       data-testid="tab-past-medications"
                     >
                       <Clock className="w-4 h-4" />
                       Past ({discontinuedMedications.length})
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="repeat" 
+                    <TabsTrigger
+                      value="repeat"
                       className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200"
                       data-testid="tab-repeat-medications"
                     >
                       <Refresh className="w-4 h-4" />
                       Repeat ({repeatMedications.length})
                     </TabsTrigger>
-                    <TabsTrigger 
-                      value="summary" 
+                    <TabsTrigger
+                      value="summary"
                       className="flex items-center gap-2 data-[state=active]:bg-purple-50 data-[state=active]:text-purple-700 data-[state=active]:border-purple-200"
                       data-testid="tab-medication-summary"
                     >
@@ -1626,13 +1641,13 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       Summary
                     </TabsTrigger>
                   </TabsList>
-                  <Button 
-                    onClick={onAddPrescription} 
-                    size="sm" 
+                  <Button
+                    onClick={onAddPrescription}
+                    size="sm"
                     className="bg-purple-600 hover:bg-purple-700"
+                    title="Add Medication"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Medication
+                    <Plus className="w-4 h-4" />
                   </Button>
                 </div>
 
@@ -1645,7 +1660,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   ) : prescriptionsError ? (
                     <div className="flex flex-col items-center justify-center py-8 space-y-4">
                       <div className="text-red-500">Failed to load prescriptions</div>
-                      <Button 
+                      <Button
                         onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/patients', patient.id, 'prescriptions'] })}
                         variant="outline"
                         size="sm"
@@ -1657,10 +1672,10 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                   ) : activeMedications.length > 0 ? (
                     <div className="grid gap-4">
                       {activeMedications.map((prescription: any) => (
-                        <div key={prescription.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
+                        <div key={prescription.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-white space-y-4">
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
+                              <div className="flex items-center gap-3 mb-4">
                                 <h4 className="font-semibold text-slate-800 text-lg">
                                   {prescription.medicationName}
                                 </h4>
@@ -1670,45 +1685,45 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   </Badge>
                                 )}
                                 <Badge className={
-                                  prescription.status === "active" 
-                                    ? "bg-green-100 text-green-800 border-green-200" 
+                                  prescription.status === "active"
+                                    ? "bg-green-100 text-green-800 border-green-200"
                                     : prescription.status === "completed"
-                                    ? "bg-blue-100 text-blue-800 border-blue-200"
-                                    : "bg-gray-100 text-gray-800 border-gray-200"
+                                      ? "bg-blue-100 text-blue-800 border-blue-200"
+                                      : "bg-gray-100 text-gray-800 border-gray-200"
                                 }>
                                   {prescription.status}
                                 </Badge>
                               </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                                <div className="bg-slate-50 p-3 rounded-md">
-                                  <span className="font-medium text-slate-700 block">Dosage</span>
-                                  <p className="text-slate-800 mt-1">{prescription.dosage}</p>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                <div className="bg-slate-50 p-3 rounded-md space-y-1">
+                                  <span className="font-medium text-slate-700 block text-xs">Dosage</span>
+                                  <p className="text-slate-800">{prescription.dosage}</p>
                                 </div>
-                                <div className="bg-slate-50 p-3 rounded-md">
-                                  <span className="font-medium text-slate-700 block">Frequency</span>
-                                  <p className="text-slate-800 mt-1">{prescription.frequency}</p>
+                                <div className="bg-slate-50 p-3 rounded-md space-y-1">
+                                  <span className="font-medium text-slate-700 block text-xs">Frequency</span>
+                                  <p className="text-slate-800">{prescription.frequency}</p>
                                 </div>
-                                <div className="bg-slate-50 p-3 rounded-md">
-                                  <span className="font-medium text-slate-700 block">Duration</span>
-                                  <p className="text-slate-800 mt-1">{prescription.duration}</p>
+                                <div className="bg-slate-50 p-3 rounded-md space-y-1">
+                                  <span className="font-medium text-slate-700 block text-xs">Duration</span>
+                                  <p className="text-slate-800">{prescription.duration}</p>
                                 </div>
-                                <div className="bg-slate-50 p-3 rounded-md">
-                                  <span className="font-medium text-slate-700 block">Prescribed by</span>
-                                  <p className="text-slate-800 mt-1">{prescription.prescribedBy}</p>
+                                <div className="bg-slate-50 p-3 rounded-md space-y-1">
+                                  <span className="font-medium text-slate-700 block text-xs">Prescribed by</span>
+                                  <p className="text-slate-800">{prescription.prescribedBy}</p>
                                 </div>
                               </div>
-                              
+
                               {prescription.instructions && (
-                                <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
-                                  <span className="font-medium text-slate-700 flex items-center gap-2">
+                                <div className="p-3 bg-blue-50 rounded-md border border-blue-100 space-y-2">
+                                  <span className="font-medium text-slate-700 flex items-center gap-2 text-sm">
                                     <FileText className="w-4 h-4" />
                                     Special Instructions
                                   </span>
-                                  <p className="text-slate-800 mt-2">{prescription.instructions}</p>
+                                  <p className="text-slate-800 text-sm">{prescription.instructions}</p>
                                 </div>
                               )}
-                              
+
                               <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
                                 <div className="flex items-center space-x-4 text-xs text-slate-500">
                                   <div className="flex items-center gap-1">
@@ -1773,17 +1788,16 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         </div>
                       ))}
                     </div>
-                ) : (
-                  <div className="text-center py-12 text-gray-500">
-                    <Medication className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">No Active Prescriptions</h3>
-                    <p className="text-sm text-gray-500 mb-4">Start by adding the first prescription for this patient</p>
-                    <Button onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add First Prescription
-                    </Button>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <Medication className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-700 mb-2">No Active Prescriptions</h3>
+                      <p className="text-sm text-gray-500 mb-4">Start by adding the first prescription for this patient</p>
+                      <Button onClick={onAddPrescription} className="bg-purple-600 hover:bg-purple-700" title="Add First Prescription">
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
 
                 {/* Past Medications Tab */}
@@ -1799,16 +1813,16 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   {prescription.medicationName}
                                 </h4>
                                 <Badge className={
-                                  prescription.status === "completed" 
-                                    ? "bg-blue-100 text-blue-700 border-blue-200" 
+                                  prescription.status === "completed"
+                                    ? "bg-blue-100 text-blue-700 border-blue-200"
                                     : prescription.status === "discontinued"
-                                    ? "bg-orange-100 text-orange-700 border-orange-200"
-                                    : "bg-gray-100 text-gray-700 border-gray-200"
+                                      ? "bg-orange-100 text-orange-700 border-orange-200"
+                                      : "bg-gray-100 text-gray-700 border-gray-200"
                                 }>
                                   {prescription.status}
                                 </Badge>
                               </div>
-                              
+
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2 text-sm">
                                 <div className="bg-white p-2 rounded border">
                                   <span className="font-medium text-gray-600 block text-xs">Dosage</span>
@@ -1829,24 +1843,24 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                   </p>
                                 </div>
                               </div>
-                              
+
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-200">
                                 <div className="text-xs text-gray-500">
                                   Started: {prescription.startDate ? new Date(prescription.startDate).toLocaleDateString() : 'Not specified'}
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="text-blue-600 hover:text-blue-800 border-blue-200"
                                     onClick={() => handleReorderMedication(prescription)}
                                   >
                                     <Refresh className="w-3 h-3 mr-1" />
                                     Reorder
                                   </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
                                     className="text-gray-600 hover:text-gray-800"
                                     onClick={() => handlePrintPrescription(prescription)}
                                   >
@@ -1877,138 +1891,137 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       Long-term medications that require regular review by medical staff. Reviews ensure safety and effectiveness.
                     </p>
                   </div>
-                  
+
                   {/* Actual repeat medications based on patient's prescriptions */}
-                  {activeMedications.filter((prescription: any) => 
-                    prescription.isRepeat || 
-                    prescription.duration?.toLowerCase().includes('ongoing') || 
+                  {activeMedications.filter((prescription: any) =>
+                    prescription.isRepeat ||
+                    prescription.duration?.toLowerCase().includes('ongoing') ||
                     prescription.duration?.toLowerCase().includes('long') ||
                     prescription.duration?.toLowerCase().includes('term') ||
                     prescription.duration === 'Ongoing as directed'
                   ).length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {activeMedications
-                        .filter((prescription: any) => 
-                          prescription.isRepeat || 
-                          prescription.duration?.toLowerCase().includes('ongoing') || 
+                        .filter((prescription: any) =>
+                          prescription.isRepeat ||
+                          prescription.duration?.toLowerCase().includes('ongoing') ||
                           prescription.duration?.toLowerCase().includes('long') ||
                           prescription.duration?.toLowerCase().includes('term') ||
                           prescription.duration === 'Ongoing as directed'
                         )
                         .map((prescription: any) => (
-                        <div key={prescription.id} className="border border-green-200 rounded-lg p-4 bg-green-50">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="font-semibold text-green-800 text-lg">
-                                  {prescription.medicationName}
-                                </h4>
-                                <Badge className="bg-green-100 text-green-800 border-green-200">
-                                  Repeat Prescription
-                                </Badge>
-                                {prescription.reviewDate && (
-                                  <Badge variant="outline" className={`text-xs ${
-                                    new Date(prescription.reviewDate) < new Date() 
+                          <div key={prescription.id} className="border border-green-200 rounded-lg p-4 bg-green-50 space-y-4">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-2 mb-4">
+                                  <h4 className="font-semibold text-green-800 text-lg">
+                                    {prescription.medicationName}
+                                  </h4>
+                                  <Badge className="bg-green-100 text-green-800 border-green-200">
+                                    Repeat Prescription
+                                  </Badge>
+                                  {prescription.reviewDate && (
+                                    <Badge variant="outline" className={`text-xs ${new Date(prescription.reviewDate) < new Date()
                                       ? 'bg-red-50 text-red-700 border-red-200'
                                       : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                                  }`}>
-                                    {new Date(prescription.reviewDate) < new Date() 
-                                      ? 'Review Overdue' 
-                                      : `Review Due: ${new Date(prescription.reviewDate).toLocaleDateString()}`
-                                    }
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3 text-sm">
-                                <div className="bg-white p-3 rounded-md border">
-                                  <span className="font-medium text-gray-700 block">Dosage</span>
-                                  <p className="text-gray-800 mt-1">{prescription.dosage}</p>
-                                </div>
-                                <div className="bg-white p-3 rounded-md border">
-                                  <span className="font-medium text-gray-700 block">Frequency</span>
-                                  <p className="text-gray-800 mt-1">{prescription.frequency}</p>
-                                </div>
-                                <div className="bg-white p-3 rounded-md border">
-                                  <span className="font-medium text-gray-700 block">Duration</span>
-                                  <p className="text-gray-800 mt-1">{prescription.duration}</p>
-                                </div>
-                                <div className="bg-white p-3 rounded-md border">
-                                  <span className="font-medium text-gray-700 block">Prescribed by</span>
-                                  <p className="text-gray-800 mt-1">{prescription.prescribedBy}</p>
-                                </div>
-                              </div>
-                              
-                              {prescription.instructions && (
-                                <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
-                                  <span className="font-medium text-gray-700 flex items-center gap-2">
-                                    <MedicalRecord className="w-4 h-4" />
-                                    Instructions
-                                  </span>
-                                  <p className="text-gray-800 mt-2">{prescription.instructions}</p>
-                                </div>
-                              )}
-                              
-                              <div className="flex items-center justify-between mt-4 pt-3 border-t border-green-200">
-                                <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>Started: {new Date(prescription.startDate).toLocaleDateString()}</span>
-                                  </div>
-                                  {prescription.lastReviewDate && (
-                                    <div className="flex items-center gap-1">
-                                      <Calendar className="w-3 h-3" />
-                                      <span>Last Review: {new Date(prescription.lastReviewDate).toLocaleDateString()}</span>
-                                    </div>
+                                      }`}>
+                                      {new Date(prescription.reviewDate) < new Date()
+                                        ? 'Review Overdue'
+                                        : `Review Due: ${new Date(prescription.reviewDate).toLocaleDateString()}`
+                                      }
+                                    </Badge>
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="text-blue-600 hover:text-blue-800 border-blue-200"
-                                    onClick={() => handleScheduleReview(prescription.id, prescription.medicationName)}
-                                  >
-                                    <User className="w-3 h-3 mr-1" />
-                                    Schedule Review
-                                  </Button>
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    className="text-green-600 hover:text-green-800 border-green-200"
-                                    onClick={() => handleIssueRepeat(prescription.id, prescription.medicationName)}
-                                  >
-                                    <Refresh className="w-3 h-3 mr-1" />
-                                    Issue Repeat
-                                  </Button>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
-                                        <Menu className="w-3 h-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-[180px]">
-                                      <DropdownMenuItem onClick={() => handleEditPrescription(prescription)}>
-                                        <Edit className="w-3 h-3 mr-2" />
-                                        Edit Repeat
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
-                                        <Print className="w-3 h-3 mr-2" />
-                                        Print
-                                      </DropdownMenuItem>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'discontinued')}>
-                                        <X className="w-3 h-3 mr-2 text-red-600" />
-                                        Stop Repeat
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                  <div className="bg-white p-3 rounded-md border space-y-1">
+                                    <span className="font-medium text-gray-700 block text-xs">Dosage</span>
+                                    <p className="text-gray-800">{prescription.dosage}</p>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-md border space-y-1">
+                                    <span className="font-medium text-gray-700 block text-xs">Frequency</span>
+                                    <p className="text-gray-800">{prescription.frequency}</p>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-md border space-y-1">
+                                    <span className="font-medium text-gray-700 block text-xs">Duration</span>
+                                    <p className="text-gray-800">{prescription.duration}</p>
+                                  </div>
+                                  <div className="bg-white p-3 rounded-md border space-y-1">
+                                    <span className="font-medium text-gray-700 block text-xs">Prescribed by</span>
+                                    <p className="text-gray-800">{prescription.prescribedBy}</p>
+                                  </div>
+                                </div>
+
+                                {prescription.instructions && (
+                                  <div className="p-3 bg-blue-50 rounded-md border border-blue-100 space-y-2">
+                                    <span className="font-medium text-gray-700 flex items-center gap-2 text-sm">
+                                      <MedicalRecord className="w-4 h-4" />
+                                      Instructions
+                                    </span>
+                                    <p className="text-gray-800 text-sm">{prescription.instructions}</p>
+                                  </div>
+                                )}
+
+                                <div className="flex items-center justify-between mt-4 pt-3 border-t border-green-200">
+                                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                    <div className="flex items-center gap-1">
+                                      <Calendar className="w-3 h-3" />
+                                      <span>Started: {new Date(prescription.startDate).toLocaleDateString()}</span>
+                                    </div>
+                                    {prescription.lastReviewDate && (
+                                      <div className="flex items-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        <span>Last Review: {new Date(prescription.lastReviewDate).toLocaleDateString()}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-blue-600 hover:text-blue-800 border-blue-200"
+                                      onClick={() => handleScheduleReview(prescription.id, prescription.medicationName)}
+                                    >
+                                      <User className="w-3 h-3 mr-1" />
+                                      Schedule Review
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-green-600 hover:text-green-800 border-green-200"
+                                      onClick={() => handleIssueRepeat(prescription.id, prescription.medicationName)}
+                                    >
+                                      <Refresh className="w-3 h-3 mr-1" />
+                                      Issue Repeat
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-800">
+                                          <Menu className="w-3 h-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-[180px]">
+                                        <DropdownMenuItem onClick={() => handleEditPrescription(prescription)}>
+                                          <Edit className="w-3 h-3 mr-2" />
+                                          Edit Repeat
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handlePrintPrescription(prescription)}>
+                                          <Print className="w-3 h-3 mr-2" />
+                                          Print
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onClick={() => handleUpdateMedicationStatus(prescription.id, 'discontinued')}>
+                                          <X className="w-3 h-3 mr-2 text-red-600" />
+                                          Stop Repeat
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
@@ -2028,8 +2041,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <h4 className="font-medium text-gray-800 mb-3">Assign Review</h4>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
-                        <label className="text-sm font-medium text-gray-700 block mb-2">Assign to:</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        <label htmlFor="assign-reviewer" className="text-sm font-medium text-gray-700 block mb-2">Assign to:</label>
+                        <select id="assign-reviewer" className="w-full p-2 border border-gray-300 rounded-md text-sm" aria-label="Assign to reviewer">
                           <option>Select reviewer...</option>
                           <option>Dr. Johnson (Doctor)</option>
                           <option>Dr. Smith (Doctor)</option>
@@ -2038,8 +2051,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700 block mb-2">Review Type:</label>
-                        <select className="w-full p-2 border border-gray-300 rounded-md text-sm">
+                        <label htmlFor="review-type" className="text-sm font-medium text-gray-700 block mb-2">Review Type:</label>
+                        <select id="review-type" className="w-full p-2 border border-gray-300 rounded-md text-sm" aria-label="Review type">
                           <option>Routine Review</option>
                           <option>Urgent Review</option>
                           <option>Medication Safety Review</option>
@@ -2047,20 +2060,24 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                         </select>
                       </div>
                       <div>
-                        <label className="text-sm font-medium text-gray-700 block mb-2">Due Date:</label>
-                        <input 
-                          type="date" 
+                        <label htmlFor="review-due-date" className="text-sm font-medium text-gray-700 block mb-2">Due Date:</label>
+                        <input
+                          id="review-due-date"
+                          type="date"
                           className="w-full p-2 border border-gray-300 rounded-md text-sm"
                           defaultValue="2025-12-15"
+                          aria-label="Review due date"
                         />
                       </div>
                     </div>
                     <div className="mt-4">
-                      <label className="text-sm font-medium text-gray-700 block mb-2">Review Notes:</label>
-                      <textarea 
-                        className="w-full p-2 border border-gray-300 rounded-md text-sm" 
+                      <label htmlFor="review-notes" className="text-sm font-medium text-gray-700 block mb-2">Review Notes:</label>
+                      <textarea
+                        id="review-notes"
+                        className="w-full p-2 border border-gray-300 rounded-md text-sm"
                         rows={3}
                         placeholder="Add notes for the reviewer..."
+                        aria-label="Review notes"
                       ></textarea>
                     </div>
                     {/* Action Status Tracking */}
@@ -2068,8 +2085,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       <h4 className="text-sm font-medium text-gray-900 mb-2">Recent Actions</h4>
                       <div className="space-y-2">
                         {(() => {
-                          const actions = [];
-                          
+                          const actions: React.ReactNode[] = [];
+
                           // Check for scheduled reviews
                           const reviewKeys = Object.keys(localStorage).filter(key => key.startsWith('review_'));
                           reviewKeys.forEach(key => {
@@ -2083,7 +2100,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               );
                             }
                           });
-                          
+
                           // Check for issued repeats
                           const repeatKeys = Object.keys(localStorage).filter(key => key.startsWith('repeat_'));
                           repeatKeys.forEach(key => {
@@ -2097,7 +2114,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                               );
                             }
                           });
-                          
+
                           return actions.length > 0 ? actions : (
                             <div className="text-sm text-gray-500">No recent actions</div>
                           );
@@ -2106,16 +2123,16 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </div>
 
                     <div className="mt-4 flex gap-2">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => setShowMedicationReviewAssignmentModal(true)}
                       >
                         <User className="w-4 h-4 mr-2" />
                         Assign Review
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           toast({
@@ -2133,7 +2150,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     <div className="mt-6">
                       <MedicationReviewAssignmentsList
                         patientId={patient.id}
-                        patient={patient}
+                        patient={patient as any}
                         onCreateAssignment={() => setShowMedicationReviewAssignmentModal(true)}
                       />
                     </div>
@@ -2162,7 +2179,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       </div>
                     </div>
                   </div>
-                  
+
                   {displayPrescriptions.length > 0 && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -2172,11 +2189,11 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             <div key={prescription.id} className="flex items-center justify-between text-sm">
                               <span className="text-gray-700">{prescription.medicationName}</span>
                               <Badge className={
-                                prescription.status === "active" 
-                                  ? "bg-green-100 text-green-800" 
+                                prescription.status === "active"
+                                  ? "bg-green-100 text-green-800"
                                   : prescription.status === "completed"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-gray-100 text-gray-800"
+                                    ? "bg-blue-100 text-blue-800"
+                                    : "bg-gray-100 text-gray-800"
                               }>
                                 {prescription.status}
                               </Badge>
@@ -2184,23 +2201,23 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           ))}
                         </div>
                       </div>
-                      
+
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <h5 className="font-medium text-gray-800 mb-3">Quick Actions</h5>
                         <div className="space-y-2">
-                          <Button 
-                            onClick={onAddPrescription} 
-                            size="sm" 
+                          <Button
+                            onClick={onAddPrescription}
+                            size="sm"
                             className="w-full bg-purple-600 hover:bg-purple-700"
+                            title="Add New Medication"
                           >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add New Medication
+                            <Plus className="w-4 h-4" />
                           </Button>
                           {activeMedications.length > 0 && (
-                            <Button 
-                              onClick={() => handlePrintPrescription(activeMedications[0])} 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              onClick={() => handlePrintPrescription(activeMedications[0])}
+                              variant="outline"
+                              size="sm"
                               className="w-full"
                             >
                               <Print className="w-4 h-4 mr-2" />
@@ -2227,8 +2244,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <PatientSafetyAlertsRealtime 
-                patientId={patient.id} 
+              <PatientSafetyAlertsRealtime
+                patientId={patient.id}
                 compact={false}
               />
             </CardContent>
@@ -2287,21 +2304,21 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       {new Date(patient?.createdAt || '').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Blood Type</span>
                     <Badge variant="outline" className="text-xs text-red-600 border-red-300/60 h-5 bg-red-50/80">
                       A+
                     </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Phone</span>
                     <span className="text-xs font-medium text-gray-800 truncate max-w-20">
                       {patient?.phone || 'N/A'}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-600">Insurance</span>
                     <Badge variant="outline" className="text-xs text-emerald-600 border-emerald-300/60 h-5 bg-emerald-50/80">
@@ -2309,7 +2326,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                     </Badge>
                   </div>
                 </div>
-                
+
                 <div className="pt-2 border-t border-gray-200/60">
                   <h4 className="text-xs font-medium text-gray-900 mb-1">Allergies</h4>
                   <div className="flex flex-wrap gap-1">
@@ -2340,8 +2357,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
           </div>
 
           {/* Collapsible Consultation History */}
-          <Collapsible 
-            open={isConsultationHistoryOpen} 
+          <Collapsible
+            open={isConsultationHistoryOpen}
             onOpenChange={setIsConsultationHistoryOpen}
           >
             <Card>
@@ -2372,8 +2389,8 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <Badge 
-                                  variant="outline" 
+                                <Badge
+                                  variant="outline"
                                   className={`text-xs ${item.type === 'consultation' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}
                                 >
                                   {item.title}
@@ -2420,7 +2437,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                                       Copy Details
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                       onClick={() => handleDeleteVisit(item.id)}
                                       className="text-red-600 focus:text-red-600"
                                     >
@@ -2460,7 +2477,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
           {/* Patient Alerts - Full Width */}
           <PatientAlertsPanel
-            patient={patient}
+            patient={patient as any}
             upcomingAppointments={[]}
             criticalMedications={activePrescriptions}
           />
@@ -2476,10 +2493,10 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-700">Event Types</label>
+                  <label htmlFor="filter-visits" className="text-xs font-medium text-gray-700">Event Types</label>
                   <div className="space-y-2">
                     <div className="flex items-center space-x-3">
-                      <Checkbox 
+                      <Checkbox
                         id="filter-visits"
                         checked={timelineFilters.visits}
                         onCheckedChange={() => toggleFilter('visits')}
@@ -2492,7 +2509,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Checkbox 
+                      <Checkbox
                         id="filter-labs"
                         checked={timelineFilters.labResults}
                         onCheckedChange={() => toggleFilter('labResults')}
@@ -2505,7 +2522,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Checkbox 
+                      <Checkbox
                         id="filter-consultations"
                         checked={timelineFilters.consultations}
                         onCheckedChange={() => toggleFilter('consultations')}
@@ -2518,7 +2535,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Checkbox 
+                      <Checkbox
                         id="filter-prescriptions"
                         checked={timelineFilters.prescriptions}
                         onCheckedChange={() => toggleFilter('prescriptions')}
@@ -2531,7 +2548,7 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="pt-2 border-t border-gray-200">
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>Showing {(activityTrail || []).filter((event: any) => {
@@ -2549,9 +2566,9 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
                             return true;
                         }
                       }).length} events</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-6 px-2 text-xs"
                         onClick={() => setTimelineFilters({
                           visits: true,
@@ -2591,1018 +2608,1037 @@ This is a valid prescription for dispensing at any licensed pharmacy in Nigeria.
 
 
 
-          {/* Vital Signs Tab */}
-          <TabsContent value="vitals" className="space-y-6">
-            <PatientVitalSignsTracker patientId={patient.id} />
-          </TabsContent>
+        {/* Vital Signs Tab */}
+        <TabsContent value="vitals" className="space-y-6">
+          <PatientVitalSignsTracker patientId={patient.id} />
+        </TabsContent>
 
-          {/* Record Visit Tab */}
-          <TabsContent value="record-visit" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Stethoscope className="h-5 w-5" />
-                  Record Patient Visit - {formatPatientName(patient)}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...visitForm}>
-                  <form onSubmit={visitForm.handleSubmit(onSubmitVisit)} className="space-y-6">
-                    
-                    {/* Visit Type and Basic Info */}
+        {/* Record Visit Tab */}
+        <TabsContent value="record-visit" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Stethoscope className="h-5 w-5" />
+                Record Patient Visit - {formatPatientName(patient)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...visitForm}>
+                <form onSubmit={visitForm.handleSubmit(onSubmitVisit)} className="space-y-6">
+
+                  {/* Visit Type and Basic Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={visitForm.control}
+                      name="visitType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Visit Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select visit type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="consultation">General Consultation</SelectItem>
+                              <SelectItem value="follow-up">Follow-up Visit</SelectItem>
+                              <SelectItem value="emergency">Emergency Visit</SelectItem>
+                              <SelectItem value="routine-checkup">Routine Checkup</SelectItem>
+                              <SelectItem value="specialist-referral">Specialist Referral</SelectItem>
+                              <SelectItem value="vaccination">Vaccination</SelectItem>
+                              <SelectItem value="pre-operative">Pre-operative Assessment</SelectItem>
+                              <SelectItem value="post-operative">Post-operative Follow-up</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Chief Complaint */}
+                  <FormField
+                    control={visitForm.control}
+                    name="chiefComplaint"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chief Complaint</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Patient's main concern or reason for visit"
+                            className="min-h-[80px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* History of Present Illness */}
+                  <FormField
+                    control={visitForm.control}
+                    name="historyOfPresentIllness"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>History of Present Illness</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Detailed description of the current illness or symptoms"
+                            className="min-h-[100px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Vital Signs */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Vital Signs</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <FormField
+                        control={visitForm.control}
+                        name="bloodPressure"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Blood Pressure</FormLabel>
+                            <FormControl>
+                              <Input placeholder="120/80" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="heartRate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Heart Rate (bpm)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="72" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="temperature"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Temperature (°C)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="36.5" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="weight"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Weight (kg)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="70" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <FormField
+                        control={visitForm.control}
+                        name="height"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Height (cm)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="170" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="respiratoryRate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Respiratory Rate</FormLabel>
+                            <FormControl>
+                              <Input placeholder="16" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="oxygenSaturation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Oxygen Saturation (%)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="98" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Physical Examination */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Physical Examination</h3>
+
+                    <FormField
+                      control={visitForm.control}
+                      name="generalAppearance"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>General Appearance</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Overall appearance and condition of the patient"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={visitForm.control}
-                        name="visitType"
+                        name="cardiovascularSystem"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Visit Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel>Cardiovascular System</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Heart sounds, pulses, etc."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="respiratorySystem"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Respiratory System</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Breath sounds, chest movement, etc."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={visitForm.control}
+                        name="gastrointestinalSystem"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gastrointestinal System</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Abdomen examination findings"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="neurologicalSystem"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Neurological System</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Neurological examination findings"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={visitForm.control}
+                      name="musculoskeletalSystem"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Musculoskeletal System</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Joint, muscle, and bone examination findings"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Assessment and Diagnosis */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Assessment & Diagnosis</h3>
+
+                    <FormField
+                      control={visitForm.control}
+                      name="assessment"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Clinical Assessment</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Clinical reasoning and assessment"
+                              className="min-h-[80px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={visitForm.control}
+                      name="diagnosis"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Primary Diagnosis</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Primary diagnosis"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    {/* Additional Diagnoses */}
+                    <div className="space-y-3">
+                      <FormLabel>Additional Diagnoses</FormLabel>
+                      <div className="flex gap-2">
+                        <FormField
+                          control={visitForm.control}
+                          name="secondaryDiagnoses"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select visit type" />
-                                </SelectTrigger>
+                                <Input
+                                  placeholder="Add secondary diagnosis"
+                                  {...field}
+                                />
                               </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button
+                          type="button"
+                          onClick={addDiagnosis}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {additionalDiagnoses.length > 0 && (
+                        <div className="space-y-2">
+                          {additionalDiagnoses.map((diagnosis, index) => (
+                            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                              <span className="text-sm">{diagnosis}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeDiagnosis(diagnosis)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Treatment Plan */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Treatment Plan</h3>
+
+                    <FormField
+                      control={visitForm.control}
+                      name="treatmentPlan"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Treatment Plan</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Detailed treatment plan and interventions"
+                              className="min-h-[100px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-3">
+                      <FormLabel>Medications</FormLabel>
+                      <GlobalMedicationSearch
+                        onMedicationSelect={(medication) => {
+                          setMedicationList(prev => [...prev, medication.name]);
+                        }}
+                        placeholder="Search and add medications..."
+                      />
+
+                      {medicationList.length > 0 && (
+                        <div className="space-y-2">
+                          {medicationList.map((medication, index) => (
+                            <div key={index} className="flex items-center justify-between bg-blue-50 p-2 rounded">
+                              <span className="text-sm">{medication}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setMedicationList(prev => prev.filter((_, i) => i !== index))}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <FormField
+                      control={visitForm.control}
+                      name="patientInstructions"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Patient Instructions</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Instructions and advice for the patient"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Follow-up */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Follow-up</h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={visitForm.control}
+                        name="followUpDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Follow-up Date</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="date"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={visitForm.control}
+                        name="followUpInstructions"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Follow-up Instructions</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Specific follow-up instructions"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Additional Notes */}
+                  <FormField
+                    control={visitForm.control}
+                    name="additionalNotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Notes</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Any additional observations or notes"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Submit Button */}
+                  <div className="flex justify-end space-x-4 pt-6 border-t">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => visitForm.reset()}
+                    >
+                      Clear Form
+                    </Button>
+                    <Button type="submit">
+                      <Stethoscope className="w-4 h-4 mr-2" />
+                      Save Visit Record
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MedicalRecord className="h-5 w-5 text-emerald-600" />
+                Patient Documents & Medical Records
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="medical-records" className="w-full">
+                <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6 bg-gradient-to-r from-slate-50 to-blue-50">
+                  <TabsTrigger
+                    value="medical-records"
+                    className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all duration-200"
+                    data-testid="tab-medical-records"
+                  >
+                    <MedicalRecord className="w-4 h-4" />
+                    Medical Records
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="consent-forms"
+                    className="flex items-center gap-2 data-[state=active]:bg-violet-500 data-[state=active]:text-white transition-all duration-200"
+                    data-testid="tab-consent-forms"
+                  >
+                    <Document className="w-4 h-4" />
+                    Consent Forms
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="discharge-letters"
+                    className="flex items-center gap-2 data-[state=active]:bg-teal-500 data-[state=active]:text-white transition-all duration-200"
+                    data-testid="tab-discharge-letters"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Discharge Letters
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="insurance"
+                    className="flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all duration-200"
+                    data-testid="tab-insurance"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Insurance
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="referrals"
+                    className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all duration-200"
+                    data-testid="tab-referrals"
+                  >
+                    <Referral className="w-4 h-4" />
+                    Referrals
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="medical-records" className="space-y-4">
+                  {/* Document Fetch and Display */}
+                  <DocumentsListSection
+                    patientId={patient.id}
+                    onViewDocument={(index) => {
+                      setSelectedDocumentIndex(index);
+                      setShowDocumentCarousel(true);
+                    }}
+                  />
+
+                  {/* Upload Dialog */}
+                  <div className="flex justify-center mt-6">
+                    <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Upload Document
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <Upload className="w-5 h-5 text-emerald-600" />
+                            Upload Medical Document
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="document-type">Document Type</Label>
+                            <Select value={documentType} onValueChange={setDocumentType}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select document type" />
+                              </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="consultation">General Consultation</SelectItem>
-                                <SelectItem value="follow-up">Follow-up Visit</SelectItem>
-                                <SelectItem value="emergency">Emergency Visit</SelectItem>
-                                <SelectItem value="routine-checkup">Routine Checkup</SelectItem>
-                                <SelectItem value="specialist-referral">Specialist Referral</SelectItem>
-                                <SelectItem value="vaccination">Vaccination</SelectItem>
-                                <SelectItem value="pre-operative">Pre-operative Assessment</SelectItem>
-                                <SelectItem value="post-operative">Post-operative Follow-up</SelectItem>
+                                <SelectItem value="medical-record">Medical Record</SelectItem>
+                                <SelectItem value="lab-result">Lab Result</SelectItem>
+                                <SelectItem value="imaging">Imaging/X-ray</SelectItem>
+                                <SelectItem value="prescription">Prescription</SelectItem>
+                                <SelectItem value="discharge-summary">Discharge Summary</SelectItem>
+                                <SelectItem value="referral">Referral Letter</SelectItem>
+                                <SelectItem value="insurance">Insurance Document</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
                               </SelectContent>
                             </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                          </div>
 
-                    {/* Chief Complaint */}
-                    <FormField
-                      control={visitForm.control}
-                      name="chiefComplaint"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Chief Complaint</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Patient's main concern or reason for visit"
-                              className="min-h-[80px]"
-                              {...field} 
+                          <div className="space-y-2">
+                            <Label htmlFor="file-upload">Select File</Label>
+                            <Input
+                              id="file-upload"
+                              type="file"
+                              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                              onChange={handleFileSelect}
+                              className="cursor-pointer"
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* History of Present Illness */}
-                    <FormField
-                      control={visitForm.control}
-                      name="historyOfPresentIllness"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>History of Present Illness</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Detailed description of the current illness or symptoms"
-                              className="min-h-[100px]"
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Vital Signs */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Vital Signs</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <FormField
-                          control={visitForm.control}
-                          name="bloodPressure"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Blood Pressure</FormLabel>
-                              <FormControl>
-                                <Input placeholder="120/80" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="heartRate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Heart Rate (bpm)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="72" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="temperature"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Temperature (°C)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="36.5" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="weight"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Weight (kg)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="70" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <FormField
-                          control={visitForm.control}
-                          name="height"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Height (cm)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="170" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="respiratoryRate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Respiratory Rate</FormLabel>
-                              <FormControl>
-                                <Input placeholder="16" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="oxygenSaturation"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Oxygen Saturation (%)</FormLabel>
-                              <FormControl>
-                                <Input placeholder="98" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Physical Examination */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Physical Examination</h3>
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="generalAppearance"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>General Appearance</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Overall appearance and condition of the patient"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={visitForm.control}
-                          name="cardiovascularSystem"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Cardiovascular System</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Heart sounds, pulses, etc."
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="respiratorySystem"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Respiratory System</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Breath sounds, chest movement, etc."
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={visitForm.control}
-                          name="gastrointestinalSystem"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Gastrointestinal System</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Abdomen examination findings"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="neurologicalSystem"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Neurological System</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Neurological examination findings"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="musculoskeletalSystem"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Musculoskeletal System</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Joint, muscle, and bone examination findings"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Assessment and Diagnosis */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Assessment & Diagnosis</h3>
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="assessment"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Clinical Assessment</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Clinical reasoning and assessment"
-                                className="min-h-[80px]"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="diagnosis"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Primary Diagnosis</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="Primary diagnosis"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Additional Diagnoses */}
-                      <div className="space-y-3">
-                        <FormLabel>Additional Diagnoses</FormLabel>
-                        <div className="flex gap-2">
-                          <FormField
-                            control={visitForm.control}
-                            name="secondaryDiagnoses"
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormControl>
-                                  <Input 
-                                    placeholder="Add secondary diagnosis"
-                                    {...field} 
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
+                            {uploadFile && (
+                              <p className="text-sm text-gray-600">
+                                Selected: {uploadFile.name} ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
+                              </p>
                             )}
-                          />
-                          <Button 
-                            type="button" 
-                            onClick={addDiagnosis}
-                            variant="outline"
-                            size="sm"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        
-                        {additionalDiagnoses.length > 0 && (
-                          <div className="space-y-2">
-                            {additionalDiagnoses.map((diagnosis, index) => (
-                              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                                <span className="text-sm">{diagnosis}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => removeDiagnosis(diagnosis)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
                           </div>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Treatment Plan */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Treatment Plan</h3>
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="treatmentPlan"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Treatment Plan</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Detailed treatment plan and interventions"
-                                className="min-h-[100px]"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="space-y-3">
-                        <FormLabel>Medications</FormLabel>
-                        <GlobalMedicationSearch
-                          onMedicationSelect={(medication) => {
-                            setMedicationList(prev => [...prev, medication.name]);
-                          }}
-                          placeholder="Search and add medications..."
-                        />
-                        
-                        {medicationList.length > 0 && (
                           <div className="space-y-2">
-                            {medicationList.map((medication, index) => (
-                              <div key={index} className="flex items-center justify-between bg-blue-50 p-2 rounded">
-                                <span className="text-sm">{medication}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setMedicationList(prev => prev.filter((_, i) => i !== index))}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      
-                      <FormField
-                        control={visitForm.control}
-                        name="patientInstructions"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Patient Instructions</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                placeholder="Instructions and advice for the patient"
-                                {...field} 
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    {/* Follow-up */}
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Follow-up</h3>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={visitForm.control}
-                          name="followUpDate"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Follow-up Date</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="date"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        
-                        <FormField
-                          control={visitForm.control}
-                          name="followUpInstructions"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Follow-up Instructions</FormLabel>
-                              <FormControl>
-                                <Textarea 
-                                  placeholder="Specific follow-up instructions"
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Additional Notes */}
-                    <FormField
-                      control={visitForm.control}
-                      name="additionalNotes"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Additional Notes</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Any additional observations or notes"
-                              {...field} 
+                            <Label htmlFor="description">Description (Optional)</Label>
+                            <Input
+                              id="description"
+                              value={documentDescription}
+                              onChange={(e) => setDocumentDescription(e.target.value)}
+                              placeholder="Brief description of the document"
                             />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Submit Button */}
-                    <div className="flex justify-end space-x-4 pt-6 border-t">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => visitForm.reset()}
-                      >
-                        Clear Form
-                      </Button>
-                      <Button type="submit">
-                        <Stethoscope className="w-4 h-4 mr-2" />
-                        Save Visit Record
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Documents Tab */}
-          <TabsContent value="documents" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MedicalRecord className="h-5 w-5 text-emerald-600" />
-                  Patient Documents & Medical Records
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="medical-records" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6 bg-gradient-to-r from-slate-50 to-blue-50">
-                    <TabsTrigger 
-                      value="medical-records" 
-                      className="flex items-center gap-2 data-[state=active]:bg-blue-500 data-[state=active]:text-white transition-all duration-200"
-                      data-testid="tab-medical-records"
-                    >
-                      <MedicalRecord className="w-4 h-4" />
-                      Medical Records
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="consent-forms" 
-                      className="flex items-center gap-2 data-[state=active]:bg-violet-500 data-[state=active]:text-white transition-all duration-200"
-                      data-testid="tab-consent-forms"
-                    >
-                      <Document className="w-4 h-4" />
-                      Consent Forms
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="discharge-letters" 
-                      className="flex items-center gap-2 data-[state=active]:bg-teal-500 data-[state=active]:text-white transition-all duration-200"
-                      data-testid="tab-discharge-letters"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Discharge Letters
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="insurance" 
-                      className="flex items-center gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white transition-all duration-200"
-                      data-testid="tab-insurance"
-                    >
-                      <FileText className="w-4 h-4" />
-                      Insurance
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="referrals" 
-                      className="flex items-center gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white transition-all duration-200"
-                      data-testid="tab-referrals"
-                    >
-                      <Referral className="w-4 h-4" />
-                      Referrals
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="medical-records" className="space-y-4">
-                    {/* Document Fetch and Display */}
-                    <DocumentsListSection 
-                      patientId={patient.id}
-                      onViewDocument={(index) => {
-                        setSelectedDocumentIndex(index);
-                        setShowDocumentCarousel(true);
-                      }}
-                    />
-                    
-                    {/* Upload Dialog */}
-                    <div className="flex justify-center mt-6">
-                      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
-                        <DialogTrigger asChild>
-                          <Button className="bg-emerald-600 hover:bg-emerald-700">
-                            <Upload className="w-4 h-4 mr-2" />
-                            Upload Document
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle className="flex items-center gap-2">
-                              <Upload className="w-5 h-5 text-emerald-600" />
-                              Upload Medical Document
-                            </DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="document-type">Document Type</Label>
-                              <Select value={documentType} onValueChange={setDocumentType}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select document type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="medical-record">Medical Record</SelectItem>
-                                  <SelectItem value="lab-result">Lab Result</SelectItem>
-                                  <SelectItem value="imaging">Imaging/X-ray</SelectItem>
-                                  <SelectItem value="prescription">Prescription</SelectItem>
-                                  <SelectItem value="discharge-summary">Discharge Summary</SelectItem>
-                                  <SelectItem value="referral">Referral Letter</SelectItem>
-                                  <SelectItem value="insurance">Insurance Document</SelectItem>
-                                  <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="file-upload">Select File</Label>
-                              <Input
-                                id="file-upload"
-                                type="file"
-                                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                onChange={handleFileSelect}
-                                className="cursor-pointer"
-                              />
-                              {uploadFile && (
-                                <p className="text-sm text-gray-600">
-                                  Selected: {uploadFile.name} ({(uploadFile.size / 1024 / 1024).toFixed(2)} MB)
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="space-y-2">
-                              <Label htmlFor="description">Description (Optional)</Label>
-                              <Input
-                                id="description"
-                                value={documentDescription}
-                                onChange={(e) => setDocumentDescription(e.target.value)}
-                                placeholder="Brief description of the document"
-                              />
-                            </div>
-
-                            <div className="flex gap-3 pt-4">
-                              <Button
-                                onClick={handleDocumentUpload}
-                                disabled={!uploadFile || !documentType || uploadDocumentMutation.isPending}
-                                className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                              >
-                                {uploadDocumentMutation.isPending ? (
-                                  <>
-                                    <Clock className="w-4 h-4 mr-2 animate-spin" />
-                                    Uploading...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Upload
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setShowUploadDialog(false)}
-                                disabled={uploadDocumentMutation.isPending}
-                              >
-                                Cancel
-                              </Button>
-                            </div>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="consent-forms" className="space-y-4">
-                    <div className="text-center py-12 text-gray-500">
-                      <Document className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-700 mb-2">Consent Forms</h3>
-                      <p className="text-sm text-gray-500 mb-4">Manage patient consent and authorization forms</p>
-                      <ConsentCapture
-                        patientId={patient.id}
-                        patientName={formatPatientName(patient)}
-                        trigger={
-                          <Button className="bg-blue-600 hover:bg-blue-700">
-                            <Plus className="w-4 h-4 mr-2" />
-                            New Consent Form
-                          </Button>
-                        }
-                        onConsentCaptured={() => {
-                          toast({
-                            title: "Success",
-                            description: "Consent form captured successfully",
-                          });
-                        }}
-                      />
-                    </div>
-                  </TabsContent>
+                          <div className="flex gap-3 pt-4">
+                            <Button
+                              onClick={handleDocumentUpload}
+                              disabled={!uploadFile || !documentType || uploadDocumentMutation.isPending}
+                              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              {uploadDocumentMutation.isPending ? (
+                                <>
+                                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Upload
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowUploadDialog(false)}
+                              disabled={uploadDocumentMutation.isPending}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </TabsContent>
 
-                  <TabsContent value="discharge-letters" className="space-y-4">
-                    <PatientDischargeLetterTab 
-                      patientId={patient.id} 
-                      patientName={formatPatientName(patient)}
-                      clinicName="Bluequee Health Clinic"
-                      clinicAddress="Southwest Nigeria"
-                    />
-                  </TabsContent>
-
-                  <TabsContent value="insurance" className="space-y-4">
-                    <InsuranceManagement patientId={patient.id} />
-                  </TabsContent>
-
-                  <TabsContent value="referrals" className="space-y-4">
-                    <ReferralManagement patientId={patient.id} />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Labs Tab */}
-          <TabsContent value="labs" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BloodTest className="h-5 w-5 text-red-600" />
-                  Laboratory Tests & Results
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="orders" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6">
-                    <TabsTrigger value="orders" className="flex items-center gap-2">
-                      <BloodTest className="w-4 h-4" />
-                      Lab Orders
-                    </TabsTrigger>
-                    <TabsTrigger value="results" className="flex items-center gap-2">
-                      <BloodTest className="w-4 h-4" />
-                      Results
-                    </TabsTrigger>
-                    <TabsTrigger value="reviewed" className="flex items-center gap-2">
-                      <Success className="w-4 h-4" />
-                      Reviewed
-                    </TabsTrigger>
-                    <TabsTrigger value="pending" className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      Pending
-                    </TabsTrigger>
-                    <TabsTrigger value="history" className="flex items-center gap-2">
-                      <History className="w-4 h-4" />
-                      History
-                    </TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="orders" className="space-y-4">
-                    <LabOrderForm patientId={patient.id} />
-                  </TabsContent>
-
-                  <TabsContent value="results" className="space-y-4">
-                    <LabOrdersList patientId={patient.id} />
-                    
-                    {/* AI-Powered Lab Result Integration */}
-                    <LabResultPersonalityIntegration
+                <TabsContent value="consent-forms" className="space-y-4">
+                  <div className="text-center py-12 text-gray-500">
+                    <Document className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">Consent Forms</h3>
+                    <p className="text-sm text-gray-500 mb-4">Manage patient consent and authorization forms</p>
+                    <ConsentCapture
                       patientId={patient.id}
-                      labResults={[]} // This will be populated with actual lab results
-                      patientData={{
-                        firstName: patient.firstName,
-                        lastName: patient.lastName,
-                        age: patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : undefined,
-                        gender: patient.gender,
-                        medicalHistory: patient.medicalHistory || undefined,
-                        allergies: patient.allergies || undefined
-                      }}
-                      onIntegrationComplete={() => {
-                        queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/visits`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] });
+                      patientName={formatPatientName(patient)}
+                      trigger={
+                        <Button className="bg-blue-600 hover:bg-blue-700" title="New Consent Form">
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      }
+                      onConsentCaptured={() => {
+                        toast({
+                          title: "Success",
+                          description: "Consent form captured successfully",
+                        });
                       }}
                     />
-                  </TabsContent>
+                  </div>
+                </TabsContent>
 
-                  <TabsContent value="reviewed" className="space-y-4">
-                    <PatientReviewedResults 
-                      patientId={patient.id} 
-                      showDeleteVisitConfirm={showDeleteVisitConfirm}
-                      setShowDeleteVisitConfirm={setShowDeleteVisitConfirm}
-                      confirmDeleteVisit={confirmDeleteVisit}
-                    />
-                  </TabsContent>
+                <TabsContent value="discharge-letters" className="space-y-4">
+                  <PatientDischargeLetterTab
+                    patientId={patient.id}
+                    patientName={formatPatientName(patient)}
+                    clinicName="Bluequee Health Clinic"
+                    clinicAddress="Southwest Nigeria"
+                  />
+                </TabsContent>
 
-                  <TabsContent value="pending" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">Pending Lab Tests</h3>
-                        <Button 
-                          variant="outline" 
+                <TabsContent value="insurance" className="space-y-4">
+                  <InsuranceManagement patientId={patient.id} />
+                </TabsContent>
+
+                <TabsContent value="referrals" className="space-y-4">
+                  <ReferralManagement patientId={patient.id} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Labs Tab */}
+        <TabsContent value="labs" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BloodTest className="h-5 w-5 text-red-600" />
+                Laboratory Tests & Results
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="orders" className="w-full">
+                <TabsList className="grid w-full grid-cols-5 max-w-3xl mb-6">
+                  <TabsTrigger value="orders" className="flex items-center gap-2">
+                    <BloodTest className="w-4 h-4" />
+                    Lab Orders
+                  </TabsTrigger>
+                  <TabsTrigger value="results" className="flex items-center gap-2">
+                    <BloodTest className="w-4 h-4" />
+                    Results
+                  </TabsTrigger>
+                  <TabsTrigger value="reviewed" className="flex items-center gap-2">
+                    <Success className="w-4 h-4" />
+                    Reviewed
+                  </TabsTrigger>
+                  <TabsTrigger value="pending" className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    History
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="orders" className="space-y-4">
+                  <LabOrderForm patientId={patient.id} />
+                </TabsContent>
+
+                <TabsContent value="results" className="space-y-4">
+                  <LabOrdersList patientId={patient.id} />
+
+                  {/* AI-Powered Lab Result Integration */}
+                  <LabResultPersonalityIntegration
+                    patientId={patient.id}
+                    labResults={[]} // This will be populated with actual lab results
+                    patientData={{
+                      firstName: patient.firstName,
+                      lastName: patient.lastName,
+                      age: patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : undefined,
+                      gender: patient.gender,
+                      medicalHistory: patient.medicalHistory || undefined,
+                      allergies: patient.allergies || undefined
+                    }}
+                    onIntegrationComplete={() => {
+                      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
+                      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/visits`] });
+                      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] });
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="reviewed" className="space-y-4">
+                  <PatientReviewedResults
+                    patientId={patient.id}
+                    showDeleteVisitConfirm={showDeleteVisitConfirm}
+                    setShowDeleteVisitConfirm={setShowDeleteVisitConfirm}
+                    confirmDeleteVisit={confirmDeleteVisit}
+                  />
+                </TabsContent>
+
+                <TabsContent value="pending" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-gray-900">Pending Lab Tests</h3>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
+                      >
+                        <Refresh className="w-4 h-4 mr-2" />
+                        Refresh
+                      </Button>
+                    </div>
+                    <LabOrdersList patientId={patient.id} showPendingOnly={true} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="history" className="space-y-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-gray-900">Complete Lab History</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
                         >
                           <Refresh className="w-4 h-4 mr-2" />
                           Refresh
                         </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handlePrintLabHistory()}
+                        >
+                          <Print className="w-4 h-4 mr-2" />
+                          Print
+                        </Button>
                       </div>
-                      <LabOrdersList patientId={patient.id} showPendingOnly={true} />
                     </div>
-                  </TabsContent>
+                    <LabOrdersList patientId={patient.id} showAll={true} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                  <TabsContent value="history" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium text-gray-900">Complete Lab History</h3>
-                        <div className="flex gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}/lab-orders`] })}
-                          >
-                            <Refresh className="w-4 h-4 mr-2" />
-                            Refresh
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handlePrintLabHistory()}
-                          >
-                            <Print className="w-4 h-4 mr-2" />
-                            Print
-                          </Button>
-                        </div>
-                      </div>
-                      <LabOrdersList patientId={patient.id} showAll={true} />
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        {/* Consultation Forms Tab */}
+        <TabsContent value="consultation" className="space-y-6">
+          <ConsultationFormSelector patientId={patient.id} />
+        </TabsContent>
 
-          {/* Consultation Forms Tab */}
-          <TabsContent value="consultation" className="space-y-6">
-            <ConsultationFormSelector patientId={patient.id} />
-          </TabsContent>
-
-          {/* Medication Review Assignments Tab */}
-          <TabsContent value="med-reviews" className="space-y-6">
-            <MedicationReviewAssignmentsList
-              patientId={patient.id}
-              patient={patient}
-              onCreateAssignment={() => handleCreateMedicationReviewAssignment()}
-            />
-          </TabsContent>
-
-          {/* Vaccination Tab */}
-          <TabsContent value="vaccinations" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Vitals className="h-5 w-5 text-green-500" />
-                  Vaccination History & Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <VaccinationManagement 
-                  patientId={patient.id} 
-                  canEdit={user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin'} 
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Communication Tab */}
-          <TabsContent value="communication" className="space-y-6">
-            <PatientCommunicationHub
-              patientId={patient.id}
-            />
-          </TabsContent>
-
-          {/* Appointments Tab - Detailed Implementation */}
-          <TabsContent value="appointments" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-blue-500" />
-                  Appointments & Scheduling
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PatientAppointmentsTab patientId={patient.id} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Billing Tab */}
-          <TabsContent value="billing" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CardIcon className="h-5 w-5 text-green-500" />
-                  Patient Billing
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PatientBillingTab patient={patient} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Insurance Tab */}
-          <TabsContent value="insurance" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-blue-500" />
-                  Insurance Coverage
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PatientInsuranceTab patientId={patient.id} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Medical History Tab */}
-          <TabsContent value="history" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5 text-purple-500" />
-                  Medical History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PatientHistoryTab patientId={patient.id} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        {/* Edit Patient Modal */}
-        <EditPatientModal
-          open={showEditPatientModal}
-          onOpenChange={setShowEditPatientModal}
-          patient={patient}
-          onPatientUpdated={() => {
-            // Refresh patient data after update
-            queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
-            queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
-          }}
-        />
-
-        {/* Document Preview Carousel */}
-        <DocumentPreviewCarousel
-          patientId={patient.id}
-          isOpen={showDocumentCarousel}
-          onClose={() => setShowDocumentCarousel(false)}
-          initialDocumentIndex={selectedDocumentIndex}
-        />
-
-        {/* Custom Prescription Print Dialog */}
-        {showPrescriptionPrint && (
-          <CustomPrescriptionPrint
-            prescriptions={displayPrescriptions}
-            patient={patient}
-            onClose={() => setShowPrescriptionPrint(false)}
+        {/* Medication Review Assignments Tab */}
+        <TabsContent value="med-reviews" className="space-y-6">
+          <MedicationReviewAssignmentsList
+            patientId={patient.id}
+            patient={patient as any}
+            onCreateAssignment={() => handleCreateMedicationReviewAssignment()}
           />
-        )}
+        </TabsContent>
 
-        {/* Custom Lab Order Print Dialog */}
-        {showLabOrderPrint && (
-          <CustomLabOrderPrint
-            labOrders={patientLabOrders}
-            patient={patient}
-            onClose={() => setShowLabOrderPrint(false)}
+        {/* Vaccination Tab */}
+        <TabsContent value="vaccinations" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Vitals className="h-5 w-5 text-green-500" />
+                Vaccination History & Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VaccinationManagement
+                patientId={patient.id}
+                canEdit={user?.role === 'doctor' || user?.role === 'nurse' || user?.role === 'admin'}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Communication Tab */}
+        <TabsContent value="communication" className="space-y-6">
+          <PatientCommunicationHub
+            patientId={patient.id}
           />
-        )}
+        </TabsContent>
 
-        {/* Medication Review Assignment Modal */}
-        <MedicationReviewAssignmentModal
-          isOpen={showMedicationReviewAssignmentModal}
-          onClose={handleCloseMedicationReviewAssignment}
-          patientId={patient.id}
-          patient={patient}
-          selectedPrescription={selectedPrescriptionForReview}
-        />
+        {/* Appointments Tab - Detailed Implementation */}
+        <TabsContent value="appointments" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-blue-500" />
+                Appointments & Scheduling
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatientAppointmentsTab patientId={patient.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Tab Manager Modal */}
-        <TabManager
-          open={showTabManager}
-          onOpenChange={setShowTabManager}
+        {/* Billing Tab */}
+        <TabsContent value="billing" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CardIcon className="h-5 w-5 text-green-500" />
+                Patient Billing
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatientBillingTab patient={patient} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Insurance Tab */}
+        <TabsContent value="insurance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-blue-500" />
+                Insurance Coverage
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatientInsuranceTab patientId={patient.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Medical History Tab */}
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="h-5 w-5 text-purple-500" />
+                Medical History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PatientHistoryTab patientId={patient.id} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Imaging Tab */}
+        <TabsContent value="imaging" className="space-y-4">
+          <PatientImaging patientId={patient.id} />
+        </TabsContent>
+
+        {/* Allergies Tab */}
+        <TabsContent value="allergies" className="space-y-4">
+          <PatientAllergies patientId={patient.id} />
+        </TabsContent>
+
+        {/* Immunizations Tab */}
+        <TabsContent value="immunizations" className="space-y-4">
+          <PatientImmunizations patientId={patient.id} />
+        </TabsContent>
+
+        {/* Procedures Tab */}
+        <TabsContent value="procedures" className="space-y-4">
+          <PatientProcedures patientId={patient.id} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Patient Modal */}
+      <EditPatientModal
+        open={showEditPatientModal}
+        onOpenChange={setShowEditPatientModal}
+        patient={patient as any}
+        onPatientUpdated={() => {
+          // Refresh patient data after update
+          queryClient.invalidateQueries({ queryKey: [`/api/patients/${patient.id}`] });
+          queryClient.invalidateQueries({ queryKey: ["/api/patients"] });
+        }}
+      />
+
+      {/* Document Preview Carousel */}
+      <DocumentPreviewCarousel
+        patientId={patient.id}
+        isOpen={showDocumentCarousel}
+        onClose={() => setShowDocumentCarousel(false)}
+        initialDocumentIndex={selectedDocumentIndex}
+      />
+
+      {/* Custom Prescription Print Dialog */}
+      {showPrescriptionPrint && (
+        <CustomPrescriptionPrint
+          prescriptions={displayPrescriptions}
+          patient={patient as any}
+          onClose={() => setShowPrescriptionPrint(false)}
         />
+      )}
+
+      {/* Custom Lab Order Print Dialog */}
+      {showLabOrderPrint && (
+        <CustomLabOrderPrint
+          labOrders={patientLabOrders}
+          patient={patient as any}
+          onClose={() => setShowLabOrderPrint(false)}
+        />
+      )}
+
+      {/* Medication Review Assignment Modal */}
+      <MedicationReviewAssignmentModal
+        isOpen={showMedicationReviewAssignmentModal}
+        onClose={handleCloseMedicationReviewAssignment}
+        patientId={patient.id}
+        patient={patient as any}
+        selectedPrescription={selectedPrescriptionForReview}
+      />
+
+      {/* Tab Manager Modal */}
+      <TabManager
+        open={showTabManager}
+        onOpenChange={setShowTabManager}
+      />
     </div>
   );
 }

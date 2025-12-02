@@ -3,7 +3,21 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    // Suppress console logging for expected 403 errors on notifications
+    if (res.status === 403 && res.url.includes('/notifications')) {
+      // Don't log this error - it's expected during app initialization
+      throw new Error(`${res.status}: ${text}`);
+    }
+    
+    // Try to parse as JSON for better error messages
+    try {
+      const errorData = JSON.parse(text);
+      const errorMsg = errorData.message || errorData.error || text;
+      throw new Error(`${res.status}: ${errorMsg}`);
+    } catch (e) {
+      // If not JSON, throw the raw text
+      throw new Error(`${res.status}: ${text}`);
+    }
   }
 }
 
@@ -78,6 +92,11 @@ export const getQueryFn: <T>(options: {
       return null;
     }
 
+    // Silently handle 403 errors for notifications endpoint during initialization
+    if (res.status === 403 && url.includes('/notifications')) {
+      return { notifications: [], totalCount: 0, unreadCount: 0 } as any;
+    }
+
     await throwIfResNotOk(res);
     return await res.json();
   };
@@ -86,18 +105,20 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: 0, // Allow immediate refetching
-      gcTime: 0, // Don't cache data (replaces cacheTime in v5)
-      retry: false,
-      networkMode: 'always', // Always make requests regardless of network state
+      refetchInterval: false, // Disable automatic polling by default
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+      staleTime: 5 * 60 * 1000, // Data stays fresh for 5 minutes (reduces unnecessary refetches)
+      gcTime: 10 * 60 * 1000, // Keep unused data in cache for 10 minutes
+      retry: 1, // Retry once on failure (was 0)
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+      networkMode: 'online', // Only make requests when online (was 'always')
     },
     mutations: {
-      retry: false,
+      retry: 1, // Retry mutations once
+      retryDelay: 1000,
     },
   },
 });
 
-// Force clear all cached data on module load
-queryClient.clear();
+// Don't clear cache on module load - let staleTime handle freshness
+// queryClient.clear();

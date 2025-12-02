@@ -433,9 +433,8 @@ export function PatientInsuranceTab({ patientId }: PatientInsuranceTabProps) {
           : `No ${type} insurance policies found for this patient.`}
       </p>
       {type === 'active' && (
-        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-insurance-empty">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Insurance Policy
+        <Button onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-insurance-empty" title="Add Insurance Policy">
+          <Plus className="w-4 h-4" />
         </Button>
       )}
     </div>
@@ -786,8 +785,7 @@ export function PatientInsuranceTab({ patientId }: PatientInsuranceTabProps) {
               Refresh
             </Button>
             <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => setIsAddDialogOpen(true)} data-testid="button-add-insurance">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Insurance
+              <Plus className="w-4 h-4" />
             </Button>
           </div>
         </div>

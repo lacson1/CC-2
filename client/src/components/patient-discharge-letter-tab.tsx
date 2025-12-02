@@ -5,7 +5,7 @@ import { apiRequest, queryClient } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,13 +37,13 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, parseISO } from 'date-fns';
-import { 
-  FileText, 
-  Plus, 
-  MoreVertical, 
-  Edit, 
-  Trash2, 
-  Calendar, 
+import {
+  FileText,
+  Plus,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Calendar,
   User,
   CheckCircle,
   Clock,
@@ -52,7 +52,6 @@ import {
   Pill,
   ClipboardList,
   Send,
-  Download,
   Eye,
   Printer,
   Activity,
@@ -116,8 +115,8 @@ const dischargeLetterFormSchema = z.object({
 
 type DischargeLetterFormValues = z.infer<typeof dischargeLetterFormSchema>;
 
-export function PatientDischargeLetterTab({ 
-  patientId, 
+export function PatientDischargeLetterTab({
+  patientId,
   patientName = 'Patient',
   clinicName = 'Bluequee Health Clinic',
   clinicAddress = 'Southwest Nigeria',
@@ -142,7 +141,7 @@ export function PatientDischargeLetterTab({
       return;
     }
 
-    const physicianName = letter.attendingPhysician 
+    const physicianName = letter.attendingPhysician
       ? `Dr. ${letter.attendingPhysician.firstName || ''} ${letter.attendingPhysician.lastName || letter.attendingPhysician.username}`.trim()
       : 'Attending Physician';
 
@@ -685,10 +684,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Diagnosis *</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Primary and secondary diagnoses"
                   className="min-h-[80px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-diagnosis"
                 />
               </FormControl>
@@ -704,10 +703,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Treatment Summary *</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Summary of treatment provided during admission"
                   className="min-h-[100px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-treatment-summary"
                 />
               </FormControl>
@@ -772,10 +771,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Medications on Discharge</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="List of medications prescribed at discharge with dosages"
                   className="min-h-[80px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-medications"
                 />
               </FormControl>
@@ -821,10 +820,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Follow-up Instructions</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Instructions for follow-up care"
                   className="min-h-[80px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-followup-instructions"
                 />
               </FormControl>
@@ -840,10 +839,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Special Instructions</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Any special care instructions for the patient"
                   className="min-h-[60px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-special-instructions"
                 />
               </FormControl>
@@ -859,10 +858,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Activity Restrictions</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Activity limitations and restrictions"
                   className="min-h-[60px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-restrictions"
                 />
               </FormControl>
@@ -878,10 +877,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Dietary Advice</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Dietary recommendations and restrictions"
                   className="min-h-[60px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-dietary-advice"
                 />
               </FormControl>
@@ -897,10 +896,10 @@ export function PatientDischargeLetterTab({
             <FormItem>
               <FormLabel>Warning Symptoms</FormLabel>
               <FormControl>
-                <Textarea 
+                <Textarea
                   placeholder="Symptoms that require immediate medical attention"
                   className="min-h-[60px]"
-                  {...field} 
+                  {...field}
                   data-testid="input-warning-symptoms"
                 />
               </FormControl>
@@ -911,9 +910,9 @@ export function PatientDischargeLetterTab({
         />
 
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="outline" 
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => {
               setIsAddDialogOpen(false);
               setIsEditDialogOpen(false);
@@ -923,8 +922,8 @@ export function PatientDischargeLetterTab({
           >
             Cancel
           </Button>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={addMutation.isPending || updateMutation.isPending}
             data-testid="button-submit"
           >
@@ -991,8 +990,8 @@ export function PatientDischargeLetterTab({
                 Print
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => handleDeleteClick(letter)} 
+              <DropdownMenuItem
+                onClick={() => handleDeleteClick(letter)}
                 className="text-red-600"
                 data-testid={`button-delete-${letter.id}`}
               >
@@ -1010,7 +1009,7 @@ export function PatientDischargeLetterTab({
             Admission: {format(parseISO(letter.admissionDate), 'MMM d, yyyy')}
           </span>
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex items-start gap-2">
             <ClipboardList className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
@@ -1019,7 +1018,7 @@ export function PatientDischargeLetterTab({
               <p className="text-sm text-gray-600 line-clamp-2">{letter.diagnosis}</p>
             </div>
           </div>
-          
+
           {letter.medicationsOnDischarge && (
             <div className="flex items-start gap-2">
               <Pill className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
@@ -1029,7 +1028,7 @@ export function PatientDischargeLetterTab({
               </div>
             </div>
           )}
-          
+
           {letter.followUpDate && (
             <div className="flex items-center gap-2 text-sm">
               <Calendar className="w-4 h-4 text-blue-500" />
@@ -1056,8 +1055,7 @@ export function PatientDischargeLetterTab({
             Refresh
           </Button>
           <Button onClick={handleAddNew} className="bg-teal-600 hover:bg-teal-700" data-testid="button-add-discharge-letter">
-            <Plus className="w-4 h-4 mr-2" />
-            New Discharge Letter
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
       </div>
@@ -1084,13 +1082,12 @@ export function PatientDischargeLetterTab({
           <FileText className="mx-auto h-16 w-16 text-gray-300 mb-4" />
           <h3 className="text-lg font-medium text-gray-700 mb-2">No Discharge Letters</h3>
           <p className="text-sm text-gray-500 mb-4">
-            {activeTab === 'all' 
+            {activeTab === 'all'
               ? 'Create a discharge letter to document patient discharge information'
               : `No ${activeTab} discharge letters found`}
           </p>
-          <Button onClick={handleAddNew} className="bg-teal-600 hover:bg-teal-700" data-testid="button-add-first-discharge-letter">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Discharge Letter
+          <Button onClick={handleAddNew} className="bg-teal-600 hover:bg-teal-700" data-testid="button-add-first-discharge-letter" title="Create Discharge Letter">
+            <Plus className="w-4 h-4" />
           </Button>
         </div>
       ) : (
@@ -1243,8 +1240,8 @@ export function PatientDischargeLetterTab({
                 <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
                   Close
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => handlePrintLetter(selectedLetter)}
                   data-testid="button-print-letter"
                 >
@@ -1277,8 +1274,8 @@ export function PatientDischargeLetterTab({
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} data-testid="button-cancel-delete">
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={() => selectedLetter && deleteMutation.mutate(selectedLetter.id)}
               disabled={deleteMutation.isPending}
               data-testid="button-confirm-delete"

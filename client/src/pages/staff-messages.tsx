@@ -43,8 +43,8 @@ export default function StaffMessages() {
   // Fetch staff messages
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['/api/staff/messages'],
-    staleTime: 30000,
-    refetchInterval: 60000 // Auto-refresh every minute
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    refetchInterval: false, // Disabled auto-refresh, use manual refresh
   });
 
   // Mark message as read

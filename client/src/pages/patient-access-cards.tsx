@@ -119,7 +119,7 @@ export default function PatientAccessCards() {
     
     toast({
       title: "Patient Added",
-      description: `${patient.first_name} ${patient.last_name} added to access card generation queue.`
+      description: `${patient.firstName} ${patient.lastName} added to access card generation queue.`
     });
   };
 
@@ -164,7 +164,7 @@ export default function PatientAccessCards() {
             <div class="clinic-name">Bluequee Patient Portal</div>
           </div>
           <div class="patient-section">
-            <div class="patient-name">${patient.first_name} ${patient.last_name}</div>
+            <div class="patient-name">${patient.firstName} ${patient.lastName}</div>
             <div class="credentials">
               <div class="credential-row">
                 <span class="label">Patient ID:</span>
@@ -176,7 +176,7 @@ export default function PatientAccessCards() {
               </div>
               <div class="credential-row">
                 <span class="label">DOB:</span>
-                <span class="value">${patient.date_of_birth}</span>
+                <span class="value">${patient.dateOfBirth}</span>
               </div>
             </div>
           </div>

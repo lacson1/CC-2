@@ -57,20 +57,28 @@ export function QuickMedicationSearch({
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
+        console.log(`[MedicationSearch] Searching for: "${query.trim()}"`);
         const response = await fetch(`/api/suggestions/medications?q=${encodeURIComponent(query.trim())}`, {
           headers: {
             'Content-Type': 'application/json'
           },
           credentials: 'include' // Use secure session cookies
         });
+        
+        console.log(`[MedicationSearch] Response status: ${response.status}`);
+        
         if (response.ok) {
           const data = await response.json();
+          console.log(`[MedicationSearch] Found ${data.length} medications:`, data.map((m: any) => m.name));
           setMedications(data.slice(0, 8)); // Limit to 8 results for quick search
           setIsOpen(true);
           setSelectedIndex(-1);
+        } else {
+          console.error(`[MedicationSearch] API error: ${response.status} ${response.statusText}`);
+          setMedications([]);
         }
       } catch (error) {
-        console.error('Failed to search medications:', error);
+        console.error('[MedicationSearch] Failed to search medications:', error);
         setMedications([]);
       } finally {
         setIsLoading(false);

@@ -157,15 +157,18 @@ export default function UserManagement() {
   // Queries
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/users/management"],
-    refetchInterval: 30000
+    refetchInterval: false, // Disabled auto-refresh
+    staleTime: 3 * 60 * 1000, // Cache for 3 minutes
   });
 
   const { data: roles = [] } = useQuery<Role[]>({
-    queryKey: ["/api/roles"]
+    queryKey: ["/api/roles"],
+    staleTime: 15 * 60 * 1000, // Cache for 15 minutes (static data)
   });
 
   const { data: permissions = [] } = useQuery<Permission[]>({
-    queryKey: ["/api/permissions"]
+    queryKey: ["/api/permissions"],
+    staleTime: 15 * 60 * 1000, // Cache for 15 minutes (static data)
   });
 
   const { data: organizations = [] } = useQuery<Organization[]>({
@@ -180,7 +183,12 @@ export default function UserManagement() {
         roleId: parseInt(data.roleId),
         organizationId: parseInt(data.organizationId)
       };
-      return apiRequest("/api/users", "POST", userData);
+      const response = await apiRequest("/api/users", "POST", userData);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || "Failed to create user");
+      }
+      return response.json();
     },
     onSuccess: () => {
       toast({ title: "User Created", description: "User has been successfully created." });

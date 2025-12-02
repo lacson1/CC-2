@@ -95,7 +95,7 @@ export default function ConsultationForm({ patientId, onComplete }: Consultation
         title: "Consultation Recorded",
         description: "Patient consultation has been successfully recorded.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/patients', patientId, 'consultation-records'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/patients/${patientId}/consultation-records`] });
       if (onComplete) onComplete();
       resetForm();
     },

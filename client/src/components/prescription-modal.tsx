@@ -89,6 +89,7 @@ export default function PrescriptionModal({
     resolver: zodResolver(insertPrescriptionSchema.omit({ patientId: true, medicationId: true })),
     defaultValues: {
       visitId: visitId || undefined,
+      medicationName: "",
       dosage: "",
       frequency: "",
       duration: "",
@@ -153,6 +154,11 @@ export default function PrescriptionModal({
   // Smart Auto-Fill Function using comprehensive medications database
   const handleMedicationSelect = (medication: Medication) => {
     setSelectedMedicine(medication);
+    
+    // Auto-fill medication name
+    if (medication.name) {
+      form.setValue("medicationName", medication.name);
+    }
     
     // Auto-fill dosage from comprehensive database
     if (medication.dosageAdult) {
@@ -245,9 +251,10 @@ export default function PrescriptionModal({
     const prescriptionData: InsertPrescription = {
       ...data,
       patientId: selectedPatientId,
-      medicationId: selectedMedicine?.id || null, // null for manual entries
-      // Add medication name for manual entries
-      ...(manualMedicationName && { medicationName: manualMedicationName }),
+      medicationId: null, // Reserved for medicines inventory table (backward compatibility)
+      medicationDatabaseId: selectedMedicine?.id || null, // Reference to comprehensive medications database
+      // Add medication name from either database selection or manual entry
+      medicationName: selectedMedicine?.name || manualMedicationName || data.medicationName || "",
     };
 
     createPrescriptionMutation.mutate(prescriptionData);

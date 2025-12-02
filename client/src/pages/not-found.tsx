@@ -21,9 +21,7 @@ const availableRoutes = [
   { path: "/telemedicine", name: "Telemedicine", description: "Remote consultation platform" },
   { path: "/physiotherapy", name: "Physiotherapy", description: "Physical therapy management" },
   { path: "/exercise-leaflets", name: "Exercise Leaflets", description: "Patient exercise guides" },
-  { path: "/protocols", name: "Clinical Protocols", description: "Medical protocols and guidelines" },
   { path: "/staff-messages", name: "Staff Messages", description: "Patient communication and messaging" },
-  { path: "/compliance", name: "Export Compliance", description: "Regulatory compliance tools" },
   { path: "/form-builder", name: "Form Builder", description: "Custom medical form creation" },
   { path: "/medical-tools", name: "Medical Tools", description: "Clinical calculation tools" },
   { path: "/clinical-performance", name: "Clinical Performance", description: "Performance metrics and KPIs" },
@@ -42,10 +40,10 @@ export default function NotFound() {
     return availableRoutes.filter(route => {
       const routeName = route.name.toLowerCase();
       const routePath = route.path.toLowerCase();
-      return routeName.includes(path.slice(1)) || 
-             routePath.includes(path) ||
-             path.includes(routeName.replace(/\s+/g, '-')) ||
-             calculateSimilarity(path, routePath) > 0.3;
+      return routeName.includes(path.slice(1)) ||
+        routePath.includes(path) ||
+        path.includes(routeName.replace(/\s+/g, '-')) ||
+        calculateSimilarity(path, routePath) > 0.3;
     }).slice(0, 4);
   }
 
@@ -97,8 +95,8 @@ export default function NotFound() {
   ];
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
-      <div className="w-full max-w-4xl space-y-6">
+    <div className="w-full h-full flex items-center justify-center p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-4xl mx-auto space-y-6">
         {/* Main 404 Card */}
         <Card className="shadow-xl border-0 overflow-hidden">
           <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-green-600 text-white">
@@ -115,31 +113,31 @@ export default function NotFound() {
               Path: <span className="font-mono bg-white/20 px-2 py-1 rounded text-sm">{location}</span>
             </p>
           </CardHeader>
-          
+
           <CardContent className="pt-6 space-y-6">
             {/* Quick Actions */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button 
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+              <Button
                 onClick={() => setLocation('/')}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 justify-center"
               >
                 <Home className="w-4 h-4 mr-2" />
                 Go to Dashboard
               </Button>
-              
-              <Button 
+
+              <Button
                 variant="outline"
                 onClick={() => window.history.back()}
-                className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50"
+                className="flex-1 border-blue-200 text-blue-600 hover:bg-blue-50 justify-center"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Button>
 
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => setShowCreateOptions(!showCreateOptions)}
-                className="flex-1 border-green-200 text-green-600 hover:bg-green-50"
+                className="flex-1 border-green-200 text-green-600 hover:bg-green-50 justify-center"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Page
@@ -156,7 +154,7 @@ export default function NotFound() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {suggestedPages.map((page, index) => (
                     <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer border-blue-100"
-                          onClick={() => setLocation(page.path)}>
+                      onClick={() => setLocation(page.path)}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -182,7 +180,7 @@ export default function NotFound() {
                 <div className="grid grid-cols-1 gap-3">
                   {createPageOptions.map((option, index) => (
                     <Card key={index} className="hover:shadow-md transition-shadow cursor-pointer border-green-100"
-                          onClick={option.action}>
+                      onClick={option.action}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div>
@@ -210,9 +208,9 @@ export default function NotFound() {
               </summary>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
                 {availableRoutes.map((route, index) => (
-                  <Button 
+                  <Button
                     key={index}
-                    variant="ghost" 
+                    variant="ghost"
                     className="h-auto p-3 justify-start text-left"
                     onClick={() => setLocation(route.path)}
                   >
@@ -225,16 +223,16 @@ export default function NotFound() {
               </div>
             </details>
 
-            <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg text-center border border-blue-200">
-              <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="mt-6 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg text-center border border-blue-200">
+              <div className="flex items-center justify-center gap-2 mb-2 flex-wrap">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <p className="text-sm text-blue-700 font-semibold">
-                  Bluequee Healthcare Management System
+                <p className="text-sm sm:text-base text-blue-700 font-semibold">
+                  ClinicConnect Healthcare Management
                 </p>
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               </div>
-              <p className="text-xs text-gray-600">
-                Comprehensive digital health platform for rural healthcare delivery
+              <p className="text-xs sm:text-sm text-gray-600">
+                Comprehensive digital health platform for modern healthcare delivery
               </p>
             </div>
           </CardContent>

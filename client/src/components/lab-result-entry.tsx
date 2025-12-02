@@ -202,7 +202,7 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
       item.status,
       format(new Date(order.createdAt), 'yyyy-MM-dd')
     ]);
-    
+
     return [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
   };
 
@@ -240,11 +240,10 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
               {pendingOrders.map(order => (
                 <div
                   key={order.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedOrder === order.id 
-                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800' 
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedOrder === order.id
+                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
                       : 'hover:bg-muted/50'
-                  }`}
+                    }`}
                   onClick={() => setSelectedOrder(order.id)}
                 >
                   <div className="flex items-center justify-between">
@@ -263,17 +262,17 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
                         {selectedOrder === order.id ? 'Selected' : 'Pending'}
                       </Badge>
-                      
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             className="h-8 w-8 p-0"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -398,7 +397,7 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
                     <TestTube className="h-5 w-5" />
                     Ordered Tests Details
                   </h4>
-                  
+
                   {orderItems.map((item, index) => (
                     <Card key={item.id} className="border-l-4 border-l-blue-500">
                       <CardContent className="p-4">
@@ -429,68 +428,69 @@ export default function LabResultEntry({ className }: LabResultEntryProps) {
 
                         {/* Result Entry or Display */}
                         {item.completedAt ? (
-                        <div className="bg-muted/30 p-4 rounded-lg">
-                          <p className="font-medium text-sm text-muted-foreground mb-2">Completed Result:</p>
-                          <p className="font-mono text-blue-600 dark:text-blue-400 mb-2">{item.result}</p>
-                          {item.remarks && (
-                            <>
-                              <p className="font-medium text-sm text-muted-foreground mb-1">Notes:</p>
-                              <p className="text-sm">{item.remarks}</p>
-                            </>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Completed: {format(new Date(item.completedAt), 'MMM dd, yyyy HH:mm')}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2">
-                              Test Result *
-                            </label>
-                            <Input
-                              placeholder="Enter test result (e.g., 120/80, Normal, 5.2 mg/dL)"
-                              value={resultValues[item.id]?.result || ''}
-                              onChange={(e) => handleResultChange(item.id, 'result', e.target.value)}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-2">
-                              Remarks (Optional)
-                            </label>
-                            <Textarea
-                              placeholder="Additional notes or observations..."
-                              rows={2}
-                              value={resultValues[item.id]?.remarks || ''}
-                              onChange={(e) => handleResultChange(item.id, 'remarks', e.target.value)}
-                            />
-                          </div>
-
-                          <Button
-                            onClick={() => handleSaveResult(item.id)}
-                            disabled={updateResultMutation.isPending}
-                            className="w-full"
-                          >
-                            {updateResultMutation.isPending ? (
+                          <div className="bg-muted/30 p-4 rounded-lg">
+                            <p className="font-medium text-sm text-muted-foreground mb-2">Completed Result:</p>
+                            <p className="font-mono text-blue-600 dark:text-blue-400 mb-2">{item.result}</p>
+                            {item.remarks && (
                               <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Saving...
-                              </>
-                            ) : (
-                              <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save Result
+                                <p className="font-medium text-sm text-muted-foreground mb-1">Notes:</p>
+                                <p className="text-sm">{item.remarks}</p>
                               </>
                             )}
-                          </Button>
-                        </div>
-                      )}
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Completed: {format(new Date(item.completedAt), 'MMM dd, yyyy HH:mm')}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Test Result *
+                              </label>
+                              <Input
+                                placeholder="Enter test result (e.g., 120/80, Normal, 5.2 mg/dL)"
+                                value={resultValues[item.id]?.result || ''}
+                                onChange={(e) => handleResultChange(item.id, 'result', e.target.value)}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium mb-2">
+                                Remarks (Optional)
+                              </label>
+                              <Textarea
+                                placeholder="Additional notes or observations..."
+                                rows={2}
+                                value={resultValues[item.id]?.remarks || ''}
+                                onChange={(e) => handleResultChange(item.id, 'remarks', e.target.value)}
+                              />
+                            </div>
+
+                            <Button
+                              onClick={() => handleSaveResult(item.id)}
+                              disabled={updateResultMutation.isPending}
+                              className="w-full"
+                            >
+                              {updateResultMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Saving...
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="mr-2 h-4 w-4" />
+                                  Save Result
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

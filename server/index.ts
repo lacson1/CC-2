@@ -1,20 +1,64 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import { setupRoutes } from "./routes/index";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { sessionConfig } from "./middleware/session";
 import { securityHeaders } from "./middleware/security";
+import { authRateLimit, apiRateLimit } from "./middleware/rate-limit";
+import { devLogger, prodLogger } from "./middleware/request-logger";
+import { globalErrorHandler, notFoundHandler } from "./middleware/error-handler";
 import { seedTabPresets } from "./seedTabPresets";
+import { seedTabConfigs } from "./seedTabConfigs";
+import { seedMockData } from "./seedMockData";
 
 const app = express();
 
-// CORS configuration (must be before security headers to set proper origin)
+// Enable compression for all responses
+// This will compress text-based responses (HTML, CSS, JS, JSON)
 app.use((req, res, next) => {
-  const origin = req.headers.origin || req.headers.host || '*';
-  res.header('Access-Control-Allow-Origin', origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+  // Simple gzip-like compression check
+  const acceptEncoding = req.headers['accept-encoding'] || '';
+  if (acceptEncoding.includes('gzip')) {
+    res.setHeader('Vary', 'Accept-Encoding');
+  }
+  next();
+});
+
+// CORS configuration with secure origin whitelist
+// Define allowed origins - customize based on your deployment
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : [
+      'http://localhost:5001',
+      'http://localhost:5173',
+      'http://127.0.0.1:5001',
+      'http://127.0.0.1:5173',
+    ];
+
+// In development, also allow Replit domains
+if (process.env.NODE_ENV !== 'production') {
+  // Allow any replit.dev or replit.app domain in development
+  ALLOWED_ORIGINS.push(/\.replit\.dev$/, /\.replit\.app$/, /\.repl\.co$/);
+}
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Check if origin is allowed
+  const isAllowed = origin && ALLOWED_ORIGINS.some(allowed => {
+    if (allowed instanceof RegExp) {
+      return allowed.test(origin);
+    }
+    return allowed === origin;
+  });
+  
+  if (isAllowed && origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+  }
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -32,85 +76,133 @@ app.use(express.urlencoded({ extended: false }));
 // Session middleware
 app.use(sessionConfig);
 
-app.use((req, res, next) => {
-  const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+// Rate limiting middleware
+// Apply stricter rate limiting to authentication endpoints
+app.use('/api/auth/login', authRateLimit);
+app.use('/api/auth/register', authRateLimit);
+app.use('/api/auth/reset-password', authRateLimit);
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
+// Apply standard rate limiting to all API endpoints
+app.use('/api', apiRateLimit);
 
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
-    }
-  });
-
-  next();
-});
+// Request logging middleware - use dev logger in development, prod logger in production
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(isProduction ? prodLogger : devLogger);
 
 (async () => {
-  // Seed tab presets on startup (idempotent - only creates if not exists)
   try {
-    await seedTabPresets();
-  } catch (error) {
-    console.error('Failed to seed tab presets:', error);
-  }
+    // Seed tab configurations on startup (idempotent - only creates if not exists)
+    try {
+      console.log('🌱 Seeding tab configurations...');
+      await seedTabConfigs();
+    } catch (error) {
+      console.error('Failed to seed tab configurations:', error);
+    }
 
-  // Setup new modular routes (patients, laboratory, prescriptions)
-  setupRoutes(app);
-  
-  // Setup remaining routes from old routes.ts (auth, profile, dashboard, etc.)
-  await registerRoutes(app);
+    // Seed tab presets on startup (idempotent - only creates if not exists)
+    try {
+      console.log('🌱 Seeding tab presets...');
+      await seedTabPresets();
+    } catch (error) {
+      console.error('Failed to seed tab presets:', error);
+    }
 
-  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    // Seed mock data (2 patients, 2 staff) on startup (idempotent)
+    try {
+      await seedMockData();
+    } catch (error) {
+      console.error('Failed to seed mock data:', error);
+    }
 
-    console.error('Server error:', {
-      error: err.message,
-      stack: err.stack,
-      url: req.url,
-      method: req.method,
-      status
+    // Seed comprehensive lab test catalog on startup (idempotent)
+    try {
+      console.log('🧪 Seeding lab test catalog...');
+      const { seedComprehensiveLabTests } = await import('./seedComprehensiveLabTests');
+      await seedComprehensiveLabTests();
+    } catch (error) {
+      console.error('Failed to seed lab test catalog:', error);
+    }
+
+    // Setup new modular routes (patients, laboratory, prescriptions)
+    setupRoutes(app);
+    
+    // Setup remaining routes from old routes.ts (auth, profile, dashboard, etc.)
+    await registerRoutes(app);
+
+    // Use port 5001 (port 5000 is often taken by macOS AirPlay)
+    // this serves both the API and the client.
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 5001;
+    
+    // Create HTTP server first so we can pass it to Vite for HMR
+    const { createServer } = await import('http');
+    const server = createServer(app);
+
+    // importantly only setup vite in development and after
+    // setting up all the other routes so the catch-all route
+    // doesn't interfere with the other routes
+    if (app.get("env") === "development") {
+      await setupVite(app, server);
+    } else {
+      serveStatic(app);
+    }
+
+    // 404 handler for API routes (must be after all routes)
+    app.use('/api/*', notFoundHandler);
+    
+    // Global error handler (must be last middleware)
+    app.use(globalErrorHandler);
+
+    // Start server
+    server.listen(port, "0.0.0.0", () => {
+      log(`🚀 Server running on port ${port}`);
+      log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 
-    // Only send response if not already sent
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
-    
-    // Don't throw the error to prevent server crashes
-    next();
-  });
+    // Graceful shutdown handling
+    const gracefulShutdown = async (signal: string) => {
+      log(`\n${signal} received. Starting graceful shutdown...`);
+      
+      // Stop accepting new connections
+      server.close(async () => {
+        log('HTTP server closed');
+        
+        // Close database connections
+        try {
+          const { pool } = await import('./db');
+          await pool.end();
+          log('Database connections closed');
+        } catch (error) {
+          console.error('Error closing database:', error);
+        }
+        
+        log('Graceful shutdown complete');
+        process.exit(0);
+      });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
-    await setupVite(app);
-  } else {
-    serveStatic(app);
+      // Force shutdown after 30 seconds
+      setTimeout(() => {
+        console.error('Forced shutdown after timeout');
+        process.exit(1);
+      }, 30000);
+    };
+
+    // Listen for shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      console.error('Uncaught Exception:', error);
+      gracefulShutdown('uncaughtException');
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+  } catch (error) {
+    console.error('CRITICAL: Failed to start server:', error);
+    process.exit(1);
   }
-
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  app.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-  });
 })();

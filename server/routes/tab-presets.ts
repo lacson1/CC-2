@@ -188,6 +188,16 @@ export function setupTabPresetRoutes(app: Express) {
         return res.status(403).json({ error: 'Organization context required' });
       }
 
+      // Special handling for virtual superadmin user (ID 999) who doesn't exist in database
+      // This user is a fallback superadmin that bypasses database authentication
+      if (userId === 999 && targetScope === 'user') {
+        return res.json({
+          message: 'Tab preferences are not persisted for system superadmin. Changes will reset on logout.',
+          preset: 'N/A',
+          tabs: []
+        });
+      }
+
       // Authorization checks
       if (targetScope === 'organization' && req.user?.role !== 'admin' && req.user?.role !== 'super_admin') {
         return res.status(403).json({ error: 'Only admins can apply organization-wide presets' });

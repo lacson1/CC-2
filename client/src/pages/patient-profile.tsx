@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute } from "wouter";
-import { AlertCircle, Edit, Stethoscope, Pill, FlaskRound, Plus, History, Printer, CheckCircle, Download, Eye, TestTube, ClipboardCheck } from "lucide-react";
+import { AlertCircle, Edit, Stethoscope, Pill, FlaskRound, Plus, History, Printer, CheckCircle, Download, Eye, ClipboardCheck, TestTube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import VisitRecordingModal from "@/components/visit-recording-modal";
 import LabResultModal from "@/components/lab-result-modal";
 import PrescriptionModal from "@/components/prescription-modal";
 import { PatientSummaryPrintable } from "@/components/patient-summary-printable";
 import { ModernPatientOverview } from "@/components/modern-patient-overview";
-import { AdvancedPatientCare } from "@/components/advanced-patient-care";
 import { FloatingActionMenu } from "@/components/floating-action-menu";
 import { useRole } from "@/components/role-guard";
 import { formatPatientName, getPatientInitials } from "@/lib/patient-utils";
@@ -21,7 +24,7 @@ import type { Patient, Visit, LabResultFromOrder, Prescription, Organization } f
 export default function PatientProfile() {
   const [, params] = useRoute("/patients/:id");
   const patientId = params?.id ? parseInt(params.id) : undefined;
-  const { role: user } = useRole();
+  const { user } = useRole();
 
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [showLabModal, setShowLabModal] = useState(false);
@@ -699,314 +702,6 @@ function LabResultInputModal({
             activePrescriptions={prescriptions || []}
             onAddPrescription={() => setShowPrescriptionModal(true)}
           />
-        </div>
-
-        {/* Detailed Tabs */}
-        <div className="mt-8">
-          <Tabs defaultValue="care" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="care">Advanced Care</TabsTrigger>
-              <TabsTrigger value="visits">Visits</TabsTrigger>
-              <TabsTrigger value="labs">Lab Results</TabsTrigger>
-              <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
-              <TabsTrigger value="history">History</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="care">
-              <AdvancedPatientCare patientId={patientId} />
-            </TabsContent>
-
-            <TabsContent value="visits">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <History className="mr-2 h-5 w-5" />
-                      Visit History
-                    </span>
-                    {user?.role === 'doctor' && (
-                      <Button size="sm" onClick={() => setShowVisitModal(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Visit
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {visitsLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="animate-pulse">
-                          <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
-                          <div className="h-3 bg-slate-200 rounded w-1/2 mb-1"></div>
-                          <div className="h-3 bg-slate-200 rounded w-3/4"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : visits && visits.length > 0 ? (
-                    <div className="space-y-4">
-                      {visits.map((visit) => (
-                        <div key={visit.id} className="border border-slate-200 rounded-lg p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium text-slate-800">
-                                Visit on {new Date(visit.visitDate).toLocaleDateString()}
-                              </h4>
-                              <p className="text-sm text-slate-600 mt-1">
-                                <strong>Reason:</strong> {visit.reasonForVisit}
-                              </p>
-                              {visit.diagnosis && (
-                                <p className="text-sm text-slate-600">
-                                  <strong>Diagnosis:</strong> {visit.diagnosis}
-                                </p>
-                              )}
-                              {visit.treatmentPlan && (
-                                <p className="text-sm text-slate-600 mt-1">
-                                  <strong>Treatment:</strong> {visit.treatmentPlan}
-                                </p>
-                              )}
-                            </div>
-                            <Badge>{visit.status || 'Completed'}</Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <History className="mx-auto h-12 w-12 text-slate-400" />
-                      <h3 className="mt-4 text-sm font-medium text-slate-900">No visits recorded</h3>
-                      <p className="mt-2 text-sm text-slate-500">Record the first visit for this patient.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="labs">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <FlaskRound className="mr-2 h-5 w-5" />
-                      Laboratory Tests & Results
-                    </span>
-                    {(user?.role === 'nurse' || user?.role === 'doctor') && (
-                      <Button size="sm" onClick={() => setShowLabModal(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Result
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="results" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                      <TabsTrigger value="results" className="flex items-center gap-2">
-                        <FlaskRound className="h-4 w-4" />
-                        Results
-                      </TabsTrigger>
-                      <TabsTrigger value="reviewed" className="flex items-center gap-2">
-                        <CheckCircle className="h-4 w-4" />
-                        Reviewed
-                      </TabsTrigger>
-                      <TabsTrigger value="pending" className="flex items-center gap-2">
-                        <History className="h-4 w-4" />
-                        Pending
-                      </TabsTrigger>
-                      <TabsTrigger value="history" className="flex items-center gap-2">
-                        <History className="h-4 w-4" />
-                        History
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="results" className="mt-4">
-                      {labsLoading ? (
-                        <div className="space-y-4">
-                          {[...Array(3)].map((_, i) => (
-                            <div key={i} className="animate-pulse">
-                              <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
-                              <div className="h-3 bg-slate-200 rounded w-1/2 mb-1"></div>
-                              <div className="h-3 bg-slate-200 rounded w-3/4"></div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : labResults && labResults.length > 0 ? (
-                        <div className="space-y-4">
-                          {labResults.map((result) => (
-                            <div key={result.id} className="border border-slate-200 rounded-lg p-4">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium text-slate-800">{result.testName}</h4>
-                                  <p className="text-sm text-slate-600 mt-1">
-                                    <strong>Result:</strong> {result.result}
-                                  </p>
-                                  {result.normalRange && (
-                                    <p className="text-sm text-slate-600">
-                                      <strong>Normal Range:</strong> {result.normalRange}
-                                    </p>
-                                  )}
-                                  {result.notes && (
-                                    <p className="text-sm text-slate-600 mt-1">
-                                      <strong>Notes:</strong> {result.notes}
-                                    </p>
-                                  )}
-                                  <p className="text-xs text-slate-400 mt-2">
-                                    {result.testDate ? new Date(result.testDate).toLocaleDateString() : 'No date recorded'}
-                                  </p>
-                                </div>
-                                <div>{getStatusBadge(result.status)}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8">
-                          <FlaskRound className="mx-auto h-12 w-12 text-slate-400" />
-                          <h3 className="mt-4 text-sm font-medium text-slate-900">No completed results</h3>
-                          <p className="mt-2 text-sm text-slate-500">Completed lab results will appear here.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-
-                    <TabsContent value="reviewed" className="mt-4">
-                      <PatientReviewedResults patientId={patient.id} />
-                    </TabsContent>
-
-                    <TabsContent value="pending" className="mt-4">
-                      <PendingLabOrders 
-                        labOrders={labOrders} 
-                        labOrdersLoading={labOrdersLoading} 
-                        onProcessResult={(orderItem) => {
-                          setSelectedOrderItem(orderItem);
-                          setShowResultModal(true);
-                        }}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="history" className="mt-4">
-                      <div className="text-center py-8">
-                        <History className="mx-auto h-12 w-12 text-slate-400" />
-                        <h3 className="mt-4 text-sm font-medium text-slate-900">Lab History</h3>
-                        <p className="mt-2 text-sm text-slate-500">Historical lab data will be displayed here.</p>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="prescriptions">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <span className="flex items-center">
-                      <Pill className="mr-2 h-5 w-5" />
-                      Prescriptions
-                    </span>
-                    {user?.role === 'doctor' && (
-                      <Button size="sm" onClick={() => setShowPrescriptionModal(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Prescription
-                      </Button>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {prescriptionsLoading ? (
-                    <div className="space-y-4">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="animate-pulse">
-                          <div className="h-4 bg-slate-200 rounded w-1/4 mb-2"></div>
-                          <div className="h-3 bg-slate-200 rounded w-1/2 mb-1"></div>
-                          <div className="h-3 bg-slate-200 rounded w-3/4"></div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : prescriptions && prescriptions.length > 0 ? (
-                    <div className="space-y-4">
-                      {prescriptions.map((prescription) => (
-                        <div key={prescription.id} className="border rounded-lg p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-medium text-slate-800">{prescription.medicationName || `Medicine ID: ${prescription.medicationId}`}</h4>
-                              <p className="text-sm text-slate-600 mt-1">
-                                <strong>Dosage:</strong> {prescription.dosage}
-                              </p>
-                              <p className="text-sm text-slate-600">
-                                <strong>Frequency:</strong> {prescription.frequency}
-                              </p>
-                              <p className="text-sm text-slate-600">
-                                <strong>Duration:</strong> {prescription.duration}
-                              </p>
-                              {prescription.instructions && (
-                                <p className="text-sm text-slate-600 mt-2">
-                                  <strong>Instructions:</strong> {prescription.instructions}
-                                </p>
-                              )}
-                              <div className="flex items-center gap-2 mt-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => printPrescription(prescription, patient)}
-                                >
-                                  <Printer className="mr-1 h-3 w-3" />
-                                  Print
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <Badge variant={prescription.status === 'active' ? 'default' : 'secondary'}>
-                                {prescription.status}
-                              </Badge>
-                              <p className="text-xs text-slate-500 mt-1">
-                                {new Date(prescription.startDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <Pill className="mx-auto h-12 w-12 text-slate-400" />
-                      <h3 className="mt-4 text-sm font-medium text-slate-900">No prescriptions</h3>
-                      <p className="mt-2 text-sm text-slate-500">Add the first prescription for this patient.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="history">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Medical History</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {patient.medicalHistory ? (
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-sm text-slate-700">{patient.medicalHistory}</p>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-slate-500">
-                        <p>No medical history recorded</p>
-                      </div>
-                    )}
-                    
-                    {patient.allergies && (
-                      <div>
-                        <h4 className="font-medium text-slate-800 mb-2">Allergies</h4>
-                        <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                          <p className="text-sm text-red-700">{patient.allergies}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
         </div>
         
         {/* Floating Action Menu */}
