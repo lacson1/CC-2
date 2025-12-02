@@ -1,13 +1,15 @@
 import session from 'express-session';
+import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 
-// SECURITY: Session secret must be provided via environment variable
-const SESSION_SECRET = process.env.SESSION_SECRET;
+// SECURITY: Session secret from environment variable or generate secure default
+let SESSION_SECRET = process.env.SESSION_SECRET;
 if (!SESSION_SECRET) {
-  throw new Error(
-    'CRITICAL: SESSION_SECRET environment variable is required. ' +
-    'Generate a secure secret with: openssl rand -base64 64'
-  );
+  // Generate a secure random secret if not provided
+  SESSION_SECRET = crypto.randomBytes(64).toString('base64');
+  console.warn('⚠️  WARNING: SESSION_SECRET not set. Generated temporary secret.');
+  console.warn('   Sessions will not persist across server restarts.');
+  console.warn('   Set SESSION_SECRET environment variable for production.');
 }
 
 // Use MemoryStore for development - faster and no DB issues

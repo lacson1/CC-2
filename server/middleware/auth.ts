@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
 import { storage } from '../storage';
 import { SecurityManager } from './security';
@@ -33,13 +34,14 @@ declare module 'express-session' {
   }
 }
 
-// SECURITY: JWT secret must be provided via environment variable
-const JWT_SECRET = process.env.JWT_SECRET;
+// SECURITY: JWT secret from environment variable or generate secure default
+let JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error(
-    'CRITICAL: JWT_SECRET environment variable is required. ' +
-    'Generate a secure secret with: openssl rand -base64 64'
-  );
+  // Generate a secure random secret if not provided
+  JWT_SECRET = crypto.randomBytes(64).toString('base64');
+  console.warn('⚠️  WARNING: JWT_SECRET not set. Generated temporary secret.');
+  console.warn('   JWT tokens will be invalidated on server restart.');
+  console.warn('   Set JWT_SECRET environment variable for production.');
 }
 
 const SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT_MS || '86400000', 10); // Default 24 hours
