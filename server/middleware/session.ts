@@ -23,10 +23,19 @@ if (!isDevelopment && process.env.DATABASE_URL) {
   // Use PostgreSQL session store in production
   try {
     const connectPgSimple = require('connect-pg-simple');
+    const pg = require('pg');
     const PgSession = connectPgSimple(session);
     
+    // Create a pool with SSL support for managed databases
+    const pgPool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false, // Accept self-signed certificates
+      },
+    });
+    
     sessionStore = new PgSession({
-      conString: process.env.DATABASE_URL,
+      pool: pgPool,
       tableName: 'user_sessions',
       createTableIfMissing: true,
       pruneSessionInterval: 60 * 15,
@@ -36,7 +45,7 @@ if (!isDevelopment && process.env.DATABASE_URL) {
         }
       },
     });
-    console.log('Using PostgreSQL session store');
+    console.log('Using PostgreSQL session store with SSL');
   } catch (error) {
     console.warn('Failed to initialize PostgreSQL session store, falling back to MemoryStore');
     sessionStore = undefined;

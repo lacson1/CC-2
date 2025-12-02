@@ -13,6 +13,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// For production with managed databases, disable TLS certificate verification globally
+// This is needed because DigitalOcean and other providers use self-signed certificates
+if (process.env.NODE_ENV === 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 // Database connection pool configuration
 const POOL_CONFIG = {
   // Maximum number of connections in the pool
