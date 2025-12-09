@@ -4,7 +4,7 @@ region: nyc
 services:
   - name: web
     github:
-      repo: YOUR_GITHUB_USERNAME/clinicconnect-2
+      repo: lacson1/clinicconnect-2
       branch: main
       deploy_on_push: true
     
@@ -61,4 +61,5 @@ databases:
     version: "16"
     production: false
     cluster_name: clinicconnect-db-cluster
+
 
