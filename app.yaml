@@ -4,17 +4,17 @@ region: nyc
 services:
   - name: web
     github:
-      repo: lacson1/clinicconnect-2
+      repo: lacson1/CC-2
       branch: main
       deploy_on_push: true
-    
+
     dockerfile_path: Dockerfile.optimized
-    
+
     http_port: 5001
-    
+
     instance_count: 1
     instance_size_slug: basic-xxs
-    
+
     health_check:
       http_path: /api/health
       initial_delay_seconds: 60
@@ -22,35 +22,35 @@ services:
       timeout_seconds: 10
       success_threshold: 1
       failure_threshold: 5
-    
+
     envs:
       - key: NODE_ENV
         value: production
         scope: RUN_TIME
-      
+
       - key: PORT
         value: "5001"
         scope: RUN_TIME
-      
+
       - key: DATABASE_URL
-        value: ${db.DATABASE_URL}
+        value: ${clinicconnect-db.DATABASE_URL}
         scope: RUN_TIME
         type: SECRET
-      
+
       - key: JWT_SECRET
         value: ${JWT_SECRET}
         scope: RUN_TIME
         type: SECRET
-      
+
       - key: SESSION_SECRET
         value: ${SESSION_SECRET}
         scope: RUN_TIME
         type: SECRET
-      
+
       - key: SESSION_COOKIE_MAX_AGE
         value: "2592000000"
         scope: RUN_TIME
-      
+
       - key: ALLOWED_ORIGINS
         value: https://your-app-name.ondigitalocean.app
         scope: RUN_TIME
@@ -61,5 +61,3 @@ databases:
     version: "16"
     production: false
     cluster_name: clinicconnect-db-cluster
-
-
