@@ -10,8 +10,7 @@ import { Loader2, Heart, Shield, Activity, Stethoscope, Users, Eye, EyeOff, Chec
 import { SiGoogle, SiGithub, SiX, SiApple } from 'react-icons/si';
 import { Link } from 'wouter';
 
-// Import futuristic gradient background
-import backgroundImage from '@assets/particle-lines-futuristic-gradient-background_1760322867271.jpg';
+// Background image is optional - using CSS gradient as primary with optional image overlay
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -46,13 +45,7 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated Futuristic Gradient Background */}
-      <div
-        className="absolute inset-0 bg-cover bg-center animate-[float_20s_ease-in-out_infinite]"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-          backgroundSize: '120%'
-        }}
-      />
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 animate-pulse" />
 
       {/* Gradient Blend Overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-white/30" />
